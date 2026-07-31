@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>OpenReader.AppModules.Explorer</AssemblyName>
+    <Description>First-party app module: enriches Windows Explorer announcements.</Description>
+  </PropertyGroup>
+
+</Project>

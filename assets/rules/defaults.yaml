@@ -1,0 +1,350 @@
+version: 1
+
+# Built-in default speech rules.
+#
+# Layering: this file ships with the binary as the lowest priority layer.
+# User, profile, app, and script rules override it. See SPEECH_PIPELINE.md
+# for the full execution model.
+#
+# Tokens available in templates:
+#   {name}        AccessibleNode.Name (empty string if null)
+#   {value}       AccessibleNode.Value (empty string if null)
+#   {role}        AccessibleRole formatted in lowercase words ("menu item")
+#   {description} AccessibleNode.Description (empty string if null)
+#   {text}        SpeechRequest.RawText (empty string if null)
+#   {position}    AccessibleNode.Extras["uia.PositionInSet"] (e.g. "4")
+#   {setSize}     AccessibleNode.Extras["uia.SizeOfSet"] (e.g. "10")
+#   {level}       AccessibleNode.Extras["uia.Level"] (tree depth)
+#   {posInSet}    "{position} of {setSize}" — empty string when missing
+#
+# Within a layer, higher priority wins for emit. Rewrites/modulations/setVoice
+# stack from high to low priority. Suppress short-circuits at any priority.
+
+rules:
+
+  # --- Containers ---
+  - id: core.role.window
+    priority: 10
+    scope: { role: Window }
+    action: { type: emit, template: "{name}, window" }
+
+  - id: core.role.dialog
+    priority: 10
+    scope: { role: Dialog }
+    action: { type: emit, template: "{name}, dialog" }
+
+  - id: core.role.pane
+    priority: 10
+    scope: { role: Pane }
+    action: { type: emit, template: "{name}, pane" }
+
+  - id: core.role.group
+    priority: 10
+    scope: { role: Group }
+    action: { type: emit, template: "{name}, grouping" }
+
+  - id: core.role.tab
+    priority: 10
+    scope: { role: Tab }
+    action: { type: emit, template: "{name}, tab" }
+
+  - id: core.role.tabitem
+    priority: 10
+    scope: { role: TabItem }
+    action: { type: emit, template: "{name}, tab" }
+
+  - id: core.role.statusbar
+    priority: 10
+    scope: { role: StatusBar }
+    action: { type: emit, template: "{name}, status bar" }
+
+  - id: core.role.toolbar
+    priority: 10
+    scope: { role: ToolBar }
+    action: { type: emit, template: "{name}, tool bar" }
+
+  - id: core.role.menubar
+    priority: 10
+    scope: { role: MenuBar }
+    action: { type: emit, template: "{name}, menu bar" }
+
+  - id: core.role.menu
+    priority: 10
+    scope: { role: Menu }
+    action: { type: emit, template: "{name}, menu" }
+
+  - id: core.role.menuitem
+    priority: 10
+    scope: { role: MenuItem }
+    action: { type: emit, template: "{name}, menu item" }
+
+  - id: core.role.contextmenu
+    priority: 10
+    scope: { role: ContextMenu }
+    action: { type: emit, template: "{name}, context menu" }
+
+  - id: core.role.tree
+    priority: 10
+    scope: { role: Tree }
+    action: { type: emit, template: "{name}, tree" }
+
+  - id: core.role.treeitem
+    priority: 10
+    scope: { role: TreeItem }
+    action: { type: emit, template: "{name}, tree item, level {level}, {posInSet}" }
+
+  - id: core.role.list
+    priority: 10
+    scope: { role: List }
+    action: { type: emit, template: "{name}, list" }
+
+  - id: core.role.listitem
+    priority: 10
+    scope: { role: ListItem }
+    action: { type: emit, template: "{name}, list item, {posInSet}" }
+
+  - id: core.role.table
+    priority: 10
+    scope: { role: Table }
+    action: { type: emit, template: "{name}, table" }
+
+  - id: core.role.row
+    priority: 10
+    scope: { role: Row }
+    action: { type: emit, template: "{name}, row" }
+
+  - id: core.role.cell
+    priority: 10
+    scope: { role: Cell }
+    action: { type: emit, template: "{name}, cell, {value}" }
+
+  - id: core.role.columnheader
+    priority: 10
+    scope: { role: ColumnHeader }
+    action: { type: emit, template: "{name}, column header" }
+
+  - id: core.role.rowheader
+    priority: 10
+    scope: { role: RowHeader }
+    action: { type: emit, template: "{name}, row header" }
+
+  # --- Interactive ---
+  - id: core.role.button
+    priority: 10
+    scope: { role: Button }
+    action: { type: emit, template: "{name}, button" }
+
+  - id: core.role.togglebutton
+    priority: 10
+    scope: { role: ToggleButton }
+    action: { type: emit, template: "{name}, toggle button" }
+
+  - id: core.role.togglebutton.pressed
+    priority: 20
+    scope: { role: ToggleButton, requiredStates: [Pressed] }
+    action: { type: emit, template: "{name}, toggle button, pressed" }
+
+  - id: core.role.splitbutton
+    priority: 10
+    scope: { role: SplitButton }
+    action: { type: emit, template: "{name}, split button" }
+
+  - id: core.role.checkbox
+    priority: 10
+    scope: { role: CheckBox }
+    action: { type: emit, template: "{name}, check box, not checked" }
+
+  - id: core.role.checkbox.checked
+    priority: 20
+    scope: { role: CheckBox, requiredStates: [Checked] }
+    action: { type: emit, template: "{name}, check box, checked" }
+
+  - id: core.role.checkbox.mixed
+    priority: 20
+    scope: { role: CheckBox, requiredStates: [Mixed] }
+    action: { type: emit, template: "{name}, check box, partially checked" }
+
+  - id: core.role.radiobutton
+    priority: 10
+    scope: { role: RadioButton }
+    action: { type: emit, template: "{name}, radio button, not selected" }
+
+  - id: core.role.radiobutton.selected
+    priority: 20
+    scope: { role: RadioButton, requiredStates: [Selected] }
+    action: { type: emit, template: "{name}, radio button, selected" }
+
+  - id: core.role.combobox
+    priority: 10
+    scope: { role: ComboBox }
+    action: { type: emit, template: "{name}, combo box, {value}" }
+
+  # Combo box selection change — the SelectionItemPattern fires
+  # ValueChanged when the user picks a new entry. Announce just the new
+  # value (the combo's name was already spoken on focus).
+  - id: core.combobox.value_changed
+    priority: 20
+    scope: { role: ComboBox, reason: ValueChanged }
+    action: { type: emit, template: "{value}" }
+
+  - id: core.role.spinner
+    priority: 10
+    scope: { role: Spinner }
+    action: { type: emit, template: "{name}, spin button, {value}" }
+
+  - id: core.role.slider
+    priority: 10
+    scope: { role: Slider }
+    action: { type: emit, template: "{name}, slider, {value}" }
+
+  - id: core.role.progressbar
+    priority: 10
+    scope: { role: ProgressBar }
+    action: { type: emit, template: "{name}, progress bar, {value}" }
+
+  - id: core.role.hyperlink
+    priority: 10
+    scope: { role: Hyperlink }
+    action: { type: emit, template: "{name}, link" }
+
+  # --- Text ---
+  # On focus, {text} is the caret line (captured by the provider for text
+  # controls), NOT the whole value. A single-line edit's caret line IS its full
+  # value, so search boxes / address bars / the Run box still read their content;
+  # a multi-line edit reads only the current line instead of dumping the whole
+  # buffer (NVDA behavior). The review cursor and caret-follow read the rest.
+  - id: core.role.edit
+    priority: 10
+    scope: { role: Edit }
+    action: { type: emit, template: "{name}, edit, {text}" }
+
+  - id: core.role.edit.readonly
+    priority: 20
+    scope: { role: Edit, requiredStates: [ReadOnly] }
+    action: { type: emit, template: "{name}, read only edit, {text}" }
+
+  # Windows password boxes are ControlType.Edit + IsPassword (role Edit +
+  # Protected state), not a distinct control type — so core.role.passwordedit
+  # below never matches them. Match the Protected state here and NEVER read the
+  # content. Priority 20 so it wins over core.role.edit's {text} readout.
+  - id: core.role.edit.password
+    priority: 20
+    scope: { role: Edit, requiredStates: [Protected] }
+    action: { type: emit, template: "{name}, password edit" }
+
+  - id: core.role.passwordedit
+    priority: 10
+    scope: { role: PasswordEdit }
+    action: { type: emit, template: "{name}, password edit" }
+
+  # {text} is the caret line on focus (see core.role.edit). For a read-only or
+  # web document with no caret it's empty and Tidy() drops the trailing comma.
+  - id: core.role.document
+    priority: 10
+    scope: { role: Document }
+    action: { type: emit, template: "{name}, document, {text}" }
+
+  - id: core.role.heading
+    priority: 10
+    scope: { role: Heading }
+    action: { type: emit, template: "{name}, heading" }
+
+  - id: core.role.statictext
+    priority: 10
+    scope: { role: StaticText }
+    action: { type: emit, template: "{name}" }
+
+  # --- Notifications ---
+  - id: core.role.tooltip
+    priority: 10
+    scope: { role: ToolTip }
+    action: { type: emit, template: "tip: {name}" }
+
+  - id: core.role.notification
+    priority: 10
+    scope: { role: Notification }
+    action: { type: emit, template: "notification: {name}" }
+
+  - id: core.role.alert
+    priority: 10
+    scope: { role: Alert }
+    action: { type: emit, template: "alert: {name}" }
+
+  # --- State overlays (apply after emit) ---
+  - id: core.state.disabled
+    priority: 5
+    scope: { requiredStates: [Disabled] }
+    action: { type: rewrite, pattern: "$", replacement: ", disabled" }
+
+  - id: core.state.required
+    priority: 5
+    scope: { requiredStates: [Required] }
+    action: { type: rewrite, pattern: "$", replacement: ", required" }
+
+  - id: core.state.invalid
+    priority: 5
+    scope: { requiredStates: [Invalid] }
+    action: { type: rewrite, pattern: "$", replacement: ", invalid entry" }
+
+  # --- Read-character pathway ---
+  - id: core.read.character
+    priority: 10
+    scope: { reason: ReadCharacter }
+    action: { type: emit, template: "{text}" }
+
+  - id: core.read.word
+    priority: 10
+    scope: { reason: ReadWord }
+    action: { type: emit, template: "{text}" }
+
+  - id: core.read.line
+    priority: 10
+    scope: { reason: ReadLine }
+    action: { type: emit, template: "{text}" }
+
+  # Caret-follow: arrow / Home / End in an edit control fires
+  # TextSelectionChanged. The provider captures the line under the caret
+  # in {text}; just announce it. Cancel-group handled by reason mapping
+  # so successive arrow presses preempt rather than queue.
+  #
+  # Priority 100 so this wins over any role-keyed rule that also matches —
+  # e.g. core.role.edit.readonly (priority 20) was clobbering the caret
+  # line and re-announcing "name, read only edit, value" on every keystroke.
+  - id: core.caret.moved
+    priority: 100
+    scope: { reason: CaretMoved }
+    action: { type: emit, template: "{text}" }
+
+  - id: core.read.all
+    priority: 10
+    scope: { reason: ReadAll }
+    action: { type: emit, template: "{text}" }
+
+  # --- Events that are not focus changes ---
+  # These fire on elements that are NOT focused, which is precisely why the
+  # per-focus event subscriptions could never deliver them. The provider now
+  # registers them desktop-wide.
+
+  # List / grid / tree selection. Distinct from ValueChanged: a listbox raises
+  # SelectionItem.ElementSelected, not a value change, so without this rule
+  # arrowing through a list announced nothing at all.
+  - id: core.selection.changed
+    priority: 30
+    scope: { reason: SelectionChanged }
+    action: { type: emit, template: "{name}" }
+
+  # Windows and dialogs opening without stealing focus, tooltips, menus.
+  - id: core.alert.raised
+    priority: 30
+    scope: { reason: AlertRaised }
+    action: { type: emit, template: "{name}" }
+
+  - id: core.liveregion.changed
+    priority: 30
+    scope: { reason: LiveRegionUpdate }
+    action: { type: emit, template: "{name}" }
+
+  - id: core.user.announcement
+    priority: 10
+    scope: { reason: UserAnnouncement }
+    action: { type: emit, template: "{text}" }

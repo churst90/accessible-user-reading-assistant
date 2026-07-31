@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "OpenReader",
+  "classifications": [ "Plugin", "OpenReader", "Accessibility" ],
+  "identity": "OpenReader.Plugin.Template",
+  "name": "OpenReader plugin",
+  "shortName": "openreader-plugin",
+  "description": "A starter project for an OpenReader app module. Targets the OpenReader.Sdk and produces a loadable plugin folder ready to drop into %AppData%/OpenReader/plugins.",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "MyPlugin",
+  "preferNameDirectory": true,
+  "symbols": {
+    "PluginId": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "com.example.my-plugin",
+      "description": "Reverse-DNS plugin id, e.g. com.acme.outlook-shim",
+      "replaces": "PLUGIN_ID_PLACEHOLDER"
+    },
+    "DisplayName": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "My plugin",
+      "description": "Human-readable display name",
+      "replaces": "PLUGIN_DISPLAY_NAME_PLACEHOLDER"
+    },
+    "TargetExecutable": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "myapp.exe",
+      "description": "Executable name this plugin should attach to",
+      "replaces": "PLUGIN_TARGET_EXE_PLACEHOLDER"
+    },
+    "SdkVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "0.1.*",
+      "description": "OpenReader.Sdk NuGet version range",
+      "replaces": "SDK_VERSION_PLACEHOLDER"
+    }
+  },
+  "primaryOutputs": [
+    { "path": "MyPlugin.csproj" },
+    { "path": "MyPluginModule.cs" },
+    { "path": "manifest.json" },
+    { "path": "README.md" }
+  ]
+}

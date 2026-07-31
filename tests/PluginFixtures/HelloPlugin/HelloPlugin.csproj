@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>HelloPlugin</RootNamespace>
+    <AssemblyName>HelloPlugin</AssemblyName>
+    <Description>Test fixture plugin used by Reader.Scripting.Tests. Not shipped.</Description>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Reader.Abstractions\Reader.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

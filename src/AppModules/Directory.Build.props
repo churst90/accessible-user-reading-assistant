@@ -1,0 +1,33 @@
+<Project>
+
+  <Import Project="..\..\Directory.Build.props" />
+
+  <!--
+    Common settings for first-party app modules. They:
+      - Target net8.0, matching the SDK's surface. This is deliberately a
+        floor older than the host (net10.0), so the host can move forward
+        without forcing every plugin author to retarget. It is NOT
+        netstandard2.1: plugins load into the host's process on the host's
+        runtime, so the netstandard surface bought nothing and cost the
+        `IsExternalInit` polyfill that `record` needed.
+      - Reference Reader.Abstractions only — never Reader.Speech, Reader.Core, etc.
+        Plugins must use the contract surface, not internal types.
+      - Are NOT packable as NuGet packages (they ship inside the host MSI).
+      - Have GenerateDocumentationFile off; they're internal shims, not public API.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>OpenReader.AppModules.$(MSBuildProjectName.Replace('AppModule.', ''))</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Reader.Abstractions\Reader.Abstractions.csproj" />
+  </ItemGroup>
+
+  <!-- manifest.json sits next to the csproj and gets copied to the output. -->
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>OpenReader.AppModules.NotepadPlusPlus</AssemblyName>
+    <Description>First-party app module: announcement rules for Notepad++.</Description>
+  </PropertyGroup>
+
+</Project>

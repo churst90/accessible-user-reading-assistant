@@ -1,0 +1,121 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- WinExe: WPF host, no console window pops up when launched from a
+         desktop shortcut. Logs still go to file
+         (%LocalAppData%\OpenReader\logs\openreader-*.log); console logging
+         in Program.Main is a no-op for WinExe. -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>OpenReader.Host</RootNamespace>
+    <AssemblyName>OpenReader</AssemblyName>
+    <Description>The OpenReader host executable. Wires platform, core, and services together.</Description>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <UseWPF>true</UseWPF>
+
+    <!--
+      NativeAOT is deliberately NOT pursued. It cannot coexist with the plugin
+      system: PluginHost loads assemblies at runtime into a collectible
+      AssemblyLoadContext and activates types via Activator.CreateInstance,
+      which AOT cannot support. As long as C# app modules are a feature — and
+      they are the whole of Phase 3 — the AOT goal is unreachable, so claiming
+      it only distorts other decisions. See docs/ASSESSMENT.md S8.
+
+      The startup and pause-variance wins AOT was wanted for come from
+      ReadyToRun and TieredPGO instead, which cost nothing here.
+    -->
+    <!-- Guarded on a RID being present: ReadyToRun requires one, and setting
+         it unconditionally makes a plain RID-less `dotnet build` try to infer
+         one (linux-x64 on a dev's non-Windows box) and fail to resolve the
+         WindowsDesktop runtime pack. Publish supplies -r win-x64. -->
+    <PublishReadyToRun Condition="'$(RuntimeIdentifier)' != ''">true</PublishReadyToRun>
+    <TieredPGO>true</TieredPGO>
+
+    <!--
+      Workstation concurrent GC, NOT Server GC.
+
+      Server GC optimises throughput: one heap and one collection thread per
+      core. It trades worse pause *tails* and much higher memory for that
+      throughput. A screen reader is the opposite workload — low allocation,
+      latency-sensitive, single-user, running in the background beside the
+      apps it is reading. Pause tails are exactly what the user hears as a
+      stutter mid-word.
+    -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+
+    <!--
+      Manifest selection. Dev builds get uiAccess="false" because Windows
+      refuses to LAUNCH an unsigned uiAccess binary at all — getting that
+      wrong turns `dotnet run` into "nothing happens, no error".
+
+      Shipping builds pass -p:UiAccess=true, and must also be signed and
+      installed under %ProgramFiles%. See docs/UIACCESS.md.
+    -->
+    <UiAccess Condition="'$(UiAccess)' == ''">false</UiAccess>
+    <ApplicationManifest Condition="'$(UiAccess)' == 'true'">app.uiaccess.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(UiAccess)' != 'true'">app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <Target Name="WarnIfUiAccessUnsigned" AfterTargets="Build" Condition="'$(UiAccess)' == 'true'">
+    <Warning Text="Built with UiAccess=true. This binary will NOT launch unless it is Authenticode-signed and run from %ProgramFiles%. See docs/UIACCESS.md." />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReaderPlatform.Windows\ReaderPlatform.Windows.csproj" />
+    <ProjectReference Include="..\ReaderUI.Windows\ReaderUI.Windows.csproj" />
+    <ProjectReference Include="..\Reader.Core\Reader.Core.csproj" />
+    <ProjectReference Include="..\Reader.Speech\Reader.Speech.csproj" />
+    <ProjectReference Include="..\Reader.Output\Reader.Output.csproj" />
+    <ProjectReference Include="..\Reader.Input\Reader.Input.csproj" />
+    <ProjectReference Include="..\Reader.Scripting\Reader.Scripting.csproj" />
+    <ProjectReference Include="..\Reader.Config\Reader.Config.csproj" />
+    <ProjectReference Include="..\Reader.Diagnostics\Reader.Diagnostics.csproj" />
+  </ItemGroup>
+
+  <!--
+    First-party app modules. They are NOT referenced as assemblies — the host
+    must not link to them, otherwise their types would be loaded into the
+    host's default ALC and the plugin loader's ALC isolation would be a no-op.
+    `ReferenceOutputAssembly=false` builds them but skips the link.
+
+    The CopyAppModules target below picks up each module's output directory
+    and copies the DLL plus its `manifest.json` into
+    `<host>/bin/.../app-modules/<id>/`, where the plugin host loads it.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\AppModules\AppModule.Browser\AppModule.Browser.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\AppModules\AppModule.Explorer\AppModule.Explorer.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\AppModules\AppModule.VsCode\AppModule.VsCode.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\AppModules\AppModule.NotepadPlusPlus\AppModule.NotepadPlusPlus.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CopyAppModules" AfterTargets="Build">
+    <PropertyGroup>
+      <_AppModulesDest>$(OutDir)app-modules</_AppModulesDest>
+      <_AppModulesSrc>$(MSBuildThisFileDirectory)..\AppModules</_AppModulesSrc>
+      <_AppModuleTfm>net8.0</_AppModuleTfm>
+    </PropertyGroup>
+    <ItemGroup>
+      <_BrowserBin Include="$(_AppModulesSrc)\AppModule.Browser\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.Browser.dll" />
+      <_BrowserBin Include="$(_AppModulesSrc)\AppModule.Browser\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
+      <_ExplorerBin Include="$(_AppModulesSrc)\AppModule.Explorer\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.Explorer.dll" />
+      <_ExplorerBin Include="$(_AppModulesSrc)\AppModule.Explorer\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
+      <_VsCodeBin Include="$(_AppModulesSrc)\AppModule.VsCode\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.VsCode.dll" />
+      <_VsCodeBin Include="$(_AppModulesSrc)\AppModule.VsCode\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
+      <_NppBin Include="$(_AppModulesSrc)\AppModule.NotepadPlusPlus\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.NotepadPlusPlus.dll" />
+      <_NppBin Include="$(_AppModulesSrc)\AppModule.NotepadPlusPlus\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_BrowserBin)"  DestinationFolder="$(_AppModulesDest)\openreader.appmodule.browser\"  SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_ExplorerBin)" DestinationFolder="$(_AppModulesDest)\openreader.appmodule.explorer\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_VsCodeBin)"   DestinationFolder="$(_AppModulesDest)\openreader.appmodule.vscode\"   SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_NppBin)"      DestinationFolder="$(_AppModulesDest)\openreader.appmodule.notepad-plus-plus\" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

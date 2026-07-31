@@ -1,0 +1,32 @@
+<Project Sdk="WixToolset.Sdk/4.0.5">
+
+  <PropertyGroup>
+    <OutputName>OpenReader-$(ProductVersion)</OutputName>
+    <OutputType>Package</OutputType>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <SuppressIces>ICE61</SuppressIces>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+
+  <!--
+    The host app is published before the MSI build. The wixproj does NOT
+    reference ReaderHost.Windows directly because that pulls all transitive
+    deps into the WiX project's restore graph; instead, the release flow
+    invokes:
+        dotnet publish src/ReaderHost.Windows -c Release -r win-x64 --self-contained false -o publish/host
+    and the .wxs harvests files from publish/host.
+  -->
+
+  <PropertyGroup>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.1.0</ProductVersion>
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\publish\host\</PublishDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <BindPath Include="$(PublishDir)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>OpenReader.TestKit</RootNamespace>
+    <AssemblyName>OpenReader.TestKit</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <Description>Test fixtures and synthetic providers shared by all OpenReader test projects.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reader.Abstractions\Reader.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

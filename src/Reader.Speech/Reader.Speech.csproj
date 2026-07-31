@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>OpenReader.Speech</RootNamespace>
+    <AssemblyName>OpenReader.Speech</AssemblyName>
+    <Description>Speech queue, rule pipeline, engine-agnostic utterance composition.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reader.Abstractions\Reader.Abstractions.csproj" />
+    <ProjectReference Include="..\Reader.Diagnostics\Reader.Diagnostics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="16.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\assets\rules\defaults.yaml" Link="Rules\defaults.yaml" LogicalName="OpenReader.Speech.Rules.defaults.yaml" />
+  </ItemGroup>
+
+</Project>

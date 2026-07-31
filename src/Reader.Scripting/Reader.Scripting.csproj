@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>OpenReader.Scripting</RootNamespace>
+    <AssemblyName>OpenReader.Scripting</AssemblyName>
+    <Description>Plugin host. Loads, sandboxes, version-checks app modules.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reader.Abstractions\Reader.Abstractions.csproj" />
+    <ProjectReference Include="..\Reader.Diagnostics\Reader.Diagnostics.csproj" />
+  </ItemGroup>
+
+</Project>

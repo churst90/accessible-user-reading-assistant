@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'OpenReader/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'OpenReader/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: OpenReader
+
+jobs:
+  build:
+    name: build + test (windows)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore OpenReader.slnx
+
+      - name: Build (warnings as errors)
+        run: dotnet build OpenReader.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test OpenReader.slnx --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: OpenReader/TestResults
+          retention-days: 7

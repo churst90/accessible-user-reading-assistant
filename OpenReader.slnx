@@ -1,0 +1,35 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Reader.Abstractions/Reader.Abstractions.csproj" />
+    <Project Path="src/Reader.Config/Reader.Config.csproj" />
+    <Project Path="src/Reader.Core/Reader.Core.csproj" />
+    <Project Path="src/Reader.Diagnostics/Reader.Diagnostics.csproj" />
+    <Project Path="src/Reader.Input/Reader.Input.csproj" />
+    <Project Path="src/Reader.Output/Reader.Output.csproj" />
+    <Project Path="src/Reader.Scripting/Reader.Scripting.csproj" />
+    <Project Path="src/Reader.Speech/Reader.Speech.csproj" />
+    <Project Path="src/ReaderHost.Windows/ReaderHost.Windows.csproj" />
+    <Project Path="src/ReaderPlatform.Windows/ReaderPlatform.Windows.csproj" />
+    <Project Path="src/ReaderUI.Windows/ReaderUI.Windows.csproj" />
+    <Project Path="src/AppModules/AppModule.Browser/AppModule.Browser.csproj" />
+    <Project Path="src/AppModules/AppModule.Explorer/AppModule.Explorer.csproj" />
+    <Project Path="src/AppModules/AppModule.VsCode/AppModule.VsCode.csproj" />
+    <Project Path="src/AppModules/AppModule.NotepadPlusPlus/AppModule.NotepadPlusPlus.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/SamplePlugin/SamplePlugin.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Reader.Abstractions.Tests/Reader.Abstractions.Tests.csproj" />
+    <Project Path="tests/Reader.Config.Tests/Reader.Config.Tests.csproj" />
+    <Project Path="tests/Reader.Core.Tests/Reader.Core.Tests.csproj" />
+    <Project Path="tests/Reader.Diagnostics.Tests/Reader.Diagnostics.Tests.csproj" />
+    <Project Path="tests/Reader.Input.Tests/Reader.Input.Tests.csproj" />
+    <Project Path="tests/Reader.Output.Tests/Reader.Output.Tests.csproj" />
+    <Project Path="tests/Reader.Scripting.Tests/Reader.Scripting.Tests.csproj" />
+    <Project Path="tests/Reader.Speech.Tests/Reader.Speech.Tests.csproj" />
+    <Project Path="tests/Reader.TestKit/Reader.TestKit.csproj" />
+    <Project Path="tests/ReaderPlatform.Windows.Tests/ReaderPlatform.Windows.Tests.csproj" />
+    <Project Path="tests/PluginFixtures/HelloPlugin/HelloPlugin.csproj" />
+  </Folder>
+</Solution>

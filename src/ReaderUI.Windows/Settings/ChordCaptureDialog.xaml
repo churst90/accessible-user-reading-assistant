@@ -1,0 +1,44 @@
+<Window x:Class="OpenReader.UI.Settings.ChordCaptureDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Capture key chord"
+        Width="420" Height="220"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        AutomationProperties.Name="Capture key chord"
+        FocusManager.FocusedElement="{Binding ElementName=CaptureRoot}"
+        KeyDown="Window_KeyDown">
+  <Grid x:Name="CaptureRoot" Margin="20" Focusable="True">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,12">
+      Press the chord you want to bind. Use Ctrl, Alt, Shift, Win as modifiers,
+      or "Reader" by pressing the configured Reader modifier key (Insert or CapsLock).
+      Press Escape to cancel.
+    </TextBlock>
+
+    <Border Grid.Row="1" BorderBrush="#33000000" BorderThickness="1" CornerRadius="2"
+            Padding="12" VerticalAlignment="Center">
+      <TextBlock x:Name="PreviewText"
+                 Text="(press a chord)"
+                 FontSize="20" FontWeight="SemiBold"
+                 HorizontalAlignment="Center"
+                 AutomationProperties.LiveSetting="Polite"
+                 AutomationProperties.Name="Captured chord" />
+    </Border>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <Button x:Name="OkButton" IsDefault="True" MinWidth="80" Margin="0,0,8,0"
+              IsEnabled="False"
+              Click="OkButton_Click">OK</Button>
+      <Button x:Name="ClearButton" MinWidth="80" Margin="0,0,8,0"
+              Click="ClearButton_Click">Clear</Button>
+      <Button x:Name="CancelButton" IsCancel="True" MinWidth="80"
+              Click="CancelButton_Click">Cancel</Button>
+    </StackPanel>
+  </Grid>
+</Window>

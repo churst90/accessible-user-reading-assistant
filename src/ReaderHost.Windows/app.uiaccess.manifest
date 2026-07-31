@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SHIPPING manifest — uiAccess="true".
+
+  Selected by building with -p:UiAccess=true. Only use it for a build that will
+  be signed and installed under %ProgramFiles%; an unsigned uiAccess binary, or
+  one launched from anywhere else, will not start.
+
+  What uiAccess buys, and why a screen reader cannot ship without it:
+
+    * The low-level keyboard hook keeps firing when an elevated window has
+      focus. Without it, UIPI silently drops our hook in Task Manager, regedit,
+      an elevated terminal, or any app installed to run as admin — so the user
+      cannot even stop speech, and the reader appears frozen.
+    * UIA reads succeed across the integrity boundary, so elevated apps can be
+      read at all.
+    * SetForegroundWindow / journal-style input are permitted, which the
+      settings and exit dialogs rely on.
+
+  What it does NOT buy: the secure desktop (UAC consent, Ctrl+Alt+Del, the
+  logon and lock screens). Those run in a separate desktop that a user-session
+  process cannot see at any integrity level. Covering them requires a second
+  copy running as SYSTEM — a separate piece of work, tracked in docs/UIACCESS.md.
+
+  See docs/UIACCESS.md for the signing and install requirements.
+-->
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="OpenReader.Host" type="win32" />
+
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- asInvoker, NOT requireAdministrator. uiAccess grants the specific
+             rights an assistive technology needs; it is not elevation, and
+             asking for elevation would put a UAC prompt in front of the very
+             user who cannot read it. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="true" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}" />
+    </application>
+  </compatibility>
+
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+    </windowsSettings>
+  </application>
+
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+          type="win32"
+          name="Microsoft.Windows.Common-Controls"
+          version="6.0.0.0"
+          processorArchitecture="*"
+          publicKeyToken="6595b64144ccf1df"
+          language="*" />
+    </dependentAssembly>
+  </dependency>
+</assembly>

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>OpenReader.Samples.SamplePlugin</RootNamespace>
+    <AssemblyName>OpenReader.Samples.SamplePlugin</AssemblyName>
+    <Description>Sample OpenReader app module: announces "tab changed" in Edge. Demonstrates the minimum viable plugin.</Description>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!--
+    External authors would add the SDK as a NuGet package:
+        <PackageReference Include="OpenReader.Sdk" Version="0.1.*" />
+    In-tree, we project-reference Reader.Abstractions directly so this
+    sample stays buildable without a package restore loop.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reader.Abstractions\Reader.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

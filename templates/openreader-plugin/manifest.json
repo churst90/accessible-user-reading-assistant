@@ -1,0 +1,8 @@
+{
+  "id": "PLUGIN_ID_PLACEHOLDER",
+  "displayName": "PLUGIN_DISPLAY_NAME_PLACEHOLDER",
+  "version": "0.1.0",
+  "apiVersion": "1.0",
+  "assembly": "MyPlugin.dll",
+  "moduleType": "MyPlugin.MyPluginModule"
+}

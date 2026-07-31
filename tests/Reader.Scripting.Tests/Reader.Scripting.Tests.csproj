@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>OpenReader.Scripting.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reader.Scripting\Reader.Scripting.csproj" />
+    <ProjectReference Include="..\Reader.TestKit\Reader.TestKit.csproj" />
+    <!--
+      Build the HelloPlugin fixture but do NOT reference its assembly. We want
+      the DLL on disk so the plugin host can load it into its own
+      AssemblyLoadContext, exactly as a real plugin would; if we referenced it
+      directly the test's default load context would already have a copy and
+      the ALC isolation under test would be hidden.
+    -->
+    <ProjectReference Include="..\PluginFixtures\HelloPlugin\HelloPlugin.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
+  </ItemGroup>
+
+  <Target Name="CopyHelloPluginFixture" AfterTargets="Build">
+    <ItemGroup>
+      <_HelloPluginOutput Include="$(MSBuildThisFileDirectory)..\PluginFixtures\HelloPlugin\bin\$(Configuration)\net8.0\HelloPlugin.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_HelloPluginOutput)"
+          DestinationFolder="$(OutDir)fixtures\HelloPlugin\"
+          SkipUnchangedFiles="true"
+          Condition="Exists('@(_HelloPluginOutput)')" />
+  </Target>
+
+</Project>

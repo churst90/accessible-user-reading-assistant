@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>OpenReader.AppModules.VsCode</AssemblyName>
+    <Description>First-party app module: editor and side-bar announcements for Visual Studio Code.</Description>
+  </PropertyGroup>
+
+</Project>

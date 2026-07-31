@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "speech": {
+    "engine": "sapi5",
+    "voiceId": null,
+    "ratePercent": 175,
+    "volumeDelta": 0,
+    "pitchDelta": 0
+  },
+  "input": {
+    "readerModifier": "both",
+    "keyBindings": {}
+  }
+}

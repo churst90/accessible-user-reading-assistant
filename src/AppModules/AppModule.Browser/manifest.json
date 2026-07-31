@@ -1,0 +1,10 @@
+{
+  "id": "openreader.appmodule.browser",
+  "displayName": "Browser (Edge / Chrome)",
+  "version": "0.1.0",
+  "apiVersion": "1.0",
+  "assembly": "OpenReader.AppModules.Browser.dll",
+  "moduleType": "OpenReader.AppModules.Browser.BrowserModule",
+  "author": "OpenReader",
+  "description": "Announces tab changes and address-bar focus in Microsoft Edge and Google Chrome."
+}

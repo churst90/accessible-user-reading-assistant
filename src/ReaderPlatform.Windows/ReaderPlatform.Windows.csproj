@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>OpenReader.Platform.Windows</RootNamespace>
+    <AssemblyName>OpenReader.Platform.Windows</AssemblyName>
+    <Description>Windows accessibility implementations: UIA, MSAA, IA2, WinEvents, SAPI5.</Description>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reader.Abstractions\Reader.Abstractions.csproj" />
+    <ProjectReference Include="..\Reader.Diagnostics\Reader.Diagnostics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Speech" Version="9.0.0" />
+    <!-- NAudio: WaveOutEvent + BufferedWaveProvider for the eSpeak engine.
+         eSpeak's SynchronousPlayback mode buffers ~200 ms of audio internally
+         and espeak_Cancel doesn't flush it, so rapid arrow presses pile up
+         instead of preempting. We run eSpeak in Synchronous (no playback)
+         mode and pipe its PCM through NAudio so cancel can clear the buffer
+         immediately. MIT-licensed. -->
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ReaderPlatform.Windows.Tests" />
+  </ItemGroup>
+
+</Project>
