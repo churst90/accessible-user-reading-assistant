@@ -156,7 +156,7 @@ public sealed class KeyEchoService : IDisposable
                         _wordBuffer.Length--;
                     }
                 }
-                if (removed is not null && _settings.SpeakCharacters)
+                if (removed is not null && _settings.SpeakDeletedCharacters)
                 {
                     _speak(removed);
                 }

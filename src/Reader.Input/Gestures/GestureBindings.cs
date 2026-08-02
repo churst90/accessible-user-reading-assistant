@@ -28,6 +28,7 @@ public static class GestureBindings
     private const int VK_HOME = 0x24;
     private const int VK_END = 0x23;
     private const int VK_TAB = 0x09;
+    private const int VK_SPACE = 0x20;
     private const int VK_A = 0x41;
     private const int VK_F = 0x46;
     private const int VK_L = 0x4C;
@@ -122,6 +123,11 @@ public static class GestureBindings
         // Diagnostics snapshot to the clipboard (Ctrl+Reader+D). Ctrl-qualified
         // so plain Reader+D stays free for a user binding.
         map.Bind(new KeyChord(VK_D, InputModifiers.Reader | InputModifiers.Control), ReaderCommand.ReportDiagnostics);
+
+        // Read / Type mode toggle. Reader+Space is NVDA's browse/focus toggle;
+        // keeping it costs nothing and preserves the reflex for every user
+        // switching over.
+        map.Bind(new KeyChord(VK_SPACE, InputModifiers.Reader), ReaderCommand.ToggleReaderMode);
 
         // Read-current-line and say-all-from-cursor are bound on the main
         // letter row in both layouts so muscle memory carries between them

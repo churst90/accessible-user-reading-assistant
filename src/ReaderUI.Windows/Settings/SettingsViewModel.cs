@@ -31,6 +31,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _speakModifiers;
     private bool _speakNavigationKeys;
     private bool _speakCharacters;
+    private bool _speakDeletedCharacters = true;
     private bool _speakWords = true;
 
     public IReadOnlyList<string> AvailableVoices { get; }
@@ -67,6 +68,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             _speakNavigationKeys = k.SpeakNavigationKeys ?? false;
             _speakCharacters = k.SpeakCharacters ?? false;
             _speakWords = k.SpeakWords ?? true;
+            _speakDeletedCharacters = k.SpeakDeletedCharacters ?? true;
         }
 
         BuildKeyBindings(source.Input?.KeyBindings, ResolveLayout(_layout));
@@ -251,6 +253,17 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set => Set(ref _speakWords, value);
     }
 
+    /// <summary>
+    /// Separate from <see cref="SpeakCharacters"/> on purpose: deletion is
+    /// destructive and cannot be verified any other way, so a user who finds
+    /// per-character echo too chatty still needs to hear what vanished.
+    /// </summary>
+    public bool SpeakDeletedCharacters
+    {
+        get => _speakDeletedCharacters;
+        set => Set(ref _speakDeletedCharacters, value);
+    }
+
     /// <summary>Project the current view-model state back into a persistable <see cref="ReaderConfig"/>.</summary>
     public ReaderConfig ToConfig() => new()
     {
@@ -275,6 +288,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             SpeakNavigationKeys = _speakNavigationKeys,
             SpeakCharacters = _speakCharacters,
             SpeakWords = _speakWords,
+            SpeakDeletedCharacters = _speakDeletedCharacters,
         },
         Input = new InputConfig
         {

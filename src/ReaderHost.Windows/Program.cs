@@ -563,6 +563,7 @@ internal static class Program
             SpeakNavigationKeys = k?.SpeakNavigationKeys ?? false,
             SpeakCharacters = k?.SpeakCharacters ?? false,
             SpeakWords = k?.SpeakWords ?? true,
+            SpeakDeletedCharacters = k?.SpeakDeletedCharacters ?? true,
         };
     }
 

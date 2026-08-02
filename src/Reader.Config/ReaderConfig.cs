@@ -95,6 +95,14 @@ public sealed record KeyboardConfig
     /// <summary>Echo each completed word (after a word break: space, enter, punctuation).</summary>
     public bool? SpeakWords { get; init; }
 
+    /// <summary>
+    /// Speak the character Backspace or Delete removes. Defaults to
+    /// <c>true</c> and is deliberately independent of
+    /// <see cref="SpeakCharacters"/> — deletion is destructive, and knowing
+    /// what vanished is not the same want as hearing every keystroke.
+    /// </summary>
+    public bool? SpeakDeletedCharacters { get; init; }
+
     public static KeyboardConfig Defaults() => new()
     {
         Layout = "desktop",
@@ -105,6 +113,7 @@ public sealed record KeyboardConfig
         SpeakNavigationKeys = false,
         SpeakCharacters = false,
         SpeakWords = true,
+        SpeakDeletedCharacters = true,
     };
 }
 

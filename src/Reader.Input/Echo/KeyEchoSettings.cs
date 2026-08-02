@@ -21,5 +21,19 @@ public sealed record KeyEchoSettings
     public bool SpeakCharacters { get; init; }
     public bool SpeakWords { get; init; } = true;
 
+    /// <summary>
+    /// Speak the character that Backspace or Delete removes. <b>On by
+    /// default, and independent of <see cref="SpeakCharacters"/>.</b>
+    /// </summary>
+    /// <remarks>
+    /// Deletion is destructive and unverifiable by any other means. A sighted
+    /// user glances at the line to confirm what vanished; without this the
+    /// only way to find out is to navigate back over the text and re-read it.
+    /// So it is not part of character echo: a user who finds per-character
+    /// echo too chatty while typing still needs to know what they just
+    /// destroyed.
+    /// </remarks>
+    public bool SpeakDeletedCharacters { get; init; } = true;
+
     public static KeyEchoSettings Defaults => new();
 }

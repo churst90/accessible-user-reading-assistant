@@ -100,6 +100,19 @@ internal static class SettingsPanels
         panel.Children.Add(BuildCheck("Each typed character", nameof(SettingsViewModel.SpeakCharacters)));
         panel.Children.Add(BuildCheck("Each completed word", nameof(SettingsViewModel.SpeakWords)));
 
+        // Its own group: deleting is not typing. Grouping it with the echo
+        // checkboxes implies turning character echo off also silences
+        // deletions, which is the opposite of what a user wants.
+        panel.Children.Add(new TextBlock
+        {
+            Text = "When deleting:",
+            Margin = new Thickness(0, 16, 0, 4),
+            FontWeight = FontWeights.SemiBold,
+        });
+        panel.Children.Add(BuildCheck(
+            "Speak the character removed by Backspace or Delete",
+            nameof(SettingsViewModel.SpeakDeletedCharacters)));
+
         panel.Children.Add(new TextBlock
         {
             Text = "Desktop layout uses Insert as the Reader modifier and the numeric keypad " +

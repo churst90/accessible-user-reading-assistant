@@ -7,6 +7,7 @@
     <AssemblyName>OpenReader.Platform.Windows</AssemblyName>
     <Description>Windows accessibility implementations: UIA, MSAA, IA2, WinEvents, SAPI5.</Description>
     <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +24,30 @@
          mode and pipe its PCM through NAudio so cancel can clear the buffer
          immediately. MIT-licensed. -->
     <PackageReference Include="NAudio" Version="2.2.1" />
+    <!--
+      CsWin32: source-generated COM interop for the NATIVE UI Automation
+      client, listed in NativeMethods.txt (which permits no comments, hence
+      this one).
+
+      Why bother, when System.Windows.Automation already works: the managed
+      client froze around Windows 7 and cannot express several things a screen
+      reader needs.
+
+        * UIA_NotificationEventId and UIA_LiveRegionChangedEventId — how
+          modern apps and web pages announce transient status. No managed
+          equivalent exists, so toasts and ARIA live regions are simply silent.
+        * UIA_StyleIdAttributeId and UIA_LinkAttributeId — heading level and
+          link target. Read-mode quick navigation is built on these two.
+        * UIA_ActiveTextPositionChangedEventId — the correct caret event.
+        * CoalesceEvents — without it a busy page floods the event loop.
+        * Per-call timeouts, so a hung provider cannot wedge the reader.
+
+      Nothing here is hand-written, so IIDs and vtable order cannot drift.
+    -->
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

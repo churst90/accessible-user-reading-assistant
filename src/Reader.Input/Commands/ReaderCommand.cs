@@ -50,6 +50,12 @@ public enum ReaderCommand
     /// to gather them.
     /// </summary>
     ReportDiagnostics,
+
+    /// <summary>
+    /// Switch between Read mode and Type mode. Bound to Reader+Space, matching
+    /// NVDA's browse/focus toggle so switching users keep the reflex.
+    /// </summary>
+    ToggleReaderMode,
 }
 
 /// <summary>Human-readable labels for <see cref="ReaderCommand"/>s. Centralized so the help-mode announcer and the rebind UI agree.</summary>
@@ -85,6 +91,7 @@ public static class ReaderCommandLabels
         ReaderCommand.OpenExitDialog => "exit",
         ReaderCommand.OpenSynthesizerDialog => "open synthesizer",
         ReaderCommand.ReportDiagnostics => "copy diagnostics",
+        ReaderCommand.ToggleReaderMode => "toggle read and type mode",
         _ => command.ToString(),
     };
 }
