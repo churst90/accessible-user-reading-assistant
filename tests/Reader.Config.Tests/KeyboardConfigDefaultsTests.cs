@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Config;
+using Aura.Config;
 using Xunit;
 
-namespace OpenReader.Config.Tests;
+namespace Aura.Config.Tests;
 
 /// <summary>
 /// Locks down the "all key echo defaults off" decision so a future tweak

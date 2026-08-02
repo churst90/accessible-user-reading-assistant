@@ -174,8 +174,8 @@ this character."
 
 Layers, resolved last-wins:
 1. **Built-in defaults** (shipped with binary)
-2. **Machine** (`%ProgramData%\OpenReader\config.json`)
-3. **User** (`%AppData%\OpenReader\config.json`)
+2. **Machine** (`%ProgramData%\Aura\config.json`)
+3. **User** (`%AppData%\Aura\config.json`)
 4. **Profile** (active named profile)
 5. **App-specific override** (per executable name)
 6. **Script-contributed** (runtime, marked as such)
@@ -189,7 +189,7 @@ events.
 Plugins are .NET assemblies in either:
 
 - `<host install dir>\app-modules\<id>\` — first-party, ships with the MSI.
-- `%AppData%\OpenReader\plugins\<id>\` — user-installed, opt-in.
+- `%AppData%\Aura\plugins\<id>\` — user-installed, opt-in.
 
 Each plugin folder contains a `manifest.json` (validated by
 `PluginManifestFile.TryLoad`) and one DLL. The manifest names the assembly,
@@ -199,8 +199,8 @@ host (`PluginHost`):
 1. Reads the manifest. Refuses if `apiVersion.Major != PluginApi.CurrentApiVersion.Major`
    or its minor exceeds the host's. (See `PluginApi.IsCompatible`.)
 2. Loads the DLL into a fresh `PluginLoadContext` (collectible
-   `AssemblyLoadContext`). The contract assemblies — `OpenReader.Abstractions`,
-   `OpenReader.Diagnostics`, `Serilog` — are deferred to the host's default
+   `AssemblyLoadContext`). The contract assemblies — `Aura.Abstractions`,
+   `Aura.Diagnostics`, `Serilog` — are deferred to the host's default
    ALC so that plugin-side `IAppModule` is the *same type* the host references.
 3. Activates the manifest-named type via `Activator.CreateInstance` (parameterless
    constructor required).
@@ -213,7 +213,7 @@ host (`PluginHost`):
    `Program.cs` rebuilds the rule engine and swaps it atomically via
    `SpeechPipeline.UpdateRuleEngine`.
 
-Hot-reload (dev only, `OPENREADER_DEV=1`): a `FileSystemWatcher` per root
+Hot-reload (dev only, `AURA_DEV=1`): a `FileSystemWatcher` per root
 debounces (500 ms) and runs `PluginHost.ReloadAsync`, which:
 - Drops any plugin whose manifest file disappeared.
 - Reloads any plugin whose dir contents are newer than its `LoadedAtUtc`.

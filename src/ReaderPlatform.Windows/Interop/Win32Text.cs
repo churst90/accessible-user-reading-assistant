@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace OpenReader.Platform.Windows.Interop;
+namespace Aura.Platform.Windows.Interop;
 
 /// <summary>
 /// Hang-safe reads of a window's text and caret position.

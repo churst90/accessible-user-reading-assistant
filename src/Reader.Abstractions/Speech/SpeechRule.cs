@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.Abstractions.Speech;
+namespace Aura.Abstractions.Speech;
 
 /// <summary>
 /// A single composable rule applied during speech composition. Ordered by

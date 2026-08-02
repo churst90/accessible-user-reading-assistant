@@ -1,7 +1,7 @@
 using System.Runtime.Versioning;
 using System.Windows.Automation;
 
-namespace OpenReader.Platform.Windows.Accessibility;
+namespace Aura.Platform.Windows.Accessibility;
 
 /// <summary>
 /// The one <see cref="CacheRequest"/> every event subscription is registered

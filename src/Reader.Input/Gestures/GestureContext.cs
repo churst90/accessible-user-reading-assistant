@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Navigation;
+using Aura.Abstractions.Navigation;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// The situation a keystroke arrives in. Decides which gesture layers apply.

@@ -12,10 +12,10 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <Deterministic>true</Deterministic>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <Company>OpenReader</Company>
-    <Product>OpenReader</Product>
-    <Authors>OpenReader Contributors</Authors>
-    <Copyright>Copyright (c) OpenReader Contributors</Copyright>
+    <Company>Aura</Company>
+    <Product>Aura</Product>
+    <Authors>Aura Contributors</Authors>
+    <Copyright>Copyright (c) Aura Contributors</Copyright>
   </PropertyGroup>
 
 </Project>

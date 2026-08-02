@@ -1,10 +1,10 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Input;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Input;
+using Aura.Abstractions.Speech;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Core.Text;
+namespace Aura.Core.Text;
 
 /// <summary>
 /// Feeds the two "the caret may have moved" signals into a single

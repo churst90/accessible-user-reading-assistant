@@ -1,4 +1,4 @@
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// Tracks the last fire time of selected commands and reports whether a

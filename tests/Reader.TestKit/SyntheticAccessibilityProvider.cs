@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.TestKit;
+namespace Aura.TestKit;
 
 /// <summary>
 /// In-memory <see cref="IAccessibilityProvider"/> backed by a fixed list of

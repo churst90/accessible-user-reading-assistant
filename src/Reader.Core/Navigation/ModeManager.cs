@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Navigation;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Navigation;
 
-namespace OpenReader.Core.Navigation;
+namespace Aura.Core.Navigation;
 
 /// <summary>
 /// Owns the current <see cref="ReaderMode"/> and decides when it changes.

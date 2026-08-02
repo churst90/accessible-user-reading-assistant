@@ -1,4 +1,4 @@
-namespace OpenReader.Speech;
+namespace Aura.Speech;
 
 /// <summary>
 /// Lightweight shared timestamp marking the most recent typing keystroke.

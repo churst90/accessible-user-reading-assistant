@@ -1,5 +1,5 @@
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
 namespace HelloPlugin;
 

@@ -1,9 +1,9 @@
 using System.Runtime.Versioning;
 
-namespace OpenReader.UI.Tray;
+namespace Aura.UI.Tray;
 
 /// <summary>
-/// System-tray icon hosting OpenReader's status indicator and quick menu.
+/// System-tray icon hosting Aura's status indicator and quick menu.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -48,7 +48,7 @@ public sealed class TrayIcon : IDisposable
         _announce = announce;
 
         var menu = new AnnouncingContextMenu(_announce);
-        _statusItem = new System.Windows.Forms.ToolStripMenuItem("OpenReader: enabled") { Enabled = false };
+        _statusItem = new System.Windows.Forms.ToolStripMenuItem("Aura: enabled") { Enabled = false };
         _toggleItem = new System.Windows.Forms.ToolStripMenuItem("Toggle on/off");
         _toggleItem.Click += (_, _) => onToggleEnabled();
 
@@ -72,7 +72,7 @@ public sealed class TrayIcon : IDisposable
         _notify = new System.Windows.Forms.NotifyIcon
         {
             Icon = BuildIcon(_enabled),
-            Text = "OpenReader",
+            Text = "Aura",
             Visible = true,
             ContextMenuStrip = menu,
         };
@@ -89,8 +89,8 @@ public sealed class TrayIcon : IDisposable
         _enabled = enabled;
         _notify.Icon?.Dispose();
         _notify.Icon = BuildIcon(enabled);
-        _notify.Text = enabled ? "OpenReader" : "OpenReader (off)";
-        _statusItem.Text = enabled ? "OpenReader: enabled" : "OpenReader: disabled";
+        _notify.Text = enabled ? "Aura" : "Aura (off)";
+        _statusItem.Text = enabled ? "Aura: enabled" : "Aura: disabled";
     }
 
     public void Dispose()
@@ -128,7 +128,7 @@ public sealed class TrayIcon : IDisposable
             {
                 Opened += (_, _) =>
                 {
-                    _announce("OpenReader menu");
+                    _announce("Aura menu");
                     _lastAnnounced = null;
                     _poll.Start();
                 };

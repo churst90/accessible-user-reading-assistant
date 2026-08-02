@@ -3,14 +3,14 @@
   <PropertyGroup>
     <!-- WinExe: WPF host, no console window pops up when launched from a
          desktop shortcut. Logs still go to file
-         (%LocalAppData%\OpenReader\logs\openreader-*.log); console logging
+         (%LocalAppData%\Aura\logs\aura-*.log); console logging
          in Program.Main is a no-op for WinExe. -->
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <RootNamespace>OpenReader.Host</RootNamespace>
-    <AssemblyName>OpenReader</AssemblyName>
-    <Description>The OpenReader host executable. Wires platform, core, and services together.</Description>
+    <RootNamespace>Aura.Host</RootNamespace>
+    <AssemblyName>AURA</AssemblyName>
+    <Description>The Aura host executable. Wires platform, core, and services together.</Description>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <InvariantGlobalization>false</InvariantGlobalization>
     <UseWPF>true</UseWPF>
@@ -96,6 +96,24 @@
                       ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
 
+  <!--
+    App modules are copied twice on purpose: once after Build (so F5 and
+    `dotnet run` see them) and once after Publish. The publish copy is not
+    optional — $(OutDir) and $(PublishDir) are different places, and without
+    it a published build ships with no first-party app modules at all and
+    nobody notices, because their absence is silent.
+  -->
+  <Target Name="CopyAppModulesToPublish" AfterTargets="Publish" DependsOnTargets="CopyAppModules">
+    <PropertyGroup>
+      <_PubModulesDest>$(PublishDir)app-modules</_PubModulesDest>
+    </PropertyGroup>
+    <Copy SourceFiles="@(_BrowserBin)"  DestinationFolder="$(_PubModulesDest)\aura.appmodule.browser\"  SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_ExplorerBin)" DestinationFolder="$(_PubModulesDest)\aura.appmodule.explorer\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_VsCodeBin)"   DestinationFolder="$(_PubModulesDest)\aura.appmodule.vscode\"   SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_NppBin)"      DestinationFolder="$(_PubModulesDest)\aura.appmodule.notepad-plus-plus\" SkipUnchangedFiles="true" />
+  </Target>
+
+
   <Target Name="CopyAppModules" AfterTargets="Build">
     <PropertyGroup>
       <_AppModulesDest>$(OutDir)app-modules</_AppModulesDest>
@@ -103,19 +121,19 @@
       <_AppModuleTfm>net8.0</_AppModuleTfm>
     </PropertyGroup>
     <ItemGroup>
-      <_BrowserBin Include="$(_AppModulesSrc)\AppModule.Browser\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.Browser.dll" />
+      <_BrowserBin Include="$(_AppModulesSrc)\AppModule.Browser\bin\$(Configuration)\$(_AppModuleTfm)\Aura.AppModules.Browser.dll" />
       <_BrowserBin Include="$(_AppModulesSrc)\AppModule.Browser\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
-      <_ExplorerBin Include="$(_AppModulesSrc)\AppModule.Explorer\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.Explorer.dll" />
+      <_ExplorerBin Include="$(_AppModulesSrc)\AppModule.Explorer\bin\$(Configuration)\$(_AppModuleTfm)\Aura.AppModules.Explorer.dll" />
       <_ExplorerBin Include="$(_AppModulesSrc)\AppModule.Explorer\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
-      <_VsCodeBin Include="$(_AppModulesSrc)\AppModule.VsCode\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.VsCode.dll" />
+      <_VsCodeBin Include="$(_AppModulesSrc)\AppModule.VsCode\bin\$(Configuration)\$(_AppModuleTfm)\Aura.AppModules.VsCode.dll" />
       <_VsCodeBin Include="$(_AppModulesSrc)\AppModule.VsCode\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
-      <_NppBin Include="$(_AppModulesSrc)\AppModule.NotepadPlusPlus\bin\$(Configuration)\$(_AppModuleTfm)\OpenReader.AppModules.NotepadPlusPlus.dll" />
+      <_NppBin Include="$(_AppModulesSrc)\AppModule.NotepadPlusPlus\bin\$(Configuration)\$(_AppModuleTfm)\Aura.AppModules.NotepadPlusPlus.dll" />
       <_NppBin Include="$(_AppModulesSrc)\AppModule.NotepadPlusPlus\bin\$(Configuration)\$(_AppModuleTfm)\manifest.json" />
     </ItemGroup>
-    <Copy SourceFiles="@(_BrowserBin)"  DestinationFolder="$(_AppModulesDest)\openreader.appmodule.browser\"  SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_ExplorerBin)" DestinationFolder="$(_AppModulesDest)\openreader.appmodule.explorer\" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_VsCodeBin)"   DestinationFolder="$(_AppModulesDest)\openreader.appmodule.vscode\"   SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_NppBin)"      DestinationFolder="$(_AppModulesDest)\openreader.appmodule.notepad-plus-plus\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_BrowserBin)"  DestinationFolder="$(_AppModulesDest)\aura.appmodule.browser\"  SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_ExplorerBin)" DestinationFolder="$(_AppModulesDest)\aura.appmodule.explorer\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_VsCodeBin)"   DestinationFolder="$(_AppModulesDest)\aura.appmodule.vscode\"   SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_NppBin)"      DestinationFolder="$(_AppModulesDest)\aura.appmodule.notepad-plus-plus\" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

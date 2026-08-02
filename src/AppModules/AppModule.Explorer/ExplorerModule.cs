@@ -1,8 +1,8 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.AppModules.Explorer;
+namespace Aura.AppModules.Explorer;
 
 /// <summary>
 /// First-party app module for File Explorer (<c>explorer.exe</c>). Adds
@@ -16,11 +16,11 @@ public sealed class ExplorerModule : IAppModule
     private IDisposable? _selectionRule;
 
     public AppModuleManifest Manifest { get; } = new(
-        Id: "openreader.appmodule.explorer",
+        Id: "aura.appmodule.explorer",
         DisplayName: "Windows Explorer",
         Version: new System.Version(0, 1, 0),
         ApiVersion: new System.Version(1, 0),
-        Author: "OpenReader",
+        Author: "Aura",
         Description: "Selection announcement enrichment for File Explorer.");
 
     public bool Matches(ProcessInfo process)

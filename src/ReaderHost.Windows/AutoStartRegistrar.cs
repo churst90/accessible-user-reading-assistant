@@ -2,17 +2,17 @@ using System.Runtime.Versioning;
 using Microsoft.Win32;
 using Serilog;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Writes (or removes) the Run-on-startup registry entry that launches
-/// OpenReader when the user logs in.
+/// Aura when the user logs in.
 /// </summary>
 [SupportedOSPlatform("windows6.1")]
 internal static class AutoStartRegistrar
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string ValueName = "OpenReader";
+    private const string ValueName = "AURA";
 
     public static void Apply(bool enabled, ILogger log)
     {

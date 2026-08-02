@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.Core.Review;
+namespace Aura.Core.Review;
 
 /// <summary>
 /// Drives a "say-all" read: pumps successive lines from a

@@ -1,8 +1,8 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.AppModules.Browser;
+namespace Aura.AppModules.Browser;
 
 /// <summary>
 /// First-party app module for Chromium-based browsers (Microsoft Edge,
@@ -33,11 +33,11 @@ public sealed class BrowserModule : IAppModule
     private IDisposable? _addressBarRule;
 
     public AppModuleManifest Manifest { get; } = new(
-        Id: "openreader.appmodule.browser",
+        Id: "aura.appmodule.browser",
         DisplayName: "Browser",
         Version: new System.Version(0, 1, 0),
         ApiVersion: new System.Version(1, 0),
-        Author: "OpenReader",
+        Author: "Aura",
         Description: "Edge / Chrome tab and address-bar announcements.");
 
     public bool Matches(ProcessInfo process)

@@ -1,7 +1,7 @@
-using OpenReader.Diagnostics;
-using OpenReader.Input.Commands;
+using Aura.Diagnostics;
+using Aura.Input.Commands;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// Applies a dictionary of <c>"chord-string" → "command-name"</c> entries to

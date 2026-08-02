@@ -7,7 +7,7 @@ Each phase ends with something demonstrable. No phase is "internal cleanup."
 Outcome: empty solution builds, CI is green, the abstractions compile, the
 test harness runs against a synthetic provider.
 
-- [ ] `OpenReader.sln` with all 10 projects scaffolded, no implementation.
+- [ ] `Aura.sln` with all 10 projects scaffolded, no implementation.
 - [ ] `Reader.Abstractions` defines: `IAccessibilityProvider`, `AccessibleNode`,
       `AccessibleRole`, `AccessibilityEvent`, `ISpeechEngine`,
       `SpeechUtterance`, `IInputSource`, `RawInput`, `IAppModule`,
@@ -74,18 +74,18 @@ Outcome: third parties can ship app modules without our help.
       Explorer, VS Code, Notepad++. Validates the contract by *being our
       own first consumer* — they go through the same loader as third-party
       plugins, into per-plugin ALCs, with manifest-declared API versions.
-- [x] Hot-reload in dev mode (gated by `OPENREADER_DEV` env var).
+- [x] Hot-reload in dev mode (gated by `AURA_DEV` env var).
 - [x] Public API XML doc comments enabled on the SDK assembly; flow into
-      the NuGet package's `lib/.../OpenReader.Abstractions.xml`.
-- [x] `OpenReader.Sdk` NuGet package — `dotnet pack
-      src/Reader.Abstractions` produces `OpenReader.Sdk.<version>.nupkg`.
+      the NuGet package's `lib/.../Aura.Abstractions.xml`.
+- [x] `Aura.Sdk` NuGet package — `dotnet pack
+      src/Reader.Abstractions` produces `Aura.Sdk.<version>.nupkg`.
 - [x] In-tree sample plugin (`samples/SamplePlugin`) and `dotnet new`
-      template (`templates/openreader-plugin`, packed as
-      `OpenReader.Templates`).
+      template (`templates/aura-plugin`, packed as
+      `Aura.Templates`).
 
 **Done when:** an external developer can `dotnet new` a template, write a
 30-line shim that announces "tab changed in Edge," and load it without
-recompiling OpenReader. ✅ — see `samples/SamplePlugin/TabAnnouncerModule.cs`.
+recompiling Aura. ✅ — see `samples/SamplePlugin/TabAnnouncerModule.cs`.
 
 ## Phase 3.5 — Pre-Phase-4 cleanup — **closed 2026-04-29**
 
@@ -267,7 +267,7 @@ depend on contract surface added by items above them.
 - [ ] **Audio mixer** (NAudio or XAudio2) so themes layer under speech.
 - [ ] **Audio ducking** — Windows `IAudioVolumeDuck` to lower other apps
       during speech. Off by default.
-- [ ] **Sound packs** — themes load from `%AppData%\OpenReader\themes\<id>\`
+- [ ] **Sound packs** — themes load from `%AppData%\Aura\themes\<id>\`
       with `theme.json` mapping `CueKind → wav/oga`.
 - [ ] **Settings panel: Audio.** Theme dropdown, volume, "Test theme"
       button playing one cue per role. Disabled by default.
@@ -358,16 +358,16 @@ Recommended shape: **Shape B (command relay) — UIA event mirroring**.
 Lower bandwidth than audio streaming, voice/prosody preferences stay
 local, latency-tolerant.
 
-- [ ] **`OpenReader.Relay.Server` plugin** — exposes
+- [ ] **`Aura.Relay.Server` plugin** — exposes
       `IAccessibilityProvider` + `IInputSource` over WebSocket. Runs
       on the remote machine.
-- [ ] **`OpenReader.Relay.Client` plugin** — mirror provider/input on
+- [ ] **`Aura.Relay.Client` plugin** — mirror provider/input on
       the local machine. Suppresses the local accessibility provider
       while connected. The local user's voice + prosody + audio theme
       are used.
 - [ ] **TLS + pre-shared-key auth.** Optional Windows-domain Kerberos.
 - [ ] **Capability-gated network access** (uses 4d capability system).
-- [ ] **`OpenReader.Relay.Server.Web`** (optional) — read-only HTML
+- [ ] **`Aura.Relay.Server.Web`** (optional) — read-only HTML
       viewer for QA / demos / support tickets. SSE event stream + MP3
       chunks of synthesized speech.
 

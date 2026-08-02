@@ -1,15 +1,15 @@
 using System.Globalization;
 using System.Runtime.Versioning;
 using System.Speech.Synthesis;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Speech;
+using Aura.Diagnostics;
 using Serilog;
-using AbsVoiceInfo = OpenReader.Abstractions.Speech.VoiceInfo;
-using AbsVoiceGender = OpenReader.Abstractions.Speech.VoiceGender;
+using AbsVoiceInfo = Aura.Abstractions.Speech.VoiceInfo;
+using AbsVoiceGender = Aura.Abstractions.Speech.VoiceGender;
 using SapiVoiceInfo = System.Speech.Synthesis.VoiceInfo;
 using SapiVoiceGender = System.Speech.Synthesis.VoiceGender;
 
-namespace OpenReader.Platform.Windows.Speech;
+namespace Aura.Platform.Windows.Speech;
 
 /// <summary>
 /// <see cref="ISpeechEngine"/> implementation over the SAPI5-backed

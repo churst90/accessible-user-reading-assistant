@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace OpenReader.Abstractions.Speech;
+namespace Aura.Abstractions.Speech;
 
 /// <summary>Describes a voice exposed by an <see cref="ISpeechEngine"/>.</summary>
 public sealed record VoiceInfo(

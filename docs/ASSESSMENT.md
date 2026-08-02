@@ -213,7 +213,7 @@ There is no `app.manifest` anywhere in the tree, and no `uiAccess` or
 A normal-integrity process on Windows cannot:
 
 - **Receive low-level keyboard hook events while an elevated window has
-  focus.** UIPI blocks it. Every OpenReader command dies silently in Task
+  focus.** UIPI blocks it. Every Aura command dies silently in Task
   Manager, `regedit`, an elevated terminal, or any app installed to run as
   admin. Not "reads wrong" — the hook simply does not fire, so the reader
   appears frozen and the user cannot even stop speech.
@@ -460,7 +460,7 @@ log.Warning(ex, "speech engine threw on utterance '{Text}'", utterance.Text);
 
 `Warning` is above the configured `Information` minimum
 (`Program.cs:35`), so this reaches disk at
-`%LocalAppData%\OpenReader\logs\openreader-<date>.log`.
+`%LocalAppData%\Aura\logs\aura-<date>.log`.
 
 A screen reader speaks everything the user reads: banking pages, medical
 records, private messages, recovery codes. Password *fields* are correctly

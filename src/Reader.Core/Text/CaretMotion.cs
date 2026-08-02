@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Text;
 
-namespace OpenReader.Core.Text;
+namespace Aura.Core.Text;
 
 /// <summary>What kind of caret movement happened between two observations.</summary>
 public enum CaretMotionKind

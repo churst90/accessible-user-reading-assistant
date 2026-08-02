@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Plugins;
+namespace Aura.Abstractions.Plugins;
 
 /// <summary>
 /// Static metadata declared by an <see cref="IAppModule"/>. The host validates
@@ -9,7 +9,7 @@ namespace OpenReader.Abstractions.Plugins;
 /// <param name="DisplayName">Human-friendly name for UI surfaces.</param>
 /// <param name="Version">Module version (semantic).</param>
 /// <param name="ApiVersion">
-/// The OpenReader plugin API version this module was built against. The host
+/// The Aura plugin API version this module was built against. The host
 /// loads modules whose major matches and whose minor is &lt;= host API minor.
 /// </param>
 /// <param name="Author">Optional author / organization.</param>

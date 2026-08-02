@@ -1,11 +1,11 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Input;
-using OpenReader.Abstractions.Navigation;
-using OpenReader.Input.Commands;
-using OpenReader.Input.Gestures;
+using Aura.Abstractions.Input;
+using Aura.Abstractions.Navigation;
+using Aura.Input.Commands;
+using Aura.Input.Gestures;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 /// <summary>
 /// Layering is what makes Read mode possible. Without it, <c>h</c> either

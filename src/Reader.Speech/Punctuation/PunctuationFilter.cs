@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace OpenReader.Speech.Punctuation;
+namespace Aura.Speech.Punctuation;
 
 /// <summary>
 /// Applies a <see cref="PunctuationLevel"/> to a string to produce the form

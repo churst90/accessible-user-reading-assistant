@@ -1,6 +1,6 @@
 using System.Runtime.Versioning;
 
-namespace OpenReader.Platform.Windows.Input;
+namespace Aura.Platform.Windows.Input;
 
 /// <summary>
 /// Detects "solo taps" of CapsLock — a quick down/up with no other key

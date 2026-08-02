@@ -1,10 +1,10 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Speech.Rules;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
+using Aura.Speech.Rules;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 /// <summary>
 /// Locks down the {position} / {setSize} / {level} / {posInSet} template

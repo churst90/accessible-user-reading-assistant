@@ -1,14 +1,14 @@
-namespace OpenReader.Scripting;
+namespace Aura.Scripting;
 
 /// <summary>
-/// Host-side declaration of the plugin API surface this OpenReader build
+/// Host-side declaration of the plugin API surface this Aura build
 /// implements. Module manifests declare an <c>apiVersion</c> they were built
 /// against and the host refuses to load incompatible modules.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Compatibility rule: a module is loadable iff its declared
-/// <see cref="OpenReader.Abstractions.Plugins.AppModuleManifest.ApiVersion"/>
+/// <see cref="Aura.Abstractions.Plugins.AppModuleManifest.ApiVersion"/>
 /// has the <em>same major</em>
 /// as <see cref="CurrentApiVersion"/> and a minor &lt;= the host's minor.
 /// In other words, the host can host older minors of the same major;

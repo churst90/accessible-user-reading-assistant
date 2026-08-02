@@ -1,12 +1,12 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
-using OpenReader.Diagnostics;
-using OpenReader.Platform.Windows.Accessibility;
-using OpenReader.Platform.Windows.Interop;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
+using Aura.Diagnostics;
+using Aura.Platform.Windows.Accessibility;
+using Aura.Platform.Windows.Interop;
 using Serilog;
 
-namespace OpenReader.Platform.Windows.Text;
+namespace Aura.Platform.Windows.Text;
 
 /// <summary>
 /// Picks the best available text backend for a node and hides the choice from

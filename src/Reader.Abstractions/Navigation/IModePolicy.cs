@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.Abstractions.Navigation;
+namespace Aura.Abstractions.Navigation;
 
 /// <summary>
 /// Decides which mode the reader should be in for a given focus target.

@@ -14,7 +14,7 @@ using DataGrid = System.Windows.Controls.DataGrid;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 
-namespace OpenReader.UI.Settings;
+namespace Aura.UI.Settings;
 
 /// <summary>
 /// Builds each category's right-pane content. We assemble panels in code
@@ -29,7 +29,7 @@ internal static class SettingsPanels
         var panel = NewPanel("General");
 
         AddRow(panel, "Profile:", BuildProfileEditor(vm));
-        panel.Children.Add(BuildCheck("Start OpenReader with Windows", nameof(SettingsViewModel.StartWithWindows)));
+        panel.Children.Add(BuildCheck("Start Aura with Windows", nameof(SettingsViewModel.StartWithWindows)));
 
         panel.Children.Add(new TextBlock
         {
@@ -41,7 +41,7 @@ internal static class SettingsPanels
         });
         panel.Children.Add(new TextBlock
         {
-            Text = "App-specific overrides can be edited at %AppData%\\OpenReader\\apps\\<exe>\\config.json. They apply automatically when that app gains focus.",
+            Text = "App-specific overrides can be edited at %AppData%\\Aura\\apps\\<exe>\\config.json. They apply automatically when that app gains focus.",
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 6, 0, 0),
             FontStyle = FontStyles.Italic,

@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// A movable, comparable span over a text surface. This is the type every

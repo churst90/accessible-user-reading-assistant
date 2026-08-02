@@ -1,10 +1,10 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
-using OpenReader.Core.Review;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
+using Aura.Core.Review;
 using Xunit;
 
-namespace OpenReader.Core.Tests;
+namespace Aura.Core.Tests;
 
 public class ReviewCursorTests
 {

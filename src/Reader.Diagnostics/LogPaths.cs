@@ -1,9 +1,9 @@
-namespace OpenReader.Diagnostics;
+namespace Aura.Diagnostics;
 
-/// <summary>Resolves the OpenReader log directory in a per-user, per-OS location.</summary>
+/// <summary>Resolves the Aura log directory in a per-user, per-OS location.</summary>
 public static class LogPaths
 {
-    public const string AppDirectoryName = "OpenReader";
+    public const string AppDirectoryName = "AURA";
     public const string LogsSubdirectory = "logs";
 
     /// <summary>The directory where the rotating log file lives. Created if missing.</summary>
@@ -19,5 +19,5 @@ public static class LogPaths
     }
 
     /// <summary>The rolling log file path template (Serilog appends a date stamp).</summary>
-    public static string LogFileTemplate => Path.Combine(LogDirectory, "openreader-.log");
+    public static string LogFileTemplate => Path.Combine(LogDirectory, "aura-.log");
 }

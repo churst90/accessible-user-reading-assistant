@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Text;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 /// <summary>
 /// The word rule is shared between typing echo and the text model, so these

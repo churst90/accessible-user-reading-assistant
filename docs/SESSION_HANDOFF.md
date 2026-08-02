@@ -14,7 +14,7 @@ its findings were implemented in the same pass. Phase 3.6 items #1–#4 and the
 **Build and test status**
 
 ```
-dotnet build OpenReader.slnx      →  Build succeeded.  0 Warning(s)  0 Error(s)
+dotnet build AURA.slnx      →  Build succeeded.  0 Warning(s)  0 Error(s)
 262 tests passing across the platform-neutral suites (was 195)
 ```
 
@@ -24,7 +24,7 @@ dotnet build OpenReader.slnx      →  Build succeeded.  0 Warning(s)  0 Error(s
 `-p:EnableWindowsTargeting=true` and the SDK pulls the Windows reference packs:
 
 ```
-dotnet build OpenReader.slnx -p:EnableWindowsTargeting=true          # everything
+dotnet build AURA.slnx -p:EnableWindowsTargeting=true          # everything
 dotnet build src/ReaderHost.Windows -p:EnableWindowsTargeting=true \
     -r win-x64 --self-contained false                                # publish shape
 ```
@@ -211,11 +211,11 @@ Test count now: **162 passed, 2 skipped, 0 failed**. New test classes:
 `PositionAndLevelTests` (list/tree/edit/caret/combo rules).
 
 ```
-dotnet build OpenReader.slnx     →  Build succeeded.   0 Warning(s)   0 Error(s)
-dotnet test  OpenReader.slnx     →  162 passed, 2 skipped, 0 failed
+dotnet build AURA.slnx     →  Build succeeded.   0 Warning(s)   0 Error(s)
+dotnet test  AURA.slnx     →  162 passed, 2 skipped, 0 failed
 dotnet run   --project src/ReaderHost.Windows
   → tray icon appears with right-click menu (items announce on hover/arrow)
-  → "OpenReader ready" announcement
+  → "Aura ready" announcement
   → first-party app modules load (Browser, Explorer, VS Code, Notepad++)
   → Insert+O opens Settings with focus, Insert+Q opens Exit dialog with focus
   → arrow through Notepad / a read-only chat history reads each line as the caret moves
@@ -242,8 +242,8 @@ checked-off items.
   enforces same-major + minor-≤-host.
 - `PluginManifestFile` — JSON schema for `manifest.json`. `TryLoad` validates
   required fields and parseable versions.
-- `PluginLoadContext` — collectible ALC; defers `OpenReader.Abstractions`,
-  `OpenReader.Diagnostics`, and `Serilog` to the host's default ALC so
+- `PluginLoadContext` — collectible ALC; defers `Aura.Abstractions`,
+  `Aura.Diagnostics`, and `Serilog` to the host's default ALC so
   contract types match.
 - `PluginContext` — per-attach `IAppContext`; tracks rules registered via
   `RegisterSpeechRule` and disposes them on detach.
@@ -268,16 +268,16 @@ into `<host>/bin/.../app-modules/<id>/` by a `CopyAppModules` MSBuild
 target in `ReaderHost.Windows.csproj`.
 
 **SDK NuGet** — `Reader.Abstractions.csproj` is now packable as
-`OpenReader.Sdk` (PackageId distinct from AssemblyName). XML docs included.
+`Aura.Sdk` (PackageId distinct from AssemblyName). XML docs included.
 Pushed to NuGet by `release.yml`'s `sdk` job on tag.
 
 **Sample plugin + template**:
 
 - `samples/SamplePlugin` — 30-line "tab changed in Edge" announcer; the
   Phase-3 acceptance criterion proof point.
-- `templates/openreader-plugin` — `dotnet new` template scaffolding a
+- `templates/aura-plugin` — `dotnet new` template scaffolding a
   plugin csproj + manifest + module.
-- `templates/OpenReader.Templates.csproj` — packs the template as a NuGet
+- `templates/AURA.Templates.csproj` — packs the template as a NuGet
   template package.
 
 ### Test count this session
@@ -317,7 +317,7 @@ order:
 8. **4h — Display-model hooking.** Defer indefinitely.
 9. **4i — Remote relay.** Recommended robust architecture: Shape B (UIA
    event mirroring over WebSocket + TLS + PSK auth) shipped as
-   `OpenReader.Relay.{Server,Client}` plugins. Slot **after 4d** so it
+   `Aura.Relay.{Server,Client}` plugins. Slot **after 4d** so it
    ships as plugins, not a fork.
 
 ### Original Phase 4 list (now split across 4a–4i above)
@@ -371,29 +371,29 @@ Phase 4 has no fixed deadline; users will tell us what to build by then.
 ## Useful commands
 
 ```
-cd F:/data/Github/OpenReader
-dotnet build OpenReader.slnx
-dotnet test  OpenReader.slnx --no-build
+cd F:/data/Github/Aura
+dotnet build AURA.slnx
+dotnet test  AURA.slnx --no-build
 dotnet run   --project src/ReaderHost.Windows
 
 # enable plugin hot-reload
-$env:OPENREADER_DEV = "1"
+$env:AURA_DEV = "1"
 dotnet run --project src/ReaderHost.Windows
 
 # pack the SDK
 dotnet pack src/Reader.Abstractions -c Release -o ./packs
 
 # pack the template
-dotnet pack templates/OpenReader.Templates.csproj -c Release -o ./packs
+dotnet pack templates/AURA.Templates.csproj -c Release -o ./packs
 
 # build the MSI (requires `dotnet tool install --global wix --version 4.0.5`)
 dotnet publish src/ReaderHost.Windows -c Release -r win-x64 `
     --self-contained false -o publish/host
 pwsh scripts/regenerate-installer-files.ps1
-dotnet build installer/OpenReader.Installer.wixproj -c Release -p:ProductVersion=0.1.0
+dotnet build installer/AURA.Installer.wixproj -c Release -p:ProductVersion=0.1.0
 ```
 
-User config: `%AppData%\OpenReader\config.json`
-User plugins: `%AppData%\OpenReader\plugins\<id>\`
+User config: `%AppData%\Aura\config.json`
+User plugins: `%AppData%\Aura\plugins\<id>\`
 First-party app modules: `<host>\app-modules\<id>\`
-Logs: `%LocalAppData%\OpenReader\logs\openreader-<yyyyMMdd>.log`
+Logs: `%LocalAppData%\Aura\logs\aura-<yyyyMMdd>.log`

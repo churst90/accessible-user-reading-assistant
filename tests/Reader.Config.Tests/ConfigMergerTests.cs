@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Config;
+using Aura.Config;
 using Xunit;
 
-namespace OpenReader.Config.Tests;
+namespace Aura.Config.Tests;
 
 public class ConfigMergerTests
 {

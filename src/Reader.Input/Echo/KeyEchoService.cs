@@ -1,10 +1,10 @@
 using System.Text;
-using OpenReader.Abstractions.Input;
-using OpenReader.Abstractions.Text;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Input;
+using Aura.Abstractions.Text;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Input.Echo;
+namespace Aura.Input.Echo;
 
 /// <summary>
 /// Listens to an <see cref="IInputSource"/> and synthesizes speech announcements

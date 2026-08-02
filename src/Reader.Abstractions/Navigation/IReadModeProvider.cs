@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.Abstractions.Navigation;
+namespace Aura.Abstractions.Navigation;
 
 /// <summary>
 /// Decides whether a document supports Read mode, and builds the buffer.

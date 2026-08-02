@@ -1,8 +1,8 @@
-using OpenReader.Abstractions.Speech;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Speech;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Speech.Engines;
+namespace Aura.Speech.Engines;
 
 /// <summary>
 /// <see cref="ISpeechEngine"/> wrapper that delegates to a swappable inner

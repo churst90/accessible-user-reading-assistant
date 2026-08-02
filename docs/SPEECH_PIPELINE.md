@@ -58,9 +58,9 @@ public sealed record SpeechUtterance(
 Rules are loaded from layers and merged. Layers, evaluated in order:
 
 1. **Built-in defaults** — ship with the binary. Cover all standard roles.
-2. **User global** — `%AppData%\OpenReader\rules\user.yaml`.
-3. **Profile** — `%AppData%\OpenReader\profiles\<name>\rules.yaml`.
-4. **App-specific** — `%AppData%\OpenReader\apps\<exe>\rules.yaml`.
+2. **User global** — `%AppData%\Aura\rules\user.yaml`.
+3. **Profile** — `%AppData%\Aura\profiles\<name>\rules.yaml`.
+4. **App-specific** — `%AppData%\Aura\apps\<exe>\rules.yaml`.
 5. **Script-contributed** — registered at runtime by plugins.
 
 Within a layer, higher `Priority` wins. Across layers, later layers override

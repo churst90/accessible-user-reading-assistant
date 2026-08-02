@@ -1,11 +1,11 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using OpenReader.Config;
-using OpenReader.Input.Commands;
-using OpenReader.Input.Gestures;
+using Aura.Config;
+using Aura.Input.Commands;
+using Aura.Input.Gestures;
 
-namespace OpenReader.UI.Settings;
+namespace Aura.UI.Settings;
 
 /// <summary>
 /// Mutable, two-way-bindable mirror of <see cref="ReaderConfig"/> for the

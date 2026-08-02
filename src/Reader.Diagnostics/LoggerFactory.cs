@@ -3,7 +3,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace OpenReader.Diagnostics;
+namespace Aura.Diagnostics;
 
 /// <summary>
 /// Builds the process-wide Serilog logger and produces named child loggers

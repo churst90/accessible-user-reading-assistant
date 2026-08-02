@@ -1,12 +1,12 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Speech.Punctuation;
-using OpenReader.Speech.Queue;
-using OpenReader.Speech.Rules;
-using OpenReader.TestKit;
+using Aura.Abstractions.Speech;
+using Aura.Speech.Punctuation;
+using Aura.Speech.Queue;
+using Aura.Speech.Rules;
+using Aura.TestKit;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 /// <summary>
 /// Character-by-character navigation must name punctuation it lands on

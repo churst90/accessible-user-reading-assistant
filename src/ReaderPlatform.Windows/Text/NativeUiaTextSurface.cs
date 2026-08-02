@@ -1,14 +1,14 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
-using OpenReader.Diagnostics;
-using OpenReader.Platform.Windows.Accessibility.Native;
-using OpenReader.Platform.Windows.Interop;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
+using Aura.Diagnostics;
+using Aura.Platform.Windows.Accessibility.Native;
+using Aura.Platform.Windows.Interop;
 using Serilog;
 using Windows.Win32.UI.Accessibility;
-using OurTextUnit = OpenReader.Abstractions.Text.TextUnit;
+using OurTextUnit = Aura.Abstractions.Text.TextUnit;
 
-namespace OpenReader.Platform.Windows.Text;
+namespace Aura.Platform.Windows.Text;
 
 /// <summary>
 /// <see cref="ITextSurface"/> over a native UIA <c>TextPattern</c>.

@@ -8,13 +8,13 @@ unit test passes.
 
 - [ ] .NET 8 SDK installed (`dotnet --version` ≥ 8.0).
 - [ ] Windows SDK present (for `net8.0-windows` TFM).
-- [ ] Git initialized at `OpenReader/` root (`git init`).
+- [ ] Git initialized at `Aura/` root (`git init`).
 
 ## Step 1 — Solution + Directory.Build.props
 
-Create at `OpenReader/`:
+Create at `Aura/`:
 
-- `OpenReader.sln`
+- `Aura.sln`
 - `Directory.Build.props` enforcing globally:
   - `<Nullable>enable</Nullable>`
   - `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
@@ -51,7 +51,7 @@ Project references (top-down):
 - `Reader.Diagnostics` → (none — it's the bottom)
 - `Reader.Abstractions` → (none — it's the contract)
 
-Add all projects to `OpenReader.sln`.
+Add all projects to `Aura.sln`.
 
 ## Step 3 — Define the abstractions
 
@@ -78,7 +78,7 @@ Files:
 
 Add Serilog to `Reader.Diagnostics`. Expose:
 - `LoggerFactory.CreateForComponent(string name)`
-- Default rotating file sink at `%LocalAppData%\OpenReader\logs\`.
+- Default rotating file sink at `%LocalAppData%\Aura\logs\`.
 - A minimal `Activity`-based perf counter wrapper for hot-path timing.
 
 ## Step 5 — Test harness

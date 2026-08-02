@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <PackageType>Template</PackageType>
-    <PackageId>OpenReader.Templates</PackageId>
-    <Title>OpenReader project templates</Title>
-    <Description>dotnet new templates for OpenReader plugin development. Includes `openreader-plugin` for scaffolding an app module.</Description>
-    <PackageTags>dotnet-new;templates;openreader;plugin</PackageTags>
-    <PackageProjectUrl>https://github.com/OpenReader/OpenReader</PackageProjectUrl>
+    <PackageId>Aura.Templates</PackageId>
+    <Title>Aura project templates</Title>
+    <Description>dotnet new templates for Aura plugin development. Includes `aura-plugin` for scaffolding an app module.</Description>
+    <PackageTags>dotnet-new;templates;aura;plugin</PackageTags>
+    <PackageProjectUrl>https://github.com/Aura/Aura</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Version Condition="'$(Version)' == ''">0.1.0</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -19,8 +19,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="openreader-plugin\**\*"
-             Exclude="openreader-plugin\bin\**;openreader-plugin\obj\**" />
+    <Content Include="aura-plugin\**\*"
+             Exclude="aura-plugin\bin\**;aura-plugin\obj\**" />
     <Compile Remove="**\*" />
   </ItemGroup>
 

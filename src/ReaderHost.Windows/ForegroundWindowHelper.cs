@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Forces a WPF <see cref="Window"/> to the foreground after <c>Show()</c>.

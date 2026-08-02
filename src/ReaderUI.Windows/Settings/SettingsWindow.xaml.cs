@@ -1,9 +1,9 @@
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Controls;
-using OpenReader.Config;
+using Aura.Config;
 
-namespace OpenReader.UI.Settings;
+namespace Aura.UI.Settings;
 
 [SupportedOSPlatform("windows6.1")]
 public partial class SettingsWindow : Window

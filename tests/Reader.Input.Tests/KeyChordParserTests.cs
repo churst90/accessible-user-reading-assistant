@@ -1,9 +1,9 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Input;
-using OpenReader.Input.Gestures;
+using Aura.Abstractions.Input;
+using Aura.Input.Gestures;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 public class KeyChordParserTests
 {

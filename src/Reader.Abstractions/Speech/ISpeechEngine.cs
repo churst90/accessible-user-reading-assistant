@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Speech;
+namespace Aura.Abstractions.Speech;
 
 /// <summary>
 /// Adapter over a concrete TTS engine (SAPI5, eSpeak-NG, Azure, etc).

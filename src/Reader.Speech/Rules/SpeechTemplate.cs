@@ -1,8 +1,8 @@
 using System.Text;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.Speech.Rules;
+namespace Aura.Speech.Rules;
 
 /// <summary>
 /// Token substitution for <see cref="SpeechRuleAction.Emit"/> templates.

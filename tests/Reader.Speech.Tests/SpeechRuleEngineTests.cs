@@ -1,11 +1,11 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Speech.Rules;
-using OpenReader.TestKit;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
+using Aura.Speech.Rules;
+using Aura.TestKit;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 public class SpeechRuleEngineTests
 {

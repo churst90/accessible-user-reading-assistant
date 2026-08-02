@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Input;
+using Aura.Abstractions.Input;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// Immutable description of a keyboard chord — a virtual-key code plus the

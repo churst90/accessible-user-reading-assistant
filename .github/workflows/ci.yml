@@ -4,18 +4,18 @@ on:
   push:
     branches: [main]
     paths:
-      - 'OpenReader/**'
+      - 'Aura/**'
       - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'OpenReader/**'
+      - 'Aura/**'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
 defaults:
   run:
-    working-directory: OpenReader
+    working-directory: Aura
 
 jobs:
   build:
@@ -39,18 +39,18 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore
-        run: dotnet restore OpenReader.slnx
+        run: dotnet restore AURA.slnx
 
       - name: Build (warnings as errors)
-        run: dotnet build OpenReader.slnx --configuration Release --no-restore
+        run: dotnet build AURA.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test OpenReader.slnx --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+        run: dotnet test AURA.slnx --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: OpenReader/TestResults
+          path: Aura/TestResults
           retention-days: 7

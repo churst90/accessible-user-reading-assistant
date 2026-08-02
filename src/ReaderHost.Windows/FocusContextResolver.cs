@@ -1,8 +1,8 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Resolves an <see cref="AccessibleNode"/>'s owning process: maps the UIA

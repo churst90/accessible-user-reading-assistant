@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.TestKit</RootNamespace>
-    <AssemblyName>OpenReader.TestKit</AssemblyName>
+    <RootNamespace>Aura.TestKit</RootNamespace>
+    <AssemblyName>Aura.TestKit</AssemblyName>
     <IsPackable>false</IsPackable>
-    <Description>Test fixtures and synthetic providers shared by all OpenReader test projects.</Description>
+    <Description>Test fixtures and synthetic providers shared by all Aura test projects.</Description>
   </PropertyGroup>
 
   <ItemGroup>

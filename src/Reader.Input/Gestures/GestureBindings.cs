@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Input;
-using OpenReader.Input.Commands;
+using Aura.Abstractions.Input;
+using Aura.Input.Commands;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>Choice of default keyboard layout. Mirrors NVDA's desktop / laptop split.</summary>
 public enum KeyboardLayout
@@ -93,7 +93,7 @@ public static class GestureBindings
         map.Bind(new KeyChord(VK_CONTROL, InputModifiers.Control), ReaderCommand.StopSpeech);
 
         // Reporting and meta. NVDA: Insert+Tab = report current focus,
-        // Insert+T = report title. Insert+F is OpenReader-specific (legacy
+        // Insert+T = report title. Insert+F is Aura-specific (legacy
         // alias for ReportFocus while we don't ship report-formatting yet).
         map.Bind(new KeyChord(VK_TAB, InputModifiers.Reader), ReaderCommand.ReportFocus);
         map.Bind(new KeyChord(VK_F, InputModifiers.Reader), ReaderCommand.ReportFocus);
@@ -200,7 +200,7 @@ public static class GestureBindings
         // Say-all (NVDA: NVDA+Numpad+ AND NVDA+Down for desktop).
         map.Bind(new KeyChord(VK_ADD, InputModifiers.Reader), ReaderCommand.SayAllFromCursor);
         map.Bind(new KeyChord(VK_DOWN, InputModifiers.Reader), ReaderCommand.SayAllFromCursor);
-        // From-beginning is OpenReader-specific.
+        // From-beginning is Aura-specific.
         map.Bind(new KeyChord(VK_DOWN, InputModifiers.Reader | InputModifiers.Shift), ReaderCommand.SayAll);
 
         // Review move to focus (NVDA: NVDA+Numpad. ish; we keep Reader+. too).

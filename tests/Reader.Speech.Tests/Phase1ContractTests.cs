@@ -1,12 +1,12 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Speech.Queue;
-using OpenReader.Speech.Rules;
-using OpenReader.TestKit;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
+using Aura.Speech.Queue;
+using Aura.Speech.Rules;
+using Aura.TestKit;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 /// <summary>
 /// The canonical Phase-1 contract: focus a button, hear it announced.

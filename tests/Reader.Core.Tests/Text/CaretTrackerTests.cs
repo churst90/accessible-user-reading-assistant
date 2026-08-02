@@ -1,10 +1,10 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
-using OpenReader.Core.Text;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
+using Aura.Core.Text;
 using Xunit;
 
-namespace OpenReader.Core.Tests.Text;
+namespace Aura.Core.Tests.Text;
 
 /// <summary>
 /// Caret following, driven end to end without Windows. The behaviour these

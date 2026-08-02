@@ -1,4 +1,4 @@
-namespace OpenReader.Speech.Punctuation;
+namespace Aura.Speech.Punctuation;
 
 /// <summary>
 /// How much punctuation to spell out when speaking text. Higher levels

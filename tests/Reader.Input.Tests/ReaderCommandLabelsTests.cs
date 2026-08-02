@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Input.Commands;
+using Aura.Input.Commands;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 /// <summary>
 /// Locks down user-facing labels for every <see cref="ReaderCommand"/>. These

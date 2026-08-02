@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace OpenReader.Platform.Windows.Tests;
+namespace Aura.Platform.Windows.Tests;
 
 public class PlaceholderTests
 {

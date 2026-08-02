@@ -105,11 +105,11 @@ builds.
 
 ```powershell
 # 1. Is the manifest what you think it is?
-mt.exe -inputresource:OpenReader.exe;#1 -out:extracted.manifest
+mt.exe -inputresource:Aura.exe;#1 -out:extracted.manifest
 # look for uiAccess="true"
 
 # 2. Is it signed, and does the chain validate?
-signtool verify /pa /v OpenReader.exe
+signtool verify /pa /v Aura.exe
 
 # 3. Did the process actually get uiAccess?
 #    Process Explorer → the process → Properties → Security tab.

@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Input;
+using Aura.Abstractions.Input;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// Parses user-friendly chord strings ("Reader+Ctrl+Right", "NumPad4",

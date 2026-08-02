@@ -3,11 +3,11 @@ using System.Runtime.Versioning;
 using System.Threading.Channels;
 using System.Windows.Automation;
 using System.Windows.Automation.Text;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Accessibility;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Platform.Windows.Accessibility;
+namespace Aura.Platform.Windows.Accessibility;
 
 /// <summary>
 /// <see cref="IAccessibilityProvider"/> over the managed System.Windows.Automation

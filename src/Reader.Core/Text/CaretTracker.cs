@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
 
-namespace OpenReader.Core.Text;
+namespace Aura.Core.Text;
 
 /// <summary>
 /// Announces caret movement by sampling where the caret is and comparing it

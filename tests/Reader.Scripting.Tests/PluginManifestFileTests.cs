@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Scripting;
+using Aura.Scripting;
 using Xunit;
 
-namespace OpenReader.Scripting.Tests;
+namespace Aura.Scripting.Tests;
 
 public class PluginManifestFileTests
 {
@@ -35,7 +35,7 @@ public class PluginManifestFileTests
     [Fact]
     public void TryLoad_rejects_missing_required_fields()
     {
-        var path = Path.Combine(Path.GetTempPath(), "openreader-manifest-" + Guid.NewGuid().ToString("N") + ".json");
+        var path = Path.Combine(Path.GetTempPath(), "aura-manifest-" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(path, """{ "id": "x" }""");
         try
         {
@@ -49,7 +49,7 @@ public class PluginManifestFileTests
     [Fact]
     public void TryLoad_rejects_unparseable_versions()
     {
-        var path = Path.Combine(Path.GetTempPath(), "openreader-manifest-" + Guid.NewGuid().ToString("N") + ".json");
+        var path = Path.Combine(Path.GetTempPath(), "aura-manifest-" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(path, """
             { "id": "x", "assembly": "x.dll", "moduleType": "X.M",
               "version": "not-a-version", "apiVersion": "1.0" }

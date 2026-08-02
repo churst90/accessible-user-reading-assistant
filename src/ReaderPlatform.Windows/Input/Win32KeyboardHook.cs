@@ -2,11 +2,11 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading.Channels;
-using OpenReader.Abstractions.Input;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Input;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Platform.Windows.Input;
+namespace Aura.Platform.Windows.Input;
 
 /// <summary>
 /// Low-level keyboard input source via <c>SetWindowsHookEx(WH_KEYBOARD_LL)</c>.
@@ -188,7 +188,7 @@ public sealed class Win32KeyboardHook : IInputSource
         })
         {
             IsBackground = true,
-            Name = "OpenReader.KeyboardHook",
+            Name = "Aura.KeyboardHook",
         };
         _hookThread.SetApartmentState(ApartmentState.STA);
         _hookThread.Start();

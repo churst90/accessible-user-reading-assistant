@@ -1,8 +1,8 @@
 using System.Runtime.Versioning;
 using System.Windows.Threading;
-using OpenReader.Diagnostics;
+using Aura.Diagnostics;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Owns a dedicated STA thread that runs a WPF <see cref="Dispatcher"/>'s
@@ -34,7 +34,7 @@ internal sealed class UiThread : IDisposable
         _thread = new Thread(Run)
         {
             IsBackground = false,
-            Name = "OpenReader.UI",
+            Name = "Aura.UI",
         };
         _thread.SetApartmentState(ApartmentState.STA);
         _thread.Start();

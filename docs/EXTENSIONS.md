@@ -41,7 +41,7 @@ should carry this, and the field should be required rather than optional:
 
 ```json
 {
-  "id": "openreader.appmodule.example",
+  "id": "aura.appmodule.example",
   "quirks": [
     {
       "describes": "Reports stale value on focus for a moment after paint",
@@ -78,7 +78,7 @@ the concept is the same.
 
 **What exists today** (Phase 3, shipped): a versioned `IAppModule` contract,
 per-plugin collectible `AssemblyLoadContext`, manifest validation with an API
-version gate, hot reload in dev, an `OpenReader.Sdk` NuGet package, and a
+version gate, hot reload in dev, an `Aura.Sdk` NuGet package, and a
 `dotnet new` template. First-party modules go through the *same* loader as
 third-party ones — the contract is dogfooded rather than asserted.
 
@@ -119,7 +119,7 @@ to importing.
 
 ### Why not the code
 
-NVDA is GPLv2 and the NVDA Remote add-on is GPLv2. OpenReader is MIT. Those do
+NVDA is GPLv2 and the NVDA Remote add-on is GPLv2. Aura is MIT. Those do
 not mix: GPL is copyleft, so a derivative work has to be GPL too. Importing
 NVDA Remote's source would relicense whatever it is linked into.
 
@@ -141,7 +141,7 @@ Wire protocols are not copyrightable the way source code is, and implementing
 one from its observable behaviour is ordinary practice. What that buys is
 disproportionate:
 
-- An OpenReader user can get remote support **from an NVDA user**, and vice
+- An Aura user can get remote support **from an NVDA user**, and vice
   versa. On day one, with no new infrastructure.
 - Existing relay servers work, including community ones people already trust.
 - Nobody has to run a server to try it.
@@ -163,7 +163,7 @@ streaming: lower bandwidth, and the local user keeps their own voice, rate and
 prosody, which matters more than it sounds. A remote session that speaks in
 someone else's voice at someone else's rate is exhausting.
 
-Build it as **plugins** (`OpenReader.Relay.Server` / `.Client`), not host code.
+Build it as **plugins** (`Aura.Relay.Server` / `.Client`), not host code.
 That forces the 4d contract widening to be genuinely sufficient — if the relay
 cannot be written as a plugin, the plugin API is not finished, and better to
 learn that from our own code than from a frustrated third party.

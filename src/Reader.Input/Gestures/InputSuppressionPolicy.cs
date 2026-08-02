@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Input;
-using OpenReader.Input.Commands;
+using Aura.Abstractions.Input;
+using Aura.Input.Commands;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// Decides whether a raw key event should be swallowed before reaching the

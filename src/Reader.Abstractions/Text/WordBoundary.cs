@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// The single definition of where a word starts and ends.

@@ -1,4 +1,4 @@
-namespace OpenReader.UI.Settings;
+namespace Aura.UI.Settings;
 
 /// <summary>
 /// Identity of a settings category. The order is the display order in the

@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Accessibility;
+namespace Aura.Abstractions.Accessibility;
 
 /// <summary>
 /// Discriminator for the kind of event raised by an accessibility provider.

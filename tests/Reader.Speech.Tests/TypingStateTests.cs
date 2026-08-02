@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Speech;
+using Aura.Speech;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 public class TypingStateTests
 {

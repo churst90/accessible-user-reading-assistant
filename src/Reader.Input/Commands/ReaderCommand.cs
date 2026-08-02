@@ -1,4 +1,4 @@
-namespace OpenReader.Input.Commands;
+namespace Aura.Input.Commands;
 
 /// <summary>
 /// High-level reader actions emitted by the gesture layer and consumed by

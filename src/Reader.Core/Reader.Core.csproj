@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Core</RootNamespace>
-    <AssemblyName>OpenReader.Core</AssemblyName>
+    <RootNamespace>Aura.Core</RootNamespace>
+    <AssemblyName>Aura.Core</AssemblyName>
     <Description>Event loop, focus tracker, review cursor, command dispatcher.</Description>
   </PropertyGroup>
 

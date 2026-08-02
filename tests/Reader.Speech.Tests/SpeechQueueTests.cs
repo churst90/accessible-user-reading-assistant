@@ -1,9 +1,9 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Speech.Queue;
+using Aura.Abstractions.Speech;
+using Aura.Speech.Queue;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 public class SpeechQueueTests
 {

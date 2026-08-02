@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Speech.Punctuation;
+using Aura.Speech.Punctuation;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 public class PunctuationFilterTests
 {

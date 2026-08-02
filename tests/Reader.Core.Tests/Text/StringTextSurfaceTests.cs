@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Text;
 using Xunit;
 
-namespace OpenReader.Core.Tests.Text;
+namespace Aura.Core.Tests.Text;
 
 /// <summary>
 /// Conformance suite for <see cref="ITextRange"/> semantics. Any other backend

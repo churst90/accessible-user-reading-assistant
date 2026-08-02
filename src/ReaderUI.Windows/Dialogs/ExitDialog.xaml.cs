@@ -1,7 +1,7 @@
 using System.Runtime.Versioning;
 using System.Windows;
 
-namespace OpenReader.UI.Dialogs;
+namespace Aura.UI.Dialogs;
 
 [SupportedOSPlatform("windows6.1")]
 public partial class ExitDialog : Window

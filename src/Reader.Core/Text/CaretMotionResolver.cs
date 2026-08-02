@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Text;
 
-namespace OpenReader.Core.Text;
+namespace Aura.Core.Text;
 
 /// <summary>
 /// Works out what to announce by comparing where the caret was against where

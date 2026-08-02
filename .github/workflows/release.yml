@@ -40,9 +40,9 @@ jobs:
 
       - name: Restore + test
         run: |
-          dotnet restore OpenReader.slnx
-          dotnet build OpenReader.slnx -c Release --no-restore
-          dotnet test  OpenReader.slnx -c Release --no-build
+          dotnet restore AURA.slnx
+          dotnet build AURA.slnx -c Release --no-restore
+          dotnet test  AURA.slnx -c Release --no-build
 
       - name: Publish host
         run: >
@@ -58,13 +58,13 @@ jobs:
 
       - name: Build MSI
         run: >
-          dotnet build installer/OpenReader.Installer.wixproj
+          dotnet build installer/AURA.Installer.wixproj
           -c Release -p:ProductVersion=${{ steps.ver.outputs.version }}
 
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OpenReader-${{ steps.ver.outputs.version }}-msi
+          name: Aura-${{ steps.ver.outputs.version }}-msi
           path: installer/bin/**/Release/*.msi
           if-no-files-found: error
 
@@ -76,7 +76,7 @@ jobs:
           fail_on_unmatched_files: true
 
   sdk:
-    name: pack + publish OpenReader.Sdk
+    name: pack + publish Aura.Sdk
     runs-on: windows-latest
     timeout-minutes: 15
     needs: msi
@@ -110,7 +110,7 @@ jobs:
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OpenReader.Sdk-${{ steps.ver.outputs.version }}
+          name: Aura.Sdk-${{ steps.ver.outputs.version }}
           path: ./packs/*.*nupkg
 
       - name: Push to NuGet.org

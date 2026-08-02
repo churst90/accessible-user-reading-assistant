@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Input</RootNamespace>
-    <AssemblyName>OpenReader.Input</AssemblyName>
+    <RootNamespace>Aura.Input</RootNamespace>
+    <AssemblyName>Aura.Input</AssemblyName>
     <Description>Gesture model, key map, command resolution.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

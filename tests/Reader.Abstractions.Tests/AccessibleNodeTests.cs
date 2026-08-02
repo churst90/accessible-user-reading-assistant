@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 using Xunit;
 
-namespace OpenReader.Abstractions.Tests;
+namespace Aura.Abstractions.Tests;
 
 public class AccessibleNodeTests
 {

@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Navigation;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Navigation;
 
-namespace OpenReader.Core.Navigation;
+namespace Aura.Core.Navigation;
 
 /// <summary>
 /// The built-in mode policy: type in things you type into, read everything

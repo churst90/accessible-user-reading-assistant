@@ -1,10 +1,10 @@
 using System.Reflection;
 using FluentAssertions;
-using OpenReader.Input.Commands;
-using OpenReader.Input.Gestures;
+using Aura.Input.Commands;
+using Aura.Input.Gestures;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 /// <summary>
 /// Keeps <c>docs/KEYMAP.md</c> honest.
@@ -38,7 +38,7 @@ public class KeymapDocumentationTests
     {
         // Walk up from the test binary to the repository root.
         var dir = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!);
-        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "OpenReader.slnx")))
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "AURA.slnx")))
         {
             dir = dir.Parent;
         }

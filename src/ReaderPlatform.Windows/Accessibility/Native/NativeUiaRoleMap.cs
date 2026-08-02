@@ -1,8 +1,8 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 using Windows.Win32.UI.Accessibility;
 
-namespace OpenReader.Platform.Windows.Accessibility.Native;
+namespace Aura.Platform.Windows.Accessibility.Native;
 
 /// <summary>
 /// Native UIA control-type id → <see cref="AccessibleRole"/>.

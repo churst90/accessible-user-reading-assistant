@@ -1,11 +1,11 @@
 using System.Reflection;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Scripting;
+namespace Aura.Scripting;
 
 /// <summary>
 /// Discovers, version-gates, loads, attaches, and tears down

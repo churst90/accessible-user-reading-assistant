@@ -1,7 +1,7 @@
 using System.Runtime.Versioning;
 using Windows.Win32.UI.Accessibility;
 
-namespace OpenReader.Platform.Windows.Accessibility.Native;
+namespace Aura.Platform.Windows.Accessibility.Native;
 
 /// <summary>
 /// Bootstrap for the native UI Automation client: creates the automation

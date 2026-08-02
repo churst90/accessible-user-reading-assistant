@@ -1,4 +1,4 @@
-# OpenReader
+# Aura
 
 A modern, fast, scriptable Windows screen reader written in C#.
 

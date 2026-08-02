@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Input;
+namespace Aura.Abstractions.Input;
 
 /// <summary>
 /// Raw input producer. Platform implementations hook the OS keyboard / touch /

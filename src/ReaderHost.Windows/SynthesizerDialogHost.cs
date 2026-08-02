@@ -1,11 +1,11 @@
 using System.Runtime.Versioning;
 using System.Windows.Threading;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Config;
-using OpenReader.UI.Dialogs;
+using Aura.Abstractions.Speech;
+using Aura.Config;
+using Aura.UI.Dialogs;
 using Serilog;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Single-window owner for the synthesizer-selection dialog. Lists every

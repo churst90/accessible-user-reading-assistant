@@ -1,11 +1,11 @@
 using System.Runtime.Versioning;
 using System.Windows.Automation;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Diagnostics;
-using OpenReader.Platform.Windows.Interop;
+using Aura.Abstractions.Accessibility;
+using Aura.Diagnostics;
+using Aura.Platform.Windows.Interop;
 using Serilog;
 
-namespace OpenReader.Platform.Windows.Accessibility;
+namespace Aura.Platform.Windows.Accessibility;
 
 /// <summary>
 /// <see cref="ITextContentProvider"/> over UIA <c>TextPattern</c>. Falls back

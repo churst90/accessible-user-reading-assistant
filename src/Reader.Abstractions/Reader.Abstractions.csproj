@@ -2,22 +2,22 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>OpenReader.Abstractions</RootNamespace>
-    <AssemblyName>OpenReader.Abstractions</AssemblyName>
+    <RootNamespace>Aura.Abstractions</RootNamespace>
+    <AssemblyName>Aura.Abstractions</AssemblyName>
     <Description>Platform-neutral interfaces and value types. The contract every other project depends on.</Description>
   </PropertyGroup>
 
-  <!-- NuGet metadata: this project is shipped to plugin authors as `OpenReader.Sdk`.
-       The assembly name remains `OpenReader.Abstractions` so the host and plugins
+  <!-- NuGet metadata: this project is shipped to plugin authors as `Aura.Sdk`.
+       The assembly name remains `Aura.Abstractions` so the host and plugins
        resolve to the same loaded type identity. -->
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>OpenReader.Sdk</PackageId>
-    <Title>OpenReader Plugin SDK</Title>
-    <PackageDescription>The contract for OpenReader app modules. Reference this package when writing a plugin: implement IAppModule, ship a manifest.json, and OpenReader will load you.</PackageDescription>
-    <PackageTags>openreader;screen-reader;accessibility;plugin;sdk</PackageTags>
-    <PackageProjectUrl>https://github.com/OpenReader/OpenReader</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/OpenReader/OpenReader</RepositoryUrl>
+    <PackageId>Aura.Sdk</PackageId>
+    <Title>Aura Plugin SDK</Title>
+    <PackageDescription>The contract for Aura app modules. Reference this package when writing a plugin: implement IAppModule, ship a manifest.json, and Aura will load you.</PackageDescription>
+    <PackageTags>aura;screen-reader;accessibility;plugin;sdk</PackageTags>
+    <PackageProjectUrl>https://github.com/Aura/Aura</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Aura/Aura</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

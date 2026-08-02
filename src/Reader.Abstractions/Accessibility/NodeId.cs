@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Accessibility;
+namespace Aura.Abstractions.Accessibility;
 
 /// <summary>
 /// Opaque identifier for an accessibility node, scoped to a single provider session.

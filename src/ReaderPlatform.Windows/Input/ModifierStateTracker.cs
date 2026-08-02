@@ -1,7 +1,7 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Input;
+using Aura.Abstractions.Input;
 
-namespace OpenReader.Platform.Windows.Input;
+namespace Aura.Platform.Windows.Input;
 
 /// <summary>
 /// Tracks the active <see cref="InputModifiers"/> mask as raw key-down/key-up

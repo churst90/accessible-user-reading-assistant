@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.Abstractions.Plugins;
+namespace Aura.Abstractions.Plugins;
 
 /// <summary>
 /// The narrow surface of host services exposed to an <see cref="IAppModule"/>.

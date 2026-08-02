@@ -1,10 +1,10 @@
 {
-  "id": "openreader.sample.tab-announcer",
+  "id": "aura.sample.tab-announcer",
   "displayName": "Edge tab announcer (sample)",
   "version": "0.1.0",
   "apiVersion": "1.0",
-  "assembly": "OpenReader.Samples.SamplePlugin.dll",
-  "moduleType": "OpenReader.Samples.SamplePlugin.TabAnnouncerModule",
-  "author": "OpenReader",
-  "description": "Demonstrates the OpenReader plugin contract by announcing 'tab changed in Edge' on every focus event in msedge.exe."
+  "assembly": "Aura.Samples.SamplePlugin.dll",
+  "moduleType": "Aura.Samples.SamplePlugin.TabAnnouncerModule",
+  "author": "Aura",
+  "description": "Demonstrates the Aura plugin contract by announcing 'tab changed in Edge' on every focus event in msedge.exe."
 }

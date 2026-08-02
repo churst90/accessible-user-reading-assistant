@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Config;
+using Aura.Config;
 using Xunit;
 
-namespace OpenReader.Config.Tests;
+namespace Aura.Config.Tests;
 
 public class AppLayerSwitcherTests
 {
@@ -22,7 +22,7 @@ public class AppLayerSwitcherTests
     public void App_override_layers_on_top()
     {
         // Place an app override file in a per-user-AppData layout, then point AppLayerSwitcher at it.
-        var exe = "openreader-test-app-" + Guid.NewGuid().ToString("N")[..8] + ".exe";
+        var exe = "aura-test-app-" + Guid.NewGuid().ToString("N")[..8] + ".exe";
         var path = ConfigPaths.AppConfigPath(exe);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         try

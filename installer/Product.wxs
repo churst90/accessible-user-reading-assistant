@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    OpenReader MSI definition. WiX v4 syntax.
+    Aura MSI definition. WiX v4 syntax.
 
     Layout:
-      Program Files\OpenReader\           <- host binaries (harvested below)
-      Start Menu\OpenReader\OpenReader    <- shortcut to OpenReader.exe
-      HKCU\...\Run\OpenReader             <- managed at runtime by the host
+      Program Files\Aura\           <- host binaries (harvested below)
+      Start Menu\Aura\Aura    <- shortcut to Aura.exe
+      HKCU\...\Run\Aura             <- managed at runtime by the host
                                               when the user toggles "Start
                                               with Windows" in settings, NOT
                                               by the installer. The installer
@@ -16,39 +16,39 @@
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-  <Package Name="OpenReader"
-           Manufacturer="OpenReader"
-           Version="!(bind.FileVersion.OpenReaderExe)"
+  <Package Name="Aura"
+           Manufacturer="Aura"
+           Version="!(bind.FileVersion.AuraExe)"
            UpgradeCode="2A1F4E22-9A6F-4B6C-9F56-3F4C2A6B1A11"
            Compressed="yes"
            Scope="perMachine">
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of OpenReader is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Aura is already installed." />
 
     <MediaTemplate EmbedCab="yes" />
 
-    <Feature Id="Main" Title="OpenReader" Level="1">
+    <Feature Id="Main" Title="Aura" Level="1">
       <ComponentGroupRef Id="HostFiles" />
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="OpenReader" />
+      <Directory Id="INSTALLFOLDER" Name="Aura" />
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="ApplicationProgramsFolder" Name="OpenReader" />
+      <Directory Id="ApplicationProgramsFolder" Name="Aura" />
     </StandardDirectory>
 
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="StartMenuShortcut" Guid="*">
-        <Shortcut Id="OpenReaderShortcut"
-                  Name="OpenReader"
-                  Description="OpenReader screen reader"
-                  Target="[INSTALLFOLDER]OpenReader.exe"
+        <Shortcut Id="AuraShortcut"
+                  Name="Aura"
+                  Description="Aura screen reader"
+                  Target="[INSTALLFOLDER]Aura.exe"
                   WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\OpenReader\Installed"
+        <RegistryValue Root="HKCU" Key="Software\Aura\Installed"
                        Name="StartMenuShortcut" Type="integer" Value="1"
                        KeyPath="yes" />
       </Component>
@@ -59,15 +59,15 @@
       avoid heat (which has been deprecated in WiX 4); the build script
       regenerates this fragment when the publish output changes.
 
-      The .exe gets a stable Id ("OpenReaderExe") so we can reference its
-      file version above (`!(bind.FileVersion.OpenReaderExe)`).
+      The .exe gets a stable Id ("AuraExe") so we can reference its
+      file version above (`!(bind.FileVersion.AuraExe)`).
     -->
     <ComponentGroup Id="HostFiles" Directory="INSTALLFOLDER">
       <Component Id="HostExe" Guid="*">
-        <File Id="OpenReaderExe" Source="OpenReader.exe" KeyPath="yes" />
+        <File Id="AuraExe" Source="Aura.exe" KeyPath="yes" />
       </Component>
       <Component Id="HostDll" Guid="*">
-        <File Source="OpenReader.dll" KeyPath="yes" />
+        <File Source="Aura.dll" KeyPath="yes" />
       </Component>
       <!-- Harvested fragment is generated into HostFilesGenerated.wxi
            by tools/regenerate-installer-files.ps1; see installer/README.md. -->

@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Speech;
+namespace Aura.Abstractions.Speech;
 
 /// <summary>
 /// Why speech was requested. Used by speech rules for scope filtering and by

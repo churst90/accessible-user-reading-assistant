@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Input.Commands;
+using Aura.Input.Commands;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 public class CommandBusTests
 {

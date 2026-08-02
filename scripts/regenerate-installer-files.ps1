@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Regenerates installer/HostFilesGenerated.wxi from the published host
-    output, listing every file other than OpenReader.exe / OpenReader.dll
+    output, listing every file other than Aura.exe / Aura.dll
     (which are declared explicitly in Product.wxs).
 
 .DESCRIPTION
@@ -28,7 +28,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $publishFull = (Resolve-Path $PublishDir).Path
 
-$skip = @('OpenReader.exe', 'OpenReader.dll')
+$skip = @('Aura.exe', 'Aura.dll')
 $files = Get-ChildItem -LiteralPath $publishFull -Recurse -File |
     Where-Object { $skip -notcontains $_.Name } |
     Sort-Object FullName

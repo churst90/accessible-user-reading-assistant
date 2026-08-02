@@ -1,4 +1,4 @@
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// Resolves on-disk locations of configuration files for each layer.
@@ -14,10 +14,10 @@ public static class ConfigPaths
     public const string ConfigFileName = "config.json";
 
     public static string MachineDirectory =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "OpenReader");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "AURA");
 
     public static string UserDirectory =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenReader");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AURA");
 
     public static string MachineConfigPath => Path.Combine(MachineDirectory, ConfigFileName);
 

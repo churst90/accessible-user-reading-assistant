@@ -1,9 +1,9 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Text;
-using OpenReader.Core.Text;
+using Aura.Abstractions.Text;
+using Aura.Core.Text;
 using Xunit;
 
-namespace OpenReader.Core.Tests.Text;
+namespace Aura.Core.Tests.Text;
 
 /// <summary>
 /// Position-diffing replaces classifying the keystroke. Each test below is a

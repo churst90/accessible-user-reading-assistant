@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Config.Tests</RootNamespace>
+    <RootNamespace>Aura.Config.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

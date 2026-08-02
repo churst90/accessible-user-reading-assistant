@@ -1,7 +1,7 @@
 using System.Runtime.Versioning;
 using System.Windows;
 
-namespace OpenReader.UI.Dialogs;
+namespace Aura.UI.Dialogs;
 
 /// <summary>
 /// Modal-style synthesizer picker. Listed engines come from the host's known

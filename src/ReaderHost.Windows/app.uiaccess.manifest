@@ -25,7 +25,7 @@
   See docs/UIACCESS.md for the signing and install requirements.
 -->
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="OpenReader.Host" type="win32" />
+  <assemblyIdentity version="1.0.0.0" name="Aura.Host" type="win32" />
 
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>

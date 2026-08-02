@@ -5,11 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <Description>An OpenReader app module.</Description>
+    <Description>An Aura app module.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenReader.Sdk" Version="SDK_VERSION_PLACEHOLDER" />
+    <PackageReference Include="Aura.Sdk" Version="SDK_VERSION_PLACEHOLDER" />
   </ItemGroup>
 
   <ItemGroup>

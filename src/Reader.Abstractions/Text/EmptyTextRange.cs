@@ -1,5 +1,5 @@
 
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// A range over nothing. Returned where the contract promises a range but no

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Speech.Tests</RootNamespace>
+    <RootNamespace>Aura.Speech.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

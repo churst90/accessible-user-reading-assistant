@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Accessibility;
+namespace Aura.Abstractions.Accessibility;
 
 /// <summary>
 /// Bitfield of states that may apply to an accessibility node.

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// JSON serialization for <see cref="ReaderConfig"/>. Pretty-printed,

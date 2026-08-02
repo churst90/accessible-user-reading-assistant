@@ -1,6 +1,6 @@
-# OpenReader installer
+# Aura installer
 
-WiX 4 project. **Not** part of `OpenReader.slnx` — it requires the WiX
+WiX 4 project. **Not** part of `AURA.slnx` — it requires the WiX
 global tool, so we keep the main solution buildable without it.
 
 ## Prereqs
@@ -20,15 +20,15 @@ dotnet publish src/ReaderHost.Windows -c Release -r win-x64 `
 pwsh scripts/regenerate-installer-files.ps1
 
 # 3. Build the MSI.
-dotnet build installer/OpenReader.Installer.wixproj -c Release `
+dotnet build installer/AURA.Installer.wixproj -c Release `
     -p:ProductVersion=0.1.0
 ```
 
-The MSI lands in `installer/bin/x64/Release/OpenReader-0.1.0.msi`.
+The MSI lands in `installer/bin/x64/Release/Aura-0.1.0.msi`.
 
 ## What the installer does
 
-- Drops the host into `%ProgramFiles%\OpenReader\`.
+- Drops the host into `%ProgramFiles%\Aura\`.
 - Creates a Start Menu shortcut.
 - Registers a major-upgrade rule (downgrades are blocked with a clear
   error message).

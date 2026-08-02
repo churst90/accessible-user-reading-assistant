@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
 
-namespace OpenReader.Core.Review;
+namespace Aura.Core.Review;
 
 /// <summary>
 /// The review position — a movable point in the focused control's text that

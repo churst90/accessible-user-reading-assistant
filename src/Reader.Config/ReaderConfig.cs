@@ -1,4 +1,4 @@
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// Top-level user-facing configuration. Serialized as JSON; one instance is

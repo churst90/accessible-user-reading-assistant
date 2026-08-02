@@ -1,9 +1,9 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.TestKit;
+using Aura.Abstractions.Accessibility;
+using Aura.TestKit;
 using Xunit;
 
-namespace OpenReader.Core.Tests;
+namespace Aura.Core.Tests;
 
 public class SyntheticProviderSmokeTests
 {

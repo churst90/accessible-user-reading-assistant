@@ -1,7 +1,7 @@
 <Project Sdk="WixToolset.Sdk/4.0.5">
 
   <PropertyGroup>
-    <OutputName>OpenReader-$(ProductVersion)</OutputName>
+    <OutputName>Aura-$(ProductVersion)</OutputName>
     <OutputType>Package</OutputType>
     <InstallerPlatform>x64</InstallerPlatform>
     <SuppressIces>ICE61</SuppressIces>

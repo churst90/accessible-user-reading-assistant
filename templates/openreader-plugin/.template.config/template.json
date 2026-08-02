@@ -1,11 +1,11 @@
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "OpenReader",
-  "classifications": [ "Plugin", "OpenReader", "Accessibility" ],
-  "identity": "OpenReader.Plugin.Template",
-  "name": "OpenReader plugin",
-  "shortName": "openreader-plugin",
-  "description": "A starter project for an OpenReader app module. Targets the OpenReader.Sdk and produces a loadable plugin folder ready to drop into %AppData%/OpenReader/plugins.",
+  "author": "Aura",
+  "classifications": [ "Plugin", "Aura", "Accessibility" ],
+  "identity": "Aura.Plugin.Template",
+  "name": "Aura plugin",
+  "shortName": "aura-plugin",
+  "description": "A starter project for an Aura app module. Targets the Aura.Sdk and produces a loadable plugin folder ready to drop into %AppData%/Aura/plugins.",
   "tags": {
     "language": "C#",
     "type": "project"
@@ -38,7 +38,7 @@
       "type": "parameter",
       "datatype": "string",
       "defaultValue": "0.1.*",
-      "description": "OpenReader.Sdk NuGet version range",
+      "description": "Aura.Sdk NuGet version range",
       "replaces": "SDK_VERSION_PLACEHOLDER"
     }
   },

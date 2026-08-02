@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Accessibility;
+namespace Aura.Abstractions.Accessibility;
 
 /// <summary>
 /// The single seam between the platform layer and core. Implementations expose

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>OpenReader.AppModules.Browser</AssemblyName>
+    <AssemblyName>Aura.AppModules.Browser</AssemblyName>
     <Description>First-party app module: announces tab changes in Edge and Chrome.</Description>
   </PropertyGroup>
 

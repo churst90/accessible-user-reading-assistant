@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// Granularity of movement over a text surface. Mirrors the units every text

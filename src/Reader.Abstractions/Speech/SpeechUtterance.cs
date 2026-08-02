@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Speech;
+namespace Aura.Abstractions.Speech;
 
 /// <summary>Priority bucket for a queued utterance.</summary>
 public enum SpeechPriority

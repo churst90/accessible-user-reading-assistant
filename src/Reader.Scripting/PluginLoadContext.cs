@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace OpenReader.Scripting;
+namespace Aura.Scripting;
 
 /// <summary>
 /// Collectible <see cref="AssemblyLoadContext"/> that loads a plugin's
@@ -9,9 +9,9 @@ namespace OpenReader.Scripting;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The contract types — anything in <c>OpenReader.Abstractions</c> — are
+/// The contract types — anything in <c>Aura.Abstractions</c> — are
 /// resolved against the host's already-loaded copy so that the
-/// <see cref="OpenReader.Abstractions.Plugins.IAppModule"/> the plugin
+/// <see cref="Aura.Abstractions.Plugins.IAppModule"/> the plugin
 /// implements is the <em>same type</em> the host references. Without that,
 /// a cast across the seam would throw <see cref="InvalidCastException"/>.
 /// </para>
@@ -27,15 +27,15 @@ internal sealed class PluginLoadContext : AssemblyLoadContext
     private readonly string _pluginDir;
     private static readonly HashSet<string> SharedAssemblies = new(StringComparer.OrdinalIgnoreCase)
     {
-        "OpenReader.Abstractions",
+        "Aura.Abstractions",
         // Diagnostics is shared so plugin Serilog log entries flow to the same sink.
         // (Plugins must not redistribute Serilog themselves.)
-        "OpenReader.Diagnostics",
+        "Aura.Diagnostics",
         "Serilog",
     };
 
     public PluginLoadContext(string pluginAssemblyPath, string pluginId)
-        : base(name: $"OpenReader.Plugin:{pluginId}", isCollectible: true)
+        : base(name: $"Aura.Plugin:{pluginId}", isCollectible: true)
     {
         _resolver = new AssemblyDependencyResolver(pluginAssemblyPath);
         _pluginDir = Path.GetDirectoryName(pluginAssemblyPath)

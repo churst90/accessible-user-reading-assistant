@@ -1,4 +1,4 @@
-<Window x:Class="OpenReader.UI.Dialogs.SynthesizerDialog"
+<Window x:Class="Aura.UI.Dialogs.SynthesizerDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Select synthesizer"
@@ -16,7 +16,7 @@
     </Grid.RowDefinitions>
 
     <TextBlock Grid.Row="0"
-               Text="Choose the speech engine OpenReader should use."
+               Text="Choose the speech engine Aura should use."
                TextWrapping="Wrap"
                Margin="0,0,0,12" />
 

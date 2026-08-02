@@ -1,6 +1,6 @@
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.TestKit;
+namespace Aura.TestKit;
 
 /// <summary>
 /// Fluent builder for constructing fake accessibility trees in tests without

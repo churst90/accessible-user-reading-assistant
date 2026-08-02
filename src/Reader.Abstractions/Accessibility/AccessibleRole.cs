@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Accessibility;
+namespace Aura.Abstractions.Accessibility;
 
 /// <summary>
 /// Normalized role identifier for an accessibility tree node.

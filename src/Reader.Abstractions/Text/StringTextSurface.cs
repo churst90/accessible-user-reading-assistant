@@ -1,7 +1,7 @@
 using System.Globalization;
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// An <see cref="ITextSurface"/> over a plain string plus a caret offset.

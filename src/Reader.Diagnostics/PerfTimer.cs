@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Serilog;
 using Serilog.Events;
 
-namespace OpenReader.Diagnostics;
+namespace Aura.Diagnostics;
 
 /// <summary>
 /// Lightweight scoped stopwatch for hot-path timing. Logs elapsed time at

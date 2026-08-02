@@ -1,40 +1,40 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Input;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Config;
-using OpenReader.Core.Diagnostics;
-using OpenReader.Core.Review;
-using OpenReader.Core.Text;
-using OpenReader.Diagnostics;
-using OpenReader.Input.Commands;
-using OpenReader.Input.Echo;
-using OpenReader.Input.Gestures;
-using OpenReader.Platform.Windows.Accessibility.Native;
-using OpenReader.Platform.Windows.Input;
-using OpenReader.Platform.Windows.Speech;
-using OpenReader.Platform.Windows.Text;
-using OpenReader.Platform.Windows.Speech.EspeakNg;
-using OpenReader.Scripting;
-using OpenReader.Speech;
-using OpenReader.Speech.Engines;
-using OpenReader.Speech.Queue;
-using OpenReader.Speech.Rules;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Input;
+using Aura.Abstractions.Speech;
+using Aura.Config;
+using Aura.Core.Diagnostics;
+using Aura.Core.Review;
+using Aura.Core.Text;
+using Aura.Diagnostics;
+using Aura.Input.Commands;
+using Aura.Input.Echo;
+using Aura.Input.Gestures;
+using Aura.Platform.Windows.Accessibility.Native;
+using Aura.Platform.Windows.Input;
+using Aura.Platform.Windows.Speech;
+using Aura.Platform.Windows.Text;
+using Aura.Platform.Windows.Speech.EspeakNg;
+using Aura.Scripting;
+using Aura.Speech;
+using Aura.Speech.Engines;
+using Aura.Speech.Queue;
+using Aura.Speech.Rules;
 using Serilog.Events;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 [SupportedOSPlatform("windows6.1")]
 internal static class Program
 {
-    private const string SingleInstanceMutexName = "Global\\OpenReader.SingleInstance";
+    private const string SingleInstanceMutexName = "Global\\Aura.SingleInstance";
 
     [STAThread]
     public static int Main(string[] args)
     {
         // WinExe — no console attached. Skip the console sink (it's a silent
         // no-op anyway, but explicit avoids the wasted call). Logs go to the
-        // rotating file sink at %LocalAppData%\OpenReader\logs\.
+        // rotating file sink at %LocalAppData%\Aura\logs\.
         LoggerFactory.Configure(minimumLevel: LogEventLevel.Information, console: false);
         var log = LoggerFactory.ForComponent("Host");
 
@@ -65,7 +65,7 @@ internal static class Program
         using var mutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out var createdNew);
         if (!createdNew)
         {
-            log.Warning("another OpenReader instance is already running; exiting");
+            log.Warning("another AURA instance is already running; exiting");
             return 2;
         }
 
@@ -96,7 +96,7 @@ internal static class Program
         };
         var token = shutdown.Token;
 
-        log.Information("OpenReader host starting");
+        log.Information("AURA host starting");
         log.Information("Logs at {LogDirectory}", LogPaths.LogDirectory);
 
         // --- Config ---
@@ -152,10 +152,10 @@ internal static class Program
         AutoStartRegistrar.Apply(configStore.Current.General?.StartWithWindows ?? false, log);
 
         // --- Plugin host ---
-        // Hot-reload is enabled when the OPENREADER_DEV env var is set; in
+        // Hot-reload is enabled when the AURA_DEV env var is set; in
         // production the watcher cost would be wasted (plugins do not change
         // mid-session) and the rescan races could surface flaky behaviour.
-        var hotReload = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENREADER_DEV"));
+        var hotReload = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AURA_DEV"));
         await using var pluginHost = new PluginHost(
             pluginsRoots: new[]
             {
@@ -301,7 +301,7 @@ internal static class Program
             uiDispatcher,
             enginesFactory: () =>
             {
-                var list = new List<OpenReader.UI.Dialogs.SynthesizerOption>
+                var list = new List<Aura.UI.Dialogs.SynthesizerOption>
                 {
                     new(sapiEngine.Id, "Microsoft SAPI 5"),
                 };
@@ -317,10 +317,10 @@ internal static class Program
         var sayAll = new SayAllRunner(reviewCursor, pipeline.Submit);
         var doubleTap = new DoubleTapDetector();
 
-        OpenReader.UI.Tray.TrayIcon? tray = null;
+        Aura.UI.Tray.TrayIcon? tray = null;
         uiDispatcher.Invoke(() =>
         {
-            tray = new OpenReader.UI.Tray.TrayIcon(
+            tray = new Aura.UI.Tray.TrayIcon(
                 onOpenSettings: () => settingsHost.Show(),
                 onOpenDocumentation: () => CommandBindings.OpenDocumentation(log),
                 onToggleEnabled: () =>
@@ -480,7 +480,7 @@ internal static class Program
         pipeline.Submit(new SpeechRequest(
             SpeechReason.UserAnnouncement,
             Node: null,
-            RawText: "OpenReader ready",
+            RawText: "AURA ready",
             AppExecutableName: null));
 
         try

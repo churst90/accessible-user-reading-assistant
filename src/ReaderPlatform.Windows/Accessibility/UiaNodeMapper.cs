@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Runtime.Versioning;
 using System.Windows.Automation;
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.Platform.Windows.Accessibility;
+namespace Aura.Platform.Windows.Accessibility;
 
 /// <summary>
 /// Converts a UIA <see cref="AutomationElement"/> snapshot to an immutable

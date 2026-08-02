@@ -1,11 +1,11 @@
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Input;
-using OpenReader.Abstractions.Input;
-using OpenReader.Input.Gestures;
+using Aura.Abstractions.Input;
+using Aura.Input.Gestures;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
-namespace OpenReader.UI.Settings;
+namespace Aura.UI.Settings;
 
 [SupportedOSPlatform("windows6.1")]
 public partial class ChordCaptureDialog : Window

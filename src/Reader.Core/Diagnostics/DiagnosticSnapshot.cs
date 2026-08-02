@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace OpenReader.Core.Diagnostics;
+namespace Aura.Core.Diagnostics;
 
 /// <summary>
 /// Builds the text of a bug report.

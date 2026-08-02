@@ -1,12 +1,12 @@
 using System.Globalization;
 using System.Runtime.Versioning;
 using System.Threading.Channels;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Accessibility;
+using Aura.Diagnostics;
 using Serilog;
 using Windows.Win32.UI.Accessibility;
 
-namespace OpenReader.Platform.Windows.Accessibility.Native;
+namespace Aura.Platform.Windows.Accessibility.Native;
 
 /// <summary>
 /// <see cref="IAccessibilityProvider"/> over the native UI Automation client.

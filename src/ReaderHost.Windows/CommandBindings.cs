@@ -1,19 +1,19 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Speech;
 using System.Globalization;
-using OpenReader.Config;
-using OpenReader.Core.Diagnostics;
-using OpenReader.Diagnostics;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Core.Review;
-using OpenReader.Input.Commands;
-using OpenReader.Input.Gestures;
-using OpenReader.Platform.Windows.Accessibility.Native;
-using OpenReader.Speech;
-using OpenReader.Speech.Punctuation;
-using OpenReader.Speech.Queue;
+using Aura.Config;
+using Aura.Core.Diagnostics;
+using Aura.Diagnostics;
+using Aura.Abstractions.Accessibility;
+using Aura.Core.Review;
+using Aura.Input.Commands;
+using Aura.Input.Gestures;
+using Aura.Platform.Windows.Accessibility.Native;
+using Aura.Speech;
+using Aura.Speech.Punctuation;
+using Aura.Speech.Queue;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Wires every <see cref="ReaderCommand"/> to its handler on the
@@ -107,7 +107,7 @@ internal static class CommandBindings
                 var focused = provider.Focused;
                 var fields = new List<DiagnosticSnapshot.Field>
                 {
-                    new("OpenReader", typeof(CommandBindings).Assembly.GetName().Version?.ToString()),
+                    new("AURA", typeof(CommandBindings).Assembly.GetName().Version?.ToString()),
                     new(".NET", Environment.Version.ToString()),
                     new("OS", Environment.OSVersion.VersionString),
                     new("Architecture", System.Runtime.InteropServices.RuntimeInformation.OSArchitecture.ToString()),
@@ -124,7 +124,7 @@ internal static class CommandBindings
                     new("Log directory", LogPaths.LogDirectory),
                 };
 
-                copyToClipboard(DiagnosticSnapshot.Build("OpenReader diagnostics", fields));
+                copyToClipboard(DiagnosticSnapshot.Build("AURA diagnostics", fields));
                 Submit(SpeechReason.UserAnnouncement, DiagnosticSnapshot.SpokenSummary(fields.Count));
             }
             catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
@@ -286,7 +286,7 @@ internal static class CommandBindings
         sayAll.Cancel();
         queue.Clear();
         pipeline.Submit(new SpeechRequest(SpeechReason.UserAnnouncement, Node: null,
-            RawText: _enabled ? "OpenReader on" : "OpenReader off", AppExecutableName: null));
+            RawText: _enabled ? "AURA on" : "AURA off", AppExecutableName: null));
     }
 
     /// <summary>Launch the documentation URL via the OS shell. Public so tray menu can call it directly.</summary>
@@ -296,7 +296,7 @@ internal static class CommandBindings
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = "https://github.com/OpenReader/OpenReader",
+                FileName = "https://github.com/Aura/Aura",
                 UseShellExecute = true,
             });
         }

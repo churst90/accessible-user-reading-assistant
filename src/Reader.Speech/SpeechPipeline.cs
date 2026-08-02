@@ -1,13 +1,13 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Diagnostics;
-using OpenReader.Speech.Punctuation;
-using OpenReader.Speech.Queue;
-using OpenReader.Speech.Rules;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
+using Aura.Diagnostics;
+using Aura.Speech.Punctuation;
+using Aura.Speech.Queue;
+using Aura.Speech.Rules;
 using Serilog;
 
-namespace OpenReader.Speech;
+namespace Aura.Speech;
 
 /// <summary>
 /// Wires an <see cref="IAccessibilityProvider"/>'s event stream through the

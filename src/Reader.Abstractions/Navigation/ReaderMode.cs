@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Navigation;
+namespace Aura.Abstractions.Navigation;
 
 /// <summary>
 /// Whether keystrokes navigate the document or go to the application.

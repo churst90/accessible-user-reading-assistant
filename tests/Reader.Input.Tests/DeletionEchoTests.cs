@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Input.Echo;
+using Aura.Input.Echo;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 /// <summary>
 /// Deletion feedback is not character echo.

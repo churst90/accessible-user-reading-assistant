@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Diagnostics</RootNamespace>
-    <AssemblyName>OpenReader.Diagnostics</AssemblyName>
+    <RootNamespace>Aura.Diagnostics</RootNamespace>
+    <AssemblyName>Aura.Diagnostics</AssemblyName>
     <Description>Logging, metrics, perf counters. Bottom of the stack — depends on nothing.</Description>
   </PropertyGroup>
 

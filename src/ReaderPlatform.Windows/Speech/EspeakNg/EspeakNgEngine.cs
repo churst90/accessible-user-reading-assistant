@@ -2,12 +2,12 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NAudio.Wave;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Diagnostics;
+using Aura.Abstractions.Speech;
+using Aura.Diagnostics;
 using Serilog;
-using Engine = OpenReader.Platform.Windows.Speech.EspeakNg.EspeakNgInterop;
+using Engine = Aura.Platform.Windows.Speech.EspeakNg.EspeakNgInterop;
 
-namespace OpenReader.Platform.Windows.Speech.EspeakNg;
+namespace Aura.Platform.Windows.Speech.EspeakNg;
 
 /// <summary>
 /// <see cref="ISpeechEngine"/> over <c>libespeak-ng.dll</c> with

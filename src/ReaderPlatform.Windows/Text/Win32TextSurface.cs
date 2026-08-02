@@ -1,9 +1,9 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
-using OpenReader.Platform.Windows.Interop;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
+using Aura.Platform.Windows.Interop;
 
-namespace OpenReader.Platform.Windows.Text;
+namespace Aura.Platform.Windows.Text;
 
 /// <summary>
 /// <see cref="ITextSurface"/> over a classic Win32 edit control, via

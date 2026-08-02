@@ -1,4 +1,4 @@
-namespace OpenReader.Input.Commands;
+namespace Aura.Input.Commands;
 
 /// <summary>
 /// String ↔ <see cref="ReaderCommand"/> conversion for config files.

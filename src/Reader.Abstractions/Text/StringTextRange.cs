@@ -1,5 +1,5 @@
 
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// <see cref="ITextRange"/> over a <see cref="StringTextSurface"/>. Semantics

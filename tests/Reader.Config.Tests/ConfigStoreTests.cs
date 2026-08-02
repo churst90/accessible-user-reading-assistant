@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Config;
+using Aura.Config;
 using Xunit;
 
-namespace OpenReader.Config.Tests;
+namespace Aura.Config.Tests;
 
 public class ConfigStoreTests
 {
@@ -34,7 +34,7 @@ public class ConfigStoreTests
     [Fact]
     public void File_layer_loads_from_disk()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "openreader-config-tests-" + Guid.NewGuid().ToString("N"));
+        var dir = Path.Combine(Path.GetTempPath(), "aura-config-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, "config.json");
         try
@@ -57,7 +57,7 @@ public class ConfigStoreTests
     [Fact]
     public void Missing_file_is_treated_as_empty_layer()
     {
-        var path = Path.Combine(Path.GetTempPath(), "openreader-missing-" + Guid.NewGuid().ToString("N") + ".json");
+        var path = Path.Combine(Path.GetTempPath(), "aura-missing-" + Guid.NewGuid().ToString("N") + ".json");
 
         using var store = new ConfigStore();
         store.AddLayer("defaults", ReaderConfig.Defaults());
@@ -94,7 +94,7 @@ public class ConfigStoreTests
     [Fact]
     public void InsertFileLayer_places_layer_before_named_anchor()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "openreader-config-tests-" + Guid.NewGuid().ToString("N"));
+        var dir = Path.Combine(Path.GetTempPath(), "aura-config-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         var profilePath = Path.Combine(dir, "profile.json");
         try
@@ -127,7 +127,7 @@ public class ConfigStoreTests
     [Fact]
     public void InsertFileLayer_appends_when_anchor_missing()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "openreader-config-tests-" + Guid.NewGuid().ToString("N"));
+        var dir = Path.Combine(Path.GetTempPath(), "aura-config-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, "config.json");
         try
@@ -149,7 +149,7 @@ public class ConfigStoreTests
     [Fact]
     public void File_change_triggers_reload()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "openreader-config-tests-" + Guid.NewGuid().ToString("N"));
+        var dir = Path.Combine(Path.GetTempPath(), "aura-config-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, "config.json");
         try

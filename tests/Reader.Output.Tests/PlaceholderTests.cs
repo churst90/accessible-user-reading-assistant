@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace OpenReader.Output.Tests;
+namespace Aura.Output.Tests;
 
 public class PlaceholderTests
 {

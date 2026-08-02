@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Output</RootNamespace>
-    <AssemblyName>OpenReader.Output</AssemblyName>
+    <RootNamespace>Aura.Output</RootNamespace>
+    <AssemblyName>Aura.Output</AssemblyName>
     <Description>Arbitrates speech vs. braille vs. earcons.</Description>
   </PropertyGroup>
 

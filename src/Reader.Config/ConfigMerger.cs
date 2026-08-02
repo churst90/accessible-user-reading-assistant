@@ -1,4 +1,4 @@
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// Merges layered <see cref="ReaderConfig"/> instances. Later layers override

@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Plugins;
+namespace Aura.Abstractions.Plugins;
 
 /// <summary>
 /// Snapshot of a process passed to <see cref="IAppModule.Matches"/> when the

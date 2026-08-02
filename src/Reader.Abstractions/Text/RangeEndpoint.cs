@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>Which end of an <see cref="ITextRange"/> an operation applies to.</summary>
 public enum RangeEndpoint

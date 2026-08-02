@@ -1,4 +1,4 @@
-namespace OpenReader.Diagnostics;
+namespace Aura.Diagnostics;
 
 /// <summary>
 /// Keeps user content out of the log file.
@@ -11,7 +11,7 @@ namespace OpenReader.Diagnostics;
 /// definition, sensitive.
 /// </para>
 /// <para>
-/// Logs live at <c>%LocalAppData%\OpenReader\logs\</c>, survive reboots, and
+/// Logs live at <c>%LocalAppData%\Aura\logs\</c>, survive reboots, and
 /// are the first thing a user is asked to attach to a bug report.
 /// <c>DESIGN_PRINCIPLES.md</c> promises "we don't see anything they don't
 /// choose to send" — that promise is only true if spoken text never reaches

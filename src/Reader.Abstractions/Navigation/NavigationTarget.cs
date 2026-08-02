@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Navigation;
+namespace Aura.Abstractions.Navigation;
 
 /// <summary>
 /// A kind of element that quick navigation can jump between in

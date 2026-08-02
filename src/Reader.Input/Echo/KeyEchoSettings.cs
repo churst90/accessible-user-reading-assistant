@@ -1,4 +1,4 @@
-namespace OpenReader.Input.Echo;
+namespace Aura.Input.Echo;
 
 /// <summary>Per-feature toggles for keyboard echo.</summary>
 /// <remarks>

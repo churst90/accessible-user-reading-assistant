@@ -1,10 +1,10 @@
 using System.Runtime.Versioning;
 using FluentAssertions;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Platform.Windows.Speech;
+using Aura.Abstractions.Speech;
+using Aura.Platform.Windows.Speech;
 using Xunit;
 
-namespace OpenReader.Platform.Windows.Tests;
+namespace Aura.Platform.Windows.Tests;
 
 [SupportedOSPlatform("windows")]
 public class ProsodyCompositionTests

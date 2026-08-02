@@ -1,9 +1,9 @@
-using OpenReader.Abstractions.Input;
-using OpenReader.Diagnostics;
-using OpenReader.Input.Commands;
+using Aura.Abstractions.Input;
+using Aura.Diagnostics;
+using Aura.Input.Commands;
 using Serilog;
 
-namespace OpenReader.Input.Gestures;
+namespace Aura.Input.Gestures;
 
 /// <summary>
 /// Resolves <see cref="RawInput"/> events to <see cref="ReaderCommand"/>s

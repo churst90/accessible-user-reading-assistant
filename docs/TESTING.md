@@ -1,4 +1,4 @@
-# Testing OpenReader
+# Testing Aura
 
 For the first people trying this. Read the whole page before you start — a
 couple of things below will otherwise look like bugs.
@@ -11,8 +11,8 @@ it to be wrong, not to be finished.
 ## Before you start
 
 **Do not use this as your only screen reader.** Keep NVDA or Narrator running
-and know how to switch back. If OpenReader stops speaking you need a way to
-recover that does not depend on OpenReader.
+and know how to switch back. If Aura stops speaking you need a way to
+recover that does not depend on Aura.
 
 Requirements:
 
@@ -31,7 +31,7 @@ dotnet run --project src/ReaderHost.Windows
 ```
 
 Press **Reader+Q** (Insert+Q or CapsLock+Q) to exit. If it stops responding
-entirely, kill `OpenReader.exe` from Task Manager — though see the known gap
+entirely, kill `Aura.exe` from Task Manager — though see the known gap
 about elevated windows below, because Task Manager is one of them.
 
 ---
@@ -47,10 +47,10 @@ reader reads banking pages and password managers aloud; none of that belongs in
 a bug report. If you need to show what was announced, describe it in your own
 words.
 
-Logs are at `%LocalAppData%\OpenReader\logs\openreader-<date>.log`. They are
+Logs are at `%LocalAppData%\Aura\logs\aura-<date>.log`. They are
 content-redacted by default. If you are asked to turn redaction off for a
 specific reproduction, set `Diagnostics.RedactContent` to `false` in
-`%AppData%\OpenReader\config.json`, reproduce, then **turn it back on** and
+`%AppData%\Aura\config.json`, reproduce, then **turn it back on** and
 check the log before sending it.
 
 A good report is: what you did, what you expected to hear, what you actually

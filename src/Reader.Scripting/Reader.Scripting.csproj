@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>OpenReader.Scripting</RootNamespace>
-    <AssemblyName>OpenReader.Scripting</AssemblyName>
+    <RootNamespace>Aura.Scripting</RootNamespace>
+    <AssemblyName>Aura.Scripting</AssemblyName>
     <Description>Plugin host. Loads, sandboxes, version-checks app modules.</Description>
   </PropertyGroup>
 

@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.Speech.Queue;
+namespace Aura.Speech.Queue;
 
 /// <summary>
 /// Priority queue of <see cref="SpeechUtterance"/>s with cancel-group and
@@ -133,7 +133,7 @@ public sealed class SpeechQueue : IDisposable
     /// <summary>
     /// Tell the queue which cancel-group is currently being spoken by the
     /// engine, or <c>null</c> when the engine is idle. The drain loop calls
-    /// this around <see cref="OpenReader.Abstractions.Speech.ISpeechEngine.SpeakAsync"/>
+    /// this around <see cref="Aura.Abstractions.Speech.ISpeechEngine.SpeakAsync"/>
     /// so cancel-group enqueues can preempt mid-utterance, not just drop pending items.
     /// </summary>
     public void SetCurrentSpeakingGroup(string? group)

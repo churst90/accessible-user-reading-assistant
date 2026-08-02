@@ -1,4 +1,4 @@
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// Persists a single layer's <see cref="ReaderConfig"/> to disk as JSON.

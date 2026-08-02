@@ -1,9 +1,9 @@
 using System.Runtime.Versioning;
 using System.Windows.Threading;
-using OpenReader.UI.Dialogs;
+using Aura.UI.Dialogs;
 using Serilog;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Owner for the WPF Yes/No exit dialog. On Yes, signals the host's

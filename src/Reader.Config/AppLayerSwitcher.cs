@@ -1,7 +1,7 @@
-using OpenReader.Diagnostics;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// Manages the "app-specific override" layer at the top of <see cref="ConfigStore"/>.
@@ -9,7 +9,7 @@ namespace OpenReader.Config;
 /// <remarks>
 /// <para>
 /// The layer is rebuilt when the foreground process changes. If
-/// <c>%AppData%\OpenReader\apps\&lt;exe&gt;\config.json</c> exists for the
+/// <c>%AppData%\Aura\apps\&lt;exe&gt;\config.json</c> exists for the
 /// new exe, its content becomes the top layer; otherwise the layer is empty.
 /// </para>
 /// <para>

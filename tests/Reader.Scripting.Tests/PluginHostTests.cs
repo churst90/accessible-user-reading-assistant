@@ -1,11 +1,11 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Scripting;
-using OpenReader.TestKit;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
+using Aura.Scripting;
+using Aura.TestKit;
 using Xunit;
 
-namespace OpenReader.Scripting.Tests;
+namespace Aura.Scripting.Tests;
 
 /// <summary>
 /// End-to-end tests for <see cref="PluginHost"/>. Set up a real plugin
@@ -20,9 +20,9 @@ public class PluginHostTests : IDisposable
 
     public PluginHostTests()
     {
-        _root = Path.Combine(Path.GetTempPath(), "openreader-plugin-tests-" + Guid.NewGuid().ToString("N"));
+        _root = Path.Combine(Path.GetTempPath(), "aura-plugin-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_root);
-        _provider = new SyntheticAccessibilityProvider(System.Array.Empty<OpenReader.Abstractions.Accessibility.AccessibleNode>());
+        _provider = new SyntheticAccessibilityProvider(System.Array.Empty<Aura.Abstractions.Accessibility.AccessibleNode>());
     }
 
     public void Dispose()

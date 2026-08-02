@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Plugins;
+namespace Aura.Abstractions.Plugins;
 
 /// <summary>
 /// A pluggable per-application shim. The host loads and matches modules against

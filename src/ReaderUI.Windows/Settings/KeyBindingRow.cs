@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using OpenReader.Input.Commands;
+using Aura.Input.Commands;
 
-namespace OpenReader.UI.Settings;
+namespace Aura.UI.Settings;
 
 /// <summary>One row in the rebind grid: a command paired with its current chord text.</summary>
 public sealed class KeyBindingRow : INotifyPropertyChanged

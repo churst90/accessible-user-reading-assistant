@@ -1,12 +1,12 @@
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Text;
-using OpenReader.Platform.Windows.Accessibility.Native;
+using Aura.Abstractions.Text;
+using Aura.Platform.Windows.Accessibility.Native;
 using Windows.Win32.UI.Accessibility;
-using OurTextUnit = OpenReader.Abstractions.Text.TextUnit;
-// global:: qualified — plain 'Windows' would bind to OpenReader.Platform.Windows.
+using OurTextUnit = Aura.Abstractions.Text.TextUnit;
+// global:: qualified — plain 'Windows' would bind to Aura.Platform.Windows.
 using UiaUnit = global::Windows.Win32.UI.Accessibility.TextUnit;
 
-namespace OpenReader.Platform.Windows.Text;
+namespace Aura.Platform.Windows.Text;
 
 /// <summary>
 /// <see cref="ITextRange"/> over a native <see cref="IUIAutomationTextRange"/>.

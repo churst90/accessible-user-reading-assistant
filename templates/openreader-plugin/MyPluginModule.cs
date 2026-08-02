@@ -1,10 +1,10 @@
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
 namespace MyPlugin;
 
 /// <summary>
-/// Sample OpenReader app module. Edit Matches() to attach to a different
+/// Sample Aura app module. Edit Matches() to attach to a different
 /// process and OnAttachAsync() to register your speech rules or trigger
 /// announcements.
 /// </summary>

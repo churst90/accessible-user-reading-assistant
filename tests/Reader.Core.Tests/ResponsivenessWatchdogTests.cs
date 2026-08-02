@@ -1,9 +1,9 @@
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
-using OpenReader.Core.Diagnostics;
+using Aura.Core.Diagnostics;
 using Xunit;
 
-namespace OpenReader.Core.Tests;
+namespace Aura.Core.Tests;
 
 public class ResponsivenessWatchdogTests
 {

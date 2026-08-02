@@ -1,4 +1,4 @@
-namespace OpenReader.Core.Diagnostics;
+namespace Aura.Core.Diagnostics;
 
 /// <summary>
 /// Notices when the reader has gone silent while the user is still driving it,

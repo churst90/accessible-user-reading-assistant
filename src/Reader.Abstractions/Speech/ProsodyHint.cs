@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Speech;
+namespace Aura.Abstractions.Speech;
 
 /// <summary>
 /// Per-utterance prosody adjustments. Values are <em>deltas</em> from the

@@ -1,8 +1,8 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.Scripting;
+namespace Aura.Scripting;
 
 /// <summary>
 /// Per-attached-plugin implementation of <see cref="IAppContext"/>. Owns the

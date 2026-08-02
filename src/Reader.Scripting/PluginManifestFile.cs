@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OpenReader.Abstractions.Plugins;
+using Aura.Abstractions.Plugins;
 
-namespace OpenReader.Scripting;
+namespace Aura.Scripting;
 
 /// <summary>
 /// On-disk schema for a plugin's <c>manifest.json</c>. Deserialized by the
@@ -50,7 +50,7 @@ public sealed record PluginManifestFile
     /// <list type="bullet">
     ///   <item><c>accessibility-read</c> — observe focus / value / text events.</item>
     ///   <item><c>accessibility-write</c> — invoke patterns (Click, Toggle, etc.).</item>
-    ///   <item><c>speech-rules</c> — register <see cref="OpenReader.Abstractions.Speech.SpeechRule"/>s.</item>
+    ///   <item><c>speech-rules</c> — register <see cref="Aura.Abstractions.Speech.SpeechRule"/>s.</item>
     ///   <item><c>commands</c> — register reader commands and chord bindings.</item>
     ///   <item><c>audio-output</c> — play earcons / audio-theme cues.</item>
     ///   <item><c>settings-panel</c> — contribute a Settings dialog category.</item>

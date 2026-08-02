@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Diagnostics;
+using Aura.Diagnostics;
 using Xunit;
 
-namespace OpenReader.Diagnostics.Tests;
+namespace Aura.Diagnostics.Tests;
 
 public sealed class RedactionTests : IDisposable
 {

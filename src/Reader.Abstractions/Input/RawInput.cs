@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Input;
+namespace Aura.Abstractions.Input;
 
 /// <summary>
 /// Modifier keys held while another key was pressed. Multi-flag.

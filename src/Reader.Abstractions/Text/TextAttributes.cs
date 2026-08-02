@@ -1,4 +1,4 @@
-namespace OpenReader.Abstractions.Text;
+namespace Aura.Abstractions.Text;
 
 /// <summary>
 /// Well-known keys for <see cref="ITextRange.GetAttributes"/>. Backends map

@@ -1,9 +1,9 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Speech.Engines;
+using Aura.Abstractions.Speech;
+using Aura.Speech.Engines;
 using Xunit;
 
-namespace OpenReader.Speech.Tests;
+namespace Aura.Speech.Tests;
 
 public class EngineRouterTests
 {

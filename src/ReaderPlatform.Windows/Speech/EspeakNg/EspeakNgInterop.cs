@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace OpenReader.Platform.Windows.Speech.EspeakNg;
+namespace Aura.Platform.Windows.Speech.EspeakNg;
 
 /// <summary>
 /// P/Invoke surface for <c>libespeak-ng.dll</c>. Mirrors the C API in

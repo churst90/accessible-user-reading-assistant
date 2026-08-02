@@ -1,8 +1,8 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.AppModules.NotepadPlusPlus;
+namespace Aura.AppModules.NotepadPlusPlus;
 
 /// <summary>
 /// First-party app module for Notepad++ (<c>notepad++.exe</c>). Adds rules
@@ -14,11 +14,11 @@ public sealed class NotepadPlusPlusModule : IAppModule
     private IDisposable? _tabRule;
 
     public AppModuleManifest Manifest { get; } = new(
-        Id: "openreader.appmodule.notepad-plus-plus",
+        Id: "aura.appmodule.notepad-plus-plus",
         DisplayName: "Notepad++",
         Version: new System.Version(0, 1, 0),
         ApiVersion: new System.Version(1, 0),
-        Author: "OpenReader",
+        Author: "Aura",
         Description: "Tab announcement rules for Notepad++.");
 
     public bool Matches(ProcessInfo process)

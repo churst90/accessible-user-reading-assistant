@@ -18,7 +18,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <RootNamespace>OpenReader.AppModules.$(MSBuildProjectName.Replace('AppModule.', ''))</RootNamespace>
+    <RootNamespace>Aura.AppModules.$(MSBuildProjectName.Replace('AppModule.', ''))</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

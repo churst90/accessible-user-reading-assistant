@@ -1,7 +1,7 @@
-using OpenReader.Diagnostics;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Input.Commands;
+namespace Aura.Input.Commands;
 
 /// <summary>
 /// Single-writer / many-reader dispatcher between the gesture map and command

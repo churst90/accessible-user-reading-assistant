@@ -1,9 +1,9 @@
 using System.Globalization;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
 using YamlDotNet.RepresentationModel;
 
-namespace OpenReader.Speech.Rules;
+namespace Aura.Speech.Rules;
 
 /// <summary>
 /// Loads <see cref="SpeechRule"/>s from YAML.
@@ -15,7 +15,7 @@ namespace OpenReader.Speech.Rules;
 /// </remarks>
 public static class YamlRuleLoader
 {
-    private const string DefaultsResourceName = "OpenReader.Speech.Rules.defaults.yaml";
+    private const string DefaultsResourceName = "Aura.Speech.Rules.defaults.yaml";
 
     /// <summary>Load the rules embedded in the Reader.Speech assembly.</summary>
     public static IReadOnlyList<SpeechRule> LoadDefaults()

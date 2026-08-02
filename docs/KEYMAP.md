@@ -117,7 +117,7 @@ name, so "command keys" off does not silence it either.
 
 ## Rebinding
 
-Settings → Key bindings, or edit `%AppData%\OpenReader\config.json`:
+Settings → Key bindings, or edit `%AppData%\Aura\config.json`:
 
 ```json
 {

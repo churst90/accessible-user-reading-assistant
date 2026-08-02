@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Input.Echo;
+using Aura.Input.Echo;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 /// <summary>
 /// Asserts that key echo is off by default. Users opt in to each echo via

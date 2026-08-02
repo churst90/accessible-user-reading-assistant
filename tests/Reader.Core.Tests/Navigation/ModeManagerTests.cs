@@ -1,10 +1,10 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Navigation;
-using OpenReader.Core.Navigation;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Navigation;
+using Aura.Core.Navigation;
 using Xunit;
 
-namespace OpenReader.Core.Tests.Navigation;
+namespace Aura.Core.Tests.Navigation;
 
 public class ModeManagerTests
 {

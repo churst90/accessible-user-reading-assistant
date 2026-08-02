@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Input.Gestures;
+using Aura.Input.Gestures;
 using Xunit;
 
-namespace OpenReader.Input.Tests;
+namespace Aura.Input.Tests;
 
 public class DoubleTapDetectorTests
 {

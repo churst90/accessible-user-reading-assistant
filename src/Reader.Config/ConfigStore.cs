@@ -1,7 +1,7 @@
-using OpenReader.Diagnostics;
+using Aura.Diagnostics;
 using Serilog;
 
-namespace OpenReader.Config;
+namespace Aura.Config;
 
 /// <summary>
 /// Owns the merged <see cref="ReaderConfig"/> and emits change events when

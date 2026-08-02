@@ -1,7 +1,7 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
 
-namespace OpenReader.Abstractions.Navigation;
+namespace Aura.Abstractions.Navigation;
 
 /// <summary>
 /// A document flattened into a linear reading surface, for

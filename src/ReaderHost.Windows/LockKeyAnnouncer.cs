@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using OpenReader.Abstractions.Input;
+using Aura.Abstractions.Input;
 
-namespace OpenReader.Host;
+namespace Aura.Host;
 
 /// <summary>
 /// Announces toggle-state changes for CapsLock, NumLock, and ScrollLock by

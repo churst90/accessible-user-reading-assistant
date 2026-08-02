@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.RegularExpressions;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.Speech.Rules;
+namespace Aura.Speech.Rules;
 
 /// <summary>
 /// Composes a <see cref="SpeechUtterance"/> from a <see cref="SpeechRequest"/>

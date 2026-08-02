@@ -1,11 +1,11 @@
 using FluentAssertions;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
-using OpenReader.Scripting;
-using OpenReader.TestKit;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
+using Aura.Scripting;
+using Aura.TestKit;
 using Xunit;
 
-namespace OpenReader.Scripting.Tests;
+namespace Aura.Scripting.Tests;
 
 /// <summary>
 /// Verifies that the four first-party app modules (Browser, Explorer,
@@ -24,20 +24,20 @@ public class FirstPartyAppModuleTests
 {
     private static readonly string[] ExpectedManifestIds =
     {
-        "openreader.appmodule.browser",
-        "openreader.appmodule.explorer",
-        "openreader.appmodule.vscode",
-        "openreader.appmodule.notepad-plus-plus",
+        "aura.appmodule.browser",
+        "aura.appmodule.explorer",
+        "aura.appmodule.vscode",
+        "aura.appmodule.notepad-plus-plus",
     };
 
 
     private static string ResolveAppModulesRoot()
     {
-        // Find the repo root by walking up until we see "OpenReader.slnx".
+        // Find the repo root by walking up until we see "AURA.slnx".
         var dir = AppContext.BaseDirectory;
         while (!string.IsNullOrEmpty(dir))
         {
-            if (File.Exists(Path.Combine(dir, "OpenReader.slnx")))
+            if (File.Exists(Path.Combine(dir, "AURA.slnx")))
             {
                 break;
             }
@@ -74,9 +74,9 @@ public class FirstPartyAppModuleTests
     public async Task All_four_first_party_modules_load()
     {
         var root = ResolveAppModulesRoot();
-        Assert.False(string.IsNullOrEmpty(root), "ReaderHost.Windows app-modules output not found; run `dotnet build OpenReader.slnx` before testing.");
+        Assert.False(string.IsNullOrEmpty(root), "ReaderHost.Windows app-modules output not found; run `dotnet build AURA.slnx` before testing.");
 
-        using var provider = new SyntheticAccessibilityProvider(System.Array.Empty<OpenReader.Abstractions.Accessibility.AccessibleNode>());
+        using var provider = new SyntheticAccessibilityProvider(System.Array.Empty<Aura.Abstractions.Accessibility.AccessibleNode>());
         await using var host = new PluginHost(root, provider, _ => true);
         await host.LoadAllAsync();
 
@@ -84,17 +84,17 @@ public class FirstPartyAppModuleTests
     }
 
     [Theory]
-    [InlineData("msedge.exe", "openreader.appmodule.browser")]
-    [InlineData("chrome.exe", "openreader.appmodule.browser")]
-    [InlineData("explorer.exe", "openreader.appmodule.explorer")]
-    [InlineData("code.exe", "openreader.appmodule.vscode")]
-    [InlineData("notepad++.exe", "openreader.appmodule.notepad-plus-plus")]
+    [InlineData("msedge.exe", "aura.appmodule.browser")]
+    [InlineData("chrome.exe", "aura.appmodule.browser")]
+    [InlineData("explorer.exe", "aura.appmodule.explorer")]
+    [InlineData("code.exe", "aura.appmodule.vscode")]
+    [InlineData("notepad++.exe", "aura.appmodule.notepad-plus-plus")]
     public async Task Module_attaches_for_its_target_executable(string exe, string expectedId)
     {
         var root = ResolveAppModulesRoot();
-        Assert.False(string.IsNullOrEmpty(root), "ReaderHost.Windows app-modules output not found; run `dotnet build OpenReader.slnx` before testing.");
+        Assert.False(string.IsNullOrEmpty(root), "ReaderHost.Windows app-modules output not found; run `dotnet build AURA.slnx` before testing.");
 
-        using var provider = new SyntheticAccessibilityProvider(System.Array.Empty<OpenReader.Abstractions.Accessibility.AccessibleNode>());
+        using var provider = new SyntheticAccessibilityProvider(System.Array.Empty<Aura.Abstractions.Accessibility.AccessibleNode>());
         var announcements = new List<SpeechRequest>();
         await using var host = new PluginHost(root, provider, r => { announcements.Add(r); return true; });
         await host.LoadAllAsync();
@@ -110,9 +110,9 @@ public class FirstPartyAppModuleTests
     public async Task Non_matching_process_attaches_nothing()
     {
         var root = ResolveAppModulesRoot();
-        Assert.False(string.IsNullOrEmpty(root), "ReaderHost.Windows app-modules output not found; run `dotnet build OpenReader.slnx` before testing.");
+        Assert.False(string.IsNullOrEmpty(root), "ReaderHost.Windows app-modules output not found; run `dotnet build AURA.slnx` before testing.");
 
-        using var provider = new SyntheticAccessibilityProvider(System.Array.Empty<OpenReader.Abstractions.Accessibility.AccessibleNode>());
+        using var provider = new SyntheticAccessibilityProvider(System.Array.Empty<Aura.Abstractions.Accessibility.AccessibleNode>());
         await using var host = new PluginHost(root, provider, _ => true);
         await host.LoadAllAsync();
         await host.OnFocusChangedAsync(Process("calc.exe", "Calculator"));

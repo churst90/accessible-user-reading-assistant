@@ -1,8 +1,8 @@
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Plugins;
-using OpenReader.Abstractions.Speech;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Speech;
 
-namespace OpenReader.AppModules.VsCode;
+namespace Aura.AppModules.VsCode;
 
 /// <summary>
 /// First-party app module for Visual Studio Code (<c>code.exe</c>). VS Code
@@ -16,11 +16,11 @@ public sealed class VsCodeModule : IAppModule
     private IDisposable? _statusRule;
 
     public AppModuleManifest Manifest { get; } = new(
-        Id: "openreader.appmodule.vscode",
+        Id: "aura.appmodule.vscode",
         DisplayName: "Visual Studio Code",
         Version: new System.Version(0, 1, 0),
         ApiVersion: new System.Version(1, 0),
-        Author: "OpenReader",
+        Author: "Aura",
         Description: "Editor and status-bar tuning for VS Code.");
 
     public bool Matches(ProcessInfo process)

@@ -1,8 +1,8 @@
 using FluentAssertions;
-using OpenReader.Scripting;
+using Aura.Scripting;
 using Xunit;
 
-namespace OpenReader.Scripting.Tests;
+namespace Aura.Scripting.Tests;
 
 public class PluginApiTests
 {

@@ -1,8 +1,8 @@
 using System.Runtime.Versioning;
 using System.Windows.Automation;
-using OpenReader.Abstractions.Accessibility;
+using Aura.Abstractions.Accessibility;
 
-namespace OpenReader.Platform.Windows.Accessibility;
+namespace Aura.Platform.Windows.Accessibility;
 
 /// <summary>
 /// Single source of truth for UIA <see cref="ControlType"/> → <see cref="AccessibleRole"/>

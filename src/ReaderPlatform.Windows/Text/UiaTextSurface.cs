@@ -1,10 +1,10 @@
 using System.Runtime.Versioning;
 using System.Windows.Automation;
-using OpenReader.Abstractions.Accessibility;
-using OpenReader.Abstractions.Text;
-using OurTextUnit = OpenReader.Abstractions.Text.TextUnit;
+using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Text;
+using OurTextUnit = Aura.Abstractions.Text.TextUnit;
 
-namespace OpenReader.Platform.Windows.Text;
+namespace Aura.Platform.Windows.Text;
 
 /// <summary>
 /// <see cref="ITextSurface"/> over a UIA <c>TextPattern</c>. The primary text

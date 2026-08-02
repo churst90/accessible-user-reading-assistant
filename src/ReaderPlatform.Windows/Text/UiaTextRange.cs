@@ -1,14 +1,14 @@
 using System.Runtime.Versioning;
 using System.Windows.Automation;
-using OpenReader.Abstractions.Text;
+using Aura.Abstractions.Text;
 using UiaTextUnit = System.Windows.Automation.Text.TextUnit;
 using UiaEndpoint = System.Windows.Automation.Text.TextPatternRangeEndpoint;
 // Aliased rather than importing System.Windows.Automation.Text wholesale: that
 // namespace also defines a TextUnit, which would collide with ours.
 using UiaRange = System.Windows.Automation.Text.TextPatternRange;
-using OurTextUnit = OpenReader.Abstractions.Text.TextUnit;
+using OurTextUnit = Aura.Abstractions.Text.TextUnit;
 
-namespace OpenReader.Platform.Windows.Text;
+namespace Aura.Platform.Windows.Text;
 
 /// <summary>
 /// <see cref="ITextRange"/> over a UIA <see cref="UiaRange"/>.

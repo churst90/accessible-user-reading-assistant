@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using OpenReader.Abstractions.Input;
+using Aura.Abstractions.Input;
 
-namespace OpenReader.Input.Echo;
+namespace Aura.Input.Echo;
 
 /// <summary>
 /// Translates a virtual-key code into the printable character it produces
