@@ -1,52 +1,170 @@
 # Default key bindings
 
-`Reader` = Insert (desktop layout) or CapsLock (laptop layout).
+**`Reader`** = **Insert** (desktop layout) or **CapsLock** (laptop layout).
+Configurable via `Input.ReaderModifier` — `insert`, `capslock`, or `both`
+(the default is `both`, so either key works).
 
-## Reading and review
+This page is checked against the code by `KeymapDocumentationTests`. If you add
+a binding and do not document it, that test fails.
 
-| Chord                           | Action                                        |
-|---------------------------------|-----------------------------------------------|
-| `Reader+F`                      | Report focused control                         |
-| `Reader+T`                      | Read window title                              |
-| `Reader+F12`                    | Speak system time (double-press: speak date)   |
-| `Reader+A`                      | Say all from review cursor                     |
-| `Reader+P`                      | Cycle punctuation level (None / Some / Most / All) |
-| `Reader+Arrow`                  | Char / line review (laptop + desktop both)     |
-| `Reader+Ctrl+Arrow`             | Word review                                    |
-| `Reader+.`                      | Sync review cursor to focus                    |
-| `Reader+Ctrl+Home / End`        | Review top / bottom (laptop)                   |
+---
 
-## Numpad review (desktop layout, NumLock ON)
+## Everywhere (both layouts)
+
+| Chord | Action |
+|---|---|
+| `Ctrl` alone | Stop speech — observed, still passes through to the app |
+| `Reader+Tab` | Report focused control |
+| `Reader+F` | Report focused control |
+| `Reader+T` | Report title — the window title, not the focused control |
+| `Reader+F12` | Speak time. Press twice quickly for the date. |
+| `Reader+L` | Read current line |
+| `Reader+A` | Say all from the review cursor |
+| `Reader+P` | Cycle punctuation level — None / Some / Most / All |
+| `Reader+1` | Toggle keyboard help mode |
+| `Reader+F1` | Open documentation |
+| `Reader+N` | Open settings |
+| `Reader+O` | Open settings (alias) |
+| `Reader+Q` | Exit dialog |
+| `Ctrl+Reader+S` | Choose synthesiser |
+| `Ctrl+Reader+D` | **Copy diagnostics to the clipboard** — use this in bug reports |
+
+---
+
+## Desktop layout — numpad review (NumLock ON)
 
 ```
-  7  8  9       Top   PrevLine   -
-  4  5  6   PrevChar  CurChar    NextChar
-  1  2  3       End   NextLine   -
+ 7 prev line    8 current line    9 next line
+ 4 prev word    5 current word    6 next word
+ 1 prev char    2 current char    3 next char
 ```
-`Ctrl+Numpad 4 / 6` = previous / next word. Numpad keys are intercepted so
-they review without inserting digits or moving the system caret.
 
-## Modes and meta
+| Chord | Action |
+|---|---|
+| `Shift+Numpad7` | Review to top |
+| `Shift+Numpad1` | Review to bottom |
+| `Reader+Numpad+` | Say all from cursor |
+| `Reader+Down` | Say all from cursor |
+| `Reader+Shift+Down` | Say all from the beginning |
+| `Reader+Up` | Read current line |
+| `Reader+Numpad.` | Move review to focus |
+| `Reader+.` | Move review to focus |
 
-| Chord                           | Action                                        |
-|---------------------------------|-----------------------------------------------|
-| `Reader+1`                      | Toggle keyboard help mode (any chord names itself; `Reader+1` or `Ctrl` exits) |
-| `Reader+O`                      | Open settings                                  |
-| `Reader+Q`                      | Open exit dialog (Yes / No)                    |
-| `Reader+F1`                     | Open documentation                             |
-| `Ctrl` (alone)                  | Stop speech (observed; passes through)         |
-| `CapsLock` (double-tap)         | Toggle screen reader on / off (laptop layout)  |
-| `CapsLock` (hold)               | Use as Reader modifier (laptop layout)         |
+Numpad keys are intercepted, so they review instead of typing digits.
 
-## Notes on CapsLock
+---
 
-In laptop layout, CapsLock is a hybrid:
+## Laptop layout — main arrow cluster
 
-- **Hold + another key** → Reader modifier (e.g. `CapsLock+Down` = next line).
-- **Solo tap** → no-op for the OS (CapsLock toggle suppressed). Two solo
-  taps within ~450 ms toggle the screen reader as a whole (`ToggleEnabled`).
-- **Single solo tap** alone does nothing visible — it's the half of the
-  double-tap gesture.
+| Chord | Action |
+|---|---|
+| `Reader+Left` / `Reader+Right` | Previous / next character |
+| `Reader+.` | Current character |
+| `Ctrl+Reader+Left` / `Ctrl+Reader+Right` | Previous / next word |
+| `Ctrl+Reader+.` | Current word |
+| `Reader+Up` / `Reader+Down` | Previous / next line |
+| `Shift+Reader+.` | Current line |
+| `Shift+Reader+A` | Say all from cursor |
+| `Ctrl+Shift+Reader+A` | Say all from the beginning |
+| `Shift+Reader+Home` | Review to top |
+| `Shift+Reader+End` | Review to bottom |
 
-In desktop layout CapsLock is *not* the Reader modifier and behaves like a
-normal CapsLock key.
+---
+
+## Not on the keyboard
+
+| Action | How |
+|---|---|
+| Toggle the screen reader on/off | Double-tap CapsLock, or the tray menu |
+| Speak the date | Press `Reader+F12` twice quickly |
+
+---
+
+## CapsLock behaviour
+
+CapsLock is a hybrid when it is the Reader modifier:
+
+- **Held with another key** — acts as the Reader modifier
+- **Tapped once alone** — nothing; the OS CapsLock toggle is suppressed
+- **Tapped twice quickly** (~450 ms) — toggles the screen reader on and off
+
+When `Input.ReaderModifier` is `insert`, CapsLock behaves like a normal
+CapsLock key.
+
+---
+
+## Rebinding
+
+Settings → Key bindings, or edit `%AppData%\OpenReader\config.json`:
+
+```json
+{
+  "Input": {
+    "KeyBindings": {
+      "Reader+Shift+L": "ReadLine",
+      "Ctrl+Alt+P": "CyclePunctuationLevel"
+    }
+  }
+}
+```
+
+Chord syntax is modifiers plus a key, joined by `+`, in any order and
+case-insensitive: `Reader`, `Ctrl`/`Control`, `Shift`, `Alt`, `Win`. Changes
+apply on save — no restart.
+
+User bindings live in their own layer and override the built-in defaults
+without erasing them, so removing a rebinding restores the original.
+
+---
+
+## Command reference
+
+The exact names to use in `Input.KeyBindings`. Every command is listed,
+including the two with no default chord.
+
+| Command | Does | Default chord |
+|---|---|---|
+| `StopSpeech` | Stop speaking immediately | `Ctrl` |
+| `SayAll` | Read from the beginning | `Reader+Shift+Down` (desktop), `Ctrl+Shift+Reader+A` (laptop) |
+| `SayAllFromCursor` | Read from the review cursor | `Reader+A`, `Reader+Numpad+`, `Reader+Down` |
+| `ReadCharacter` | Speak the character at the review cursor | `Numpad2` / `Reader+.` |
+| `ReadNextCharacter` | Move right one character and speak it | `Numpad3` / `Reader+Right` |
+| `ReadPreviousCharacter` | Move left one character and speak it | `Numpad1` / `Reader+Left` |
+| `ReadWord` | Speak the word at the review cursor | `Numpad5` / `Ctrl+Reader+.` |
+| `ReadNextWord` | Move to the next word and speak it | `Numpad6` / `Ctrl+Reader+Right` |
+| `ReadPreviousWord` | Move to the previous word and speak it | `Numpad4` / `Ctrl+Reader+Left` |
+| `ReadLine` | Speak the line at the review cursor | `Numpad8`, `Reader+L`, `Reader+Up` / `Shift+Reader+.` |
+| `ReadNextLine` | Move down one line and speak it | `Numpad9` / `Reader+Down` |
+| `ReadPreviousLine` | Move up one line and speak it | `Numpad7` / `Reader+Up` |
+| `ReviewMoveToTop` | Review cursor to the start | `Shift+Numpad7` / `Shift+Reader+Home` |
+| `ReviewMoveToBottom` | Review cursor to the end | `Shift+Numpad1` / `Shift+Reader+End` |
+| `ReviewMoveToFocus` | Review cursor back to the focused control | `Reader+.`, `Reader+Numpad.` |
+| `ReportFocus` | Describe the focused control | `Reader+Tab`, `Reader+F` |
+| `ReportTitle` | Speak the window title | `Reader+T` |
+| `ReportTime` | Speak the time | `Reader+F12` |
+| `ReportDate` | Speak the date | *(none — double-tap `Reader+F12`)* |
+| `CyclePunctuationLevel` | Cycle punctuation verbosity | `Reader+P` |
+| `ToggleKeyboardHelp` | Announce keys instead of running them | `Reader+1` |
+| `ToggleEnabled` | Turn the reader on or off | *(none — double-tap CapsLock, or the tray)* |
+| `OpenSettings` | Open the settings window | `Reader+N`, `Reader+O` |
+| `OpenDocumentation` | Open the documentation | `Reader+F1` |
+| `OpenExitDialog` | Open the exit confirmation | `Reader+Q` |
+| `OpenSynthesizerDialog` | Choose the speech synthesiser | `Ctrl+Reader+S` |
+| `ReportDiagnostics` | Copy a diagnostic snapshot to the clipboard | `Ctrl+Reader+D` |
+
+---
+
+## Layers
+
+Bindings resolve through context-scoped layers, most specific first:
+
+| Layer | Priority | Active when |
+|---|---|---|
+| `readmode` | 300 | Reading a document (Phase 4c) |
+| `app:<exe>` | 200 | That application is focused |
+| `user` | 100 | Always — your rebindings |
+| `default` | 0 | Always — the tables above |
+
+This is what lets Read mode bind bare `h` to "next heading" without breaking
+the letter `h` everywhere else. Nothing populates `readmode` yet; see
+[`READ_TYPE_MODES.md`](READ_TYPE_MODES.md).

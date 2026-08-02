@@ -15,16 +15,25 @@ namespace OpenReader.Abstractions.Navigation;
 public enum ReaderMode
 {
     /// <summary>
+    /// Keystrokes go to the application. What the user types is entered;
+    /// reader commands still work through the reader modifier.
+    /// </summary>
+    /// <remarks>
+    /// <b>Deliberately zero.</b> A default-initialised struct holding a
+    /// <see cref="ReaderMode"/> gets this value, and the two modes fail very
+    /// differently: defaulting to <see cref="Read"/> means a
+    /// zero-initialised context silently swallows the user's typing, with no
+    /// error and nothing on screen to explain it. Defaulting to
+    /// <see cref="Type"/> means at worst a shortcut does not fire. The
+    /// recoverable failure gets the zero.
+    /// </remarks>
+    Type = 0,
+
+    /// <summary>
     /// Keystrokes navigate. Arrows move through the document by line and
     /// character, single letters jump between elements (<c>h</c> for the next
     /// heading, <c>k</c> for the next link), and the application never sees
     /// them.
     /// </summary>
-    Read,
-
-    /// <summary>
-    /// Keystrokes go to the application. What the user types is entered;
-    /// reader commands still work through the reader modifier.
-    /// </summary>
-    Type,
+    Read = 1,
 }
