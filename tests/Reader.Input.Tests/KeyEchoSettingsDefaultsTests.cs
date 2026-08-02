@@ -16,8 +16,7 @@ public class KeyEchoSettingsDefaultsTests
     {
         var defaults = KeyEchoSettings.Defaults;
 
-        defaults.SpeakModifiers.Should().BeFalse();
-        defaults.SpeakNavigationKeys.Should().BeFalse();
+        defaults.SpeakCommandKeys.Should().BeFalse();
         defaults.SpeakCharacters.Should().BeFalse();
     }
 

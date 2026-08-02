@@ -5,7 +5,7 @@ using OpenReader.Config;
 
 namespace OpenReader.UI.Settings;
 
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 public partial class SettingsWindow : Window
 {
     private readonly SettingsViewModel _viewModel;

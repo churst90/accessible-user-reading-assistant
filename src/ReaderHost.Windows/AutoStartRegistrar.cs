@@ -8,7 +8,7 @@ namespace OpenReader.Host;
 /// Writes (or removes) the Run-on-startup registry entry that launches
 /// OpenReader when the user logs in.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal static class AutoStartRegistrar
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";

@@ -77,8 +77,7 @@ public static class ConfigMerger
         return new KeyboardConfig
         {
             Layout = upper.Layout ?? lower.Layout,
-            SpeakModifiers = upper.SpeakModifiers ?? lower.SpeakModifiers,
-            SpeakNavigationKeys = upper.SpeakNavigationKeys ?? lower.SpeakNavigationKeys,
+            SpeakCommandKeys = upper.SpeakCommandKeys ?? lower.SpeakCommandKeys,
             SpeakCharacters = upper.SpeakCharacters ?? lower.SpeakCharacters,
             SpeakWords = upper.SpeakWords ?? lower.SpeakWords,
         };

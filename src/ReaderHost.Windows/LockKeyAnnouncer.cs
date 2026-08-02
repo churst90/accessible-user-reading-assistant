@@ -15,7 +15,7 @@ namespace OpenReader.Host;
 /// silently flipped. They sit at a different policy level than the optional
 /// "speak every navigation key" echo.
 /// </remarks>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal sealed class LockKeyAnnouncer : IDisposable
 {
     private const int VK_CAPITAL = 0x14;

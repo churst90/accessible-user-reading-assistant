@@ -13,7 +13,7 @@ namespace OpenReader.Host;
 /// constructs the window, persists the user's edits to disk, and lets
 /// <see cref="ConfigStore"/>'s file watcher pick the change up.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal sealed class SettingsHost
 {
     private readonly ConfigStore _store;

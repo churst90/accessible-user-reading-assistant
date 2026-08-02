@@ -83,11 +83,12 @@ public sealed record KeyboardConfig
     /// <summary>Active layout. <c>desktop</c> or <c>laptop</c>.</summary>
     public string? Layout { get; init; }
 
-    /// <summary>Speak modifier keys (Shift, Ctrl, Alt, Win) when pressed alone.</summary>
-    public bool? SpeakModifiers { get; init; }
-
-    /// <summary>Speak named navigation keys (Escape, Tab, Enter, Backspace, arrows, function keys).</summary>
-    public bool? SpeakNavigationKeys { get; init; }
+    /// <summary>
+    /// Speak named non-printable keys — Control, Alt, Windows, Shift,
+    /// CapsLock, Tab, Escape, Enter, Backspace, Delete, arrows, function keys.
+    /// When false, no key name is spoken under any circumstance.
+    /// </summary>
+    public bool? SpeakCommandKeys { get; init; }
 
     /// <summary>Echo each typed character.</summary>
     public bool? SpeakCharacters { get; init; }
@@ -109,8 +110,7 @@ public sealed record KeyboardConfig
         // Word echo on so typing in Notepad / search boxes is audible without
         // a stream of "left right down" or "k a t" — the noisy ones default off.
         // Surfaced as four checkboxes in Settings → Keyboard.
-        SpeakModifiers = false,
-        SpeakNavigationKeys = false,
+        SpeakCommandKeys = false,
         SpeakCharacters = false,
         SpeakWords = true,
         SpeakDeletedCharacters = true,

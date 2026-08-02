@@ -112,7 +112,7 @@ public sealed class KeyEchoService : IDisposable
             // Modifier-only press? (Pressed alone — no other key combined yet.)
             if (TryGetModifierName(input.KeyCode, out var modifierName))
             {
-                if (_settings.SpeakModifiers)
+                if (_settings.SpeakCommandKeys)
                 {
                     _speak(modifierName!);
                 }
@@ -124,7 +124,7 @@ public sealed class KeyEchoService : IDisposable
             if (navName is not null)
             {
                 HandleWordBreak(input.KeyCode);
-                if (_settings.SpeakNavigationKeys)
+                if (_settings.SpeakCommandKeys)
                 {
                     _speak(navName);
                 }
@@ -160,8 +160,11 @@ public sealed class KeyEchoService : IDisposable
                 {
                     _speak(removed);
                 }
-                else if (_settings.SpeakNavigationKeys)
+                else if (_settings.SpeakCommandKeys)
                 {
+                    // Only reachable with command-key echo ON. With it off the
+                    // user must never hear the word "backspace" — see
+                    // KeyEchoSettings.SpeakCommandKeys.
                     _speak("backspace");
                 }
                 return;

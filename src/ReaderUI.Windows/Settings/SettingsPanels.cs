@@ -21,7 +21,7 @@ namespace OpenReader.UI.Settings;
 /// rather than separate XAML files so the dialog is one self-contained unit
 /// — easier to evolve while the settings list is small.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal static class SettingsPanels
 {
     public static FrameworkElement BuildGeneralPanel(SettingsViewModel vm)
@@ -95,8 +95,9 @@ internal static class SettingsPanels
             FontWeight = FontWeights.SemiBold,
         });
 
-        panel.Children.Add(BuildCheck("Modifier keys (Shift, Control, Alt, Windows)", nameof(SettingsViewModel.SpeakModifiers)));
-        panel.Children.Add(BuildCheck("Navigation keys (Tab, Escape, Enter, arrows, function keys)", nameof(SettingsViewModel.SpeakNavigationKeys)));
+        panel.Children.Add(BuildCheck(
+            "Command keys (Control, Alt, Windows, Shift, CapsLock, Tab, Escape, Backspace, arrows, function keys)",
+            nameof(SettingsViewModel.SpeakCommandKeys)));
         panel.Children.Add(BuildCheck("Each typed character", nameof(SettingsViewModel.SpeakCharacters)));
         panel.Children.Add(BuildCheck("Each completed word", nameof(SettingsViewModel.SpeakWords)));
 

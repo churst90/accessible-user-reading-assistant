@@ -15,8 +15,7 @@ public class KeyboardConfigDefaultsTests
     {
         var defaults = KeyboardConfig.Defaults();
 
-        defaults.SpeakModifiers.Should().Be(false);
-        defaults.SpeakNavigationKeys.Should().Be(false);
+        defaults.SpeakCommandKeys.Should().Be(false);
         defaults.SpeakCharacters.Should().Be(false);
     }
 

@@ -7,7 +7,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace OpenReader.UI.Settings;
 
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 public partial class ChordCaptureDialog : Window
 {
     /// <summary>The chord captured by the user. Null until OK / Clear.</summary>

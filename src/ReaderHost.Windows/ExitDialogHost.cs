@@ -10,7 +10,7 @@ namespace OpenReader.Host;
 /// shutdown <see cref="CancellationTokenSource"/> so the main loop unwinds
 /// cleanly.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal sealed class ExitDialogHost
 {
     private readonly Dispatcher _dispatcher;

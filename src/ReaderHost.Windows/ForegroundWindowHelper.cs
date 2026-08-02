@@ -21,7 +21,7 @@ namespace OpenReader.Host;
 /// <see cref="Window.Activate"/>, then drop topmost so the user can move other
 /// windows over it normally.</para>
 /// </remarks>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal static class ForegroundWindowHelper
 {
     public static void BringToFront(Window window)

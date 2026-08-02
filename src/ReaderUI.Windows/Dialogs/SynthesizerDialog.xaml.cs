@@ -8,7 +8,7 @@ namespace OpenReader.UI.Dialogs;
 /// <c>ISpeechEngine</c> registry (SAPI5 today; eSpeak-NG planned). Selection is
 /// persisted by the host on OK.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 public partial class SynthesizerDialog : Window
 {
     /// <summary>Engine identifier the user selected, or <c>null</c> on cancel.</summary>

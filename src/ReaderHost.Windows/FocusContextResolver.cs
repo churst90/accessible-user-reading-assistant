@@ -14,7 +14,7 @@ namespace OpenReader.Host;
 /// per-pid lookups to avoid the cost of reopening a <see cref="System.Diagnostics.Process"/>
 /// handle on every focus change.
 /// </remarks>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal sealed class FocusContextResolver
 {
     private readonly Dictionary<int, string?> _pidToExe = new();

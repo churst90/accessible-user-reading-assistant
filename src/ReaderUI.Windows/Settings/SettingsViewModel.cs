@@ -28,8 +28,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     // Keyboard
     private string _layout = "desktop";
-    private bool _speakModifiers;
-    private bool _speakNavigationKeys;
+    private bool _speakCommandKeys;
     private bool _speakCharacters;
     private bool _speakDeletedCharacters = true;
     private bool _speakWords = true;
@@ -64,8 +63,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         if (source.Keyboard is { } k)
         {
             _layout = k.Layout ?? "desktop";
-            _speakModifiers = k.SpeakModifiers ?? false;
-            _speakNavigationKeys = k.SpeakNavigationKeys ?? false;
+            _speakCommandKeys = k.SpeakCommandKeys ?? false;
             _speakCharacters = k.SpeakCharacters ?? false;
             _speakWords = k.SpeakWords ?? true;
             _speakDeletedCharacters = k.SpeakDeletedCharacters ?? true;
@@ -229,16 +227,14 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool SpeakModifiers
+    /// <summary>
+    /// One toggle for every named key. When off, no key name is spoken under
+    /// any circumstance — including "backspace".
+    /// </summary>
+    public bool SpeakCommandKeys
     {
-        get => _speakModifiers;
-        set => Set(ref _speakModifiers, value);
-    }
-
-    public bool SpeakNavigationKeys
-    {
-        get => _speakNavigationKeys;
-        set => Set(ref _speakNavigationKeys, value);
+        get => _speakCommandKeys;
+        set => Set(ref _speakCommandKeys, value);
     }
 
     public bool SpeakCharacters
@@ -284,8 +280,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         Keyboard = new KeyboardConfig
         {
             Layout = _layout,
-            SpeakModifiers = _speakModifiers,
-            SpeakNavigationKeys = _speakNavigationKeys,
+            SpeakCommandKeys = _speakCommandKeys,
             SpeakCharacters = _speakCharacters,
             SpeakWords = _speakWords,
             SpeakDeletedCharacters = _speakDeletedCharacters,

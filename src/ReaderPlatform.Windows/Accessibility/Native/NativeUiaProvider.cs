@@ -1,0 +1,609 @@
+using System.Globalization;
+using System.Runtime.Versioning;
+using System.Threading.Channels;
+using OpenReader.Abstractions.Accessibility;
+using OpenReader.Diagnostics;
+using Serilog;
+using Windows.Win32.UI.Accessibility;
+
+namespace OpenReader.Platform.Windows.Accessibility.Native;
+
+/// <summary>
+/// <see cref="IAccessibilityProvider"/> over the native UI Automation client.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Replaces the <c>System.Windows.Automation</c> implementation. What that one
+/// could not do, and this one can:
+/// </para>
+/// <list type="bullet">
+///   <item><b>Live regions and notifications.</b> ARIA live regions and modern
+///   app toasts were entirely silent — the managed client has no event for
+///   either.</item>
+///   <item><b>Event coalescing.</b> A busy page can raise thousands of events
+///   a second; without coalescing the dispatch loop drowns.</item>
+///   <item><b>Heading level and link target</b> as text attributes, which is
+///   what Read-mode quick navigation is built on.</item>
+/// </list>
+/// <para>
+/// Structure deliberately mirrors the class it replaces: handlers do the bare
+/// minimum and queue to a channel, and all mapping happens on the dispatch
+/// loop. UIA callbacks run on a provider thread with a limited budget, and
+/// doing real work inside one causes UIA to start dropping events.
+/// </para>
+/// </remarks>
+// windows6.1 rather than bare "windows": the native UIA COM surface is
+// annotated 6.1+, and an unversioned claim asserts support back to XP.
+[SupportedOSPlatform("windows6.1")]
+public sealed class NativeUiaProvider : IAccessibilityProvider
+{
+    private enum RawKind { Focus, Value, Text, CaretMoved, Selection, Alert, LiveRegion, Notification }
+
+    private readonly record struct RawEvent(
+        RawKind Kind,
+        IUIAutomationElement Element,
+        string? Text = null);
+
+    private readonly Channel<RawEvent> _events;
+    private readonly object _gate = new();
+    private readonly List<Subscription> _subscriptions = new();
+    private readonly Dictionary<NodeId, IUIAutomationElement> _elementCache = new();
+    private readonly ILogger _log;
+    private readonly CancellationTokenSource _cts = new();
+
+    private IUIAutomation? _automation;
+    private IUIAutomationCacheRequest? _cacheRequest;
+    private FocusSink? _focusSink;
+    private EventSink? _eventSink;
+    private NotificationSink? _notificationSink;
+    private Task? _dispatchTask;
+    private AccessibleNode? _focused;
+    private IUIAutomationElement? _focusedElement;
+    private string? _lastFocusKey;
+    private bool _started;
+    private bool _disposed;
+
+    public NativeUiaProvider()
+    {
+        _events = Channel.CreateUnbounded<RawEvent>(new UnboundedChannelOptions
+        {
+            SingleReader = true,
+            SingleWriter = false,
+            AllowSynchronousContinuations = false,
+        });
+        _log = LoggerFactory.ForComponent("UIA.Native");
+    }
+
+    public AccessibleNode? Focused
+    {
+        get { lock (_gate) { return _focused; } }
+    }
+
+    public AccessibleNode? Root
+    {
+        get
+        {
+            try
+            {
+                return _automation is null ? null : NativeUiaNodeMapper.Map(_automation.GetRootElement());
+            }
+            catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+            {
+                return null;
+            }
+        }
+    }
+
+    /// <summary>The live element behind a node id, if it is the one in focus.</summary>
+    internal IUIAutomationElement? TryGetElement(NodeId id)
+    {
+        lock (_gate)
+        {
+            return _elementCache.TryGetValue(id, out var element) ? element : null;
+        }
+    }
+
+    internal IUIAutomation? Automation => _automation;
+
+    /// <summary>
+    /// The title of the window owning the focused element. Used by "report
+    /// title", which must give the application window rather than the label of
+    /// whatever control happens to be focused.
+    /// </summary>
+    public string? GetFocusedWindowTitle()
+    {
+        IUIAutomationElement? element;
+        lock (_gate)
+        {
+            element = _focusedElement;
+        }
+        var (_, name) = GetTopLevelWindowInfo(element);
+        return string.IsNullOrEmpty(name) ? null : name;
+    }
+
+    /// <summary>
+    /// Walk up to the owning top-level window and return its handle and name.
+    /// Returns <c>(0, null)</c> when the chain is broken.
+    /// </summary>
+    internal (nint Handle, string? Name) GetTopLevelWindowInfo(IUIAutomationElement? element)
+    {
+        if (element is null || _automation is null)
+        {
+            return (0, null);
+        }
+        try
+        {
+            var walker = _automation.ControlViewWalker;
+            var current = element;
+            // Bounded: a pathological or cyclic tree must not spin here on the
+            // dispatch loop.
+            for (var depth = 0; current is not null && depth < 64; depth++)
+            {
+                var controlType = current.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_ControlTypePropertyId);
+                if (controlType is int ct && ct == (int)UIA_CONTROLTYPE_ID.UIA_WindowControlTypeId)
+                {
+                    var handle = current.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_NativeWindowHandlePropertyId);
+                    var name = current.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_NamePropertyId);
+                    return (handle is int h ? h : 0, name as string);
+                }
+                current = walker.GetParentElement(current);
+            }
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            _log.Warning(ex, "could not resolve the top-level window");
+        }
+        return (0, null);
+    }
+
+    /// <summary>The window owning the currently focused element.</summary>
+    public (nint Handle, string? Name) GetFocusedWindowInfo()
+    {
+        IUIAutomationElement? element;
+        lock (_gate)
+        {
+            element = _focusedElement;
+        }
+        return GetTopLevelWindowInfo(element);
+    }
+
+    public AccessibleNode? FromPoint(int screenX, int screenY)
+    {
+        try
+        {
+            return _automation is null
+                ? null
+                : NativeUiaNodeMapper.Map(_automation.ElementFromPoint(new System.Drawing.Point(screenX, screenY)));
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            return null;
+        }
+    }
+
+    public IDisposable Subscribe(AccessibilityEventKind kinds, Action<AccessibilityEvent> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        var sub = new Subscription(this, kinds, handler);
+        lock (_gate)
+        {
+            _subscriptions.Add(sub);
+        }
+        return sub;
+    }
+
+    public ValueTask StartAsync(CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_started)
+        {
+            return ValueTask.CompletedTask;
+        }
+        _started = true;
+
+        _automation = NativeUia.Create();
+        // IUIAutomation6 arrived in Windows 10 1809. Everything below degrades
+        // gracefully without it — no coalescing, no notification events.
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
+        {
+            NativeUia.TryEnableCoalescing(_automation);
+        }
+        _cacheRequest = NativeUia.BuildCacheRequest(_automation);
+
+        _focusSink = new FocusSink(this);
+        _eventSink = new EventSink(this);
+
+        try
+        {
+            _automation.AddFocusChangedEventHandler(_cacheRequest, _focusSink);
+            _log.Information("native UIA focus handler registered (cached, coalescing requested)");
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            _log.Error(ex, "could not register the native UIA focus handler");
+            throw;
+        }
+
+        RegisterDesktopEvents();
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
+        {
+            RegisterNotifications();
+        }
+
+        _dispatchTask = Task.Run(() => DispatchLoopAsync(_cts.Token), _cts.Token);
+        return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Events that fire on elements which are not focused, so they can never
+    /// arrive through a per-focus subscription. Scoping every handler to the
+    /// focused element is what previously made alerts unreachable.
+    /// </summary>
+    private void RegisterDesktopEvents()
+    {
+        if (_automation is null || _eventSink is null || _cacheRequest is null)
+        {
+            return;
+        }
+        var root = _automation.GetRootElement();
+
+        Register(UIA_EVENT_ID.UIA_LiveRegionChangedEventId, "live-region");
+        Register(UIA_EVENT_ID.UIA_Window_WindowOpenedEventId, "window-opened");
+        Register(UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId, "element-selected");
+        Register(UIA_EVENT_ID.UIA_MenuOpenedEventId, "menu-opened");
+        Register(UIA_EVENT_ID.UIA_ToolTipOpenedEventId, "tooltip-opened");
+        Register(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId, "text-selection");
+        Register(UIA_EVENT_ID.UIA_Text_TextChangedEventId, "text-changed");
+
+        void Register(UIA_EVENT_ID id, string label)
+        {
+            try
+            {
+                _automation.AddAutomationEventHandler(
+                    id, root, TreeScope.TreeScope_Subtree, _cacheRequest, _eventSink);
+                _log.Debug("registered desktop-wide {Event}", label);
+            }
+            catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+            {
+                // One unavailable event must not cost us the others.
+                _log.Warning(ex, "could not register {Event}", label);
+            }
+        }
+    }
+
+    /// <summary>
+    /// UIA 6 notifications — how modern applications announce transient status.
+    /// There is no managed-client equivalent at all, which is why toasts were
+    /// silent before this.
+    /// </summary>
+    [SupportedOSPlatform("windows10.0.17763.0")]
+    private void RegisterNotifications()
+    {
+        if (_automation is not IUIAutomation6 six || _cacheRequest is null)
+        {
+            _log.Information("IUIAutomation6 unavailable; notification events will not be received");
+            return;
+        }
+        try
+        {
+            _notificationSink = new NotificationSink(this);
+            six.AddNotificationEventHandler(
+                _automation.GetRootElement(), TreeScope.TreeScope_Subtree, _cacheRequest, _notificationSink);
+            _log.Debug("registered notification handler");
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            _log.Warning(ex, "could not register the notification handler");
+        }
+    }
+
+    // ---- sinks: minimum work, then queue -----------------------------------
+
+    private void Queue(RawKind kind, IUIAutomationElement? element, string? text = null)
+    {
+        if (element is null)
+        {
+            return;
+        }
+        try
+        {
+            _events.Writer.TryWrite(new RawEvent(kind, element, text));
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            _log.Warning(ex, "ignored exception queueing {Kind}", kind);
+        }
+    }
+
+    private sealed class FocusSink(NativeUiaProvider owner) : IUIAutomationFocusChangedEventHandler
+    {
+        public void HandleFocusChangedEvent(IUIAutomationElement sender)
+            => owner.Queue(RawKind.Focus, sender);
+    }
+
+    private sealed class EventSink(NativeUiaProvider owner) : IUIAutomationEventHandler
+    {
+        public void HandleAutomationEvent(IUIAutomationElement sender, UIA_EVENT_ID eventId)
+        {
+            var kind = eventId switch
+            {
+                UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId => RawKind.CaretMoved,
+                UIA_EVENT_ID.UIA_Text_TextChangedEventId => RawKind.Text,
+                UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId => RawKind.Selection,
+                UIA_EVENT_ID.UIA_LiveRegionChangedEventId => RawKind.LiveRegion,
+                _ => RawKind.Alert,
+            };
+            owner.Queue(kind, sender);
+        }
+    }
+
+    private sealed class NotificationSink(NativeUiaProvider owner) : IUIAutomationNotificationEventHandler
+    {
+        public void HandleNotificationEvent(
+            IUIAutomationElement sender,
+            NotificationKind notificationKind,
+            NotificationProcessing notificationProcessing,
+            global::Windows.Win32.Foundation.BSTR displayString,
+            global::Windows.Win32.Foundation.BSTR activityId)
+        {
+            // The notification carries its own text; the element may be a bare
+            // container with no name at all.
+            owner.Queue(RawKind.Notification, sender, displayString.ToString());
+        }
+    }
+
+    // ---- dispatch -----------------------------------------------------------
+
+    private async Task DispatchLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var raw in _events.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            {
+                try
+                {
+                    Handle(raw);
+                }
+                catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+                {
+                    _log.Warning(ex, "dispatch loop threw on {Kind}", raw.Kind);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // expected on shutdown
+        }
+    }
+
+    private void Handle(RawEvent raw)
+    {
+        switch (raw.Kind)
+        {
+            case RawKind.Focus:
+                HandleFocus(raw.Element);
+                break;
+
+            case RawKind.Value:
+            case RawKind.Text:
+                Emit(raw.Element, AccessibilityEventKind.ValueChanged, focusedOnly: true);
+                break;
+
+            case RawKind.CaretMoved:
+                Emit(raw.Element, AccessibilityEventKind.CaretMoved, focusedOnly: true);
+                break;
+
+            case RawKind.Selection:
+                Emit(raw.Element, AccessibilityEventKind.SelectionChanged, focusedOnly: false);
+                break;
+
+            case RawKind.LiveRegion:
+                Emit(raw.Element, AccessibilityEventKind.LiveRegionChanged, focusedOnly: false);
+                break;
+
+            case RawKind.Alert:
+                Emit(raw.Element, AccessibilityEventKind.AlertRaised, focusedOnly: false);
+                break;
+
+            case RawKind.Notification:
+                HandleNotification(raw.Element, raw.Text);
+                break;
+        }
+    }
+
+    private void HandleFocus(IUIAutomationElement element)
+    {
+        var node = NativeUiaNodeMapper.MapCached(element);
+        if (node is null)
+        {
+            return;
+        }
+
+        var key = FocusKey(node);
+        bool sameNode, sameControl;
+        lock (_gate)
+        {
+            sameNode = _focused is { } prev && prev.Id == node.Id;
+            sameControl = string.Equals(_lastFocusKey, key, StringComparison.Ordinal);
+            _focused = node;
+            _focusedElement = element;
+            if (!sameNode)
+            {
+                _elementCache.Clear();
+            }
+            _elementCache[node.Id] = element;
+            _lastFocusKey = key;
+        }
+
+        // The same control re-firing focus — common in editable combos, which
+        // hand out a fresh runtime id on every arrow press. Already announced.
+        if (sameNode || sameControl)
+        {
+            return;
+        }
+
+        DispatchLocal(new AccessibilityEvent(AccessibilityEventKind.FocusChanged, node, DateTimeOffset.UtcNow));
+    }
+
+    private void HandleNotification(IUIAutomationElement element, string? text)
+    {
+        var node = NativeUiaNodeMapper.MapCached(element);
+        if (node is null)
+        {
+            return;
+        }
+        // Prefer the notification's own text; the element is often an unnamed
+        // container that would otherwise announce nothing.
+        var spoken = string.IsNullOrWhiteSpace(text) ? node.Name : text;
+        if (string.IsNullOrWhiteSpace(spoken))
+        {
+            return;
+        }
+        DispatchLocal(new AccessibilityEvent(
+            AccessibilityEventKind.LiveRegionChanged, node, DateTimeOffset.UtcNow, CaretLine: spoken));
+    }
+
+    private void Emit(IUIAutomationElement element, AccessibilityEventKind kind, bool focusedOnly)
+    {
+        if (focusedOnly && !IsFocused(element))
+        {
+            return;
+        }
+        var node = NativeUiaNodeMapper.MapCached(element);
+        if (node is null)
+        {
+            return;
+        }
+        if (!focusedOnly && string.IsNullOrEmpty(node.Name) && string.IsNullOrEmpty(node.Value))
+        {
+            // Nothing to say is not worth interrupting for.
+            return;
+        }
+        DispatchLocal(new AccessibilityEvent(kind, node, DateTimeOffset.UtcNow));
+    }
+
+    private bool IsFocused(IUIAutomationElement candidate)
+    {
+        IUIAutomationElement? focused;
+        lock (_gate)
+        {
+            focused = _focusedElement;
+        }
+        if (focused is null || _automation is null)
+        {
+            return false;
+        }
+        try
+        {
+            return _automation.CompareElements(candidate, focused) != 0;
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Identity of a focus target for de-duplication. Role and name alone are
+    /// not enough — every unnamed control of the same role would match every
+    /// other one, silencing a toolbar of icon buttons. The bounding rectangle
+    /// is what tells them apart, and needs no time window.
+    /// </summary>
+    private static string FocusKey(AccessibleNode node)
+    {
+        const char Sep = '';
+        return string.Concat(
+            ((int)node.Role).ToString(CultureInfo.InvariantCulture), Sep,
+            node.Name ?? string.Empty, Sep,
+            Extra(node, "uia.AutomationId") ?? string.Empty, Sep,
+            Extra(node, "uia.Bounds") ?? node.Id.Value);
+
+        static string? Extra(AccessibleNode n, string key)
+            => n.Extras.TryGetValue(key, out var raw) ? raw as string : null;
+    }
+
+    private void DispatchLocal(AccessibilityEvent ev)
+    {
+        Subscription[] snapshot;
+        lock (_gate)
+        {
+            snapshot = _subscriptions.ToArray();
+        }
+        foreach (var sub in snapshot)
+        {
+            if ((sub.Kinds & ev.Kind) == 0)
+            {
+                continue;
+            }
+            try
+            {
+                sub.Handler(ev);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                _log.Warning(ex, "subscriber threw on {Kind}", ev.Kind);
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        _disposed = true;
+
+        try
+        {
+            _automation?.RemoveAllEventHandlers();
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            _log.Warning(ex, "ignored exception removing native UIA handlers");
+        }
+
+        _events.Writer.TryComplete();
+        await _cts.CancelAsync().ConfigureAwait(false);
+        if (_dispatchTask is not null)
+        {
+            try
+            {
+                await _dispatchTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
+        }
+        _cts.Dispose();
+
+        lock (_gate)
+        {
+            _subscriptions.Clear();
+            _elementCache.Clear();
+        }
+        _focusSink = null;
+        _eventSink = null;
+        _notificationSink = null;
+        _cacheRequest = null;
+        _automation = null;
+    }
+
+    private sealed class Subscription(
+        NativeUiaProvider owner,
+        AccessibilityEventKind kinds,
+        Action<AccessibilityEvent> handler) : IDisposable
+    {
+        public AccessibilityEventKind Kinds { get; } = kinds;
+        public Action<AccessibilityEvent> Handler { get; } = handler;
+
+        public void Dispose()
+        {
+            lock (owner._gate)
+            {
+                owner._subscriptions.Remove(this);
+            }
+        }
+    }
+}

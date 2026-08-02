@@ -24,7 +24,7 @@ namespace OpenReader.UI.Tray;
 /// callback.
 /// </para>
 /// </remarks>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 public sealed class TrayIcon : IDisposable
 {
     private readonly System.Windows.Forms.NotifyIcon _notify;

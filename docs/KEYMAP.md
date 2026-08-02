@@ -94,6 +94,27 @@ CapsLock key.
 
 ---
 
+## Speech echo settings
+
+Settings → Keyboard. Four independent toggles:
+
+| Setting | Default | Speaks |
+|---|---|---|
+| Command keys | **off** | Named keys: Control, Alt, Windows, Shift, CapsLock, Tab, Escape, Enter, Backspace, Delete, arrows, function keys |
+| Each typed character | off | Every printable character as you type it |
+| Each completed word | **on** | The word, at a space or sentence punctuation |
+| Character removed by Backspace/Delete | **on** | The character a deletion removed |
+
+Two deliberate asymmetries:
+
+**With "command keys" off, no key name is ever spoken** — not "backspace",
+not "tab", under any circumstance. That is an invariant with a test on it.
+
+**Deletion echo is independent of character echo.** Deleting is destructive and
+cannot be verified any other way, so a user who finds per-character echo too
+chatty still hears what vanished. The removed character is content, not a key
+name, so "command keys" off does not silence it either.
+
 ## Rebinding
 
 Settings → Key bindings, or edit `%AppData%\OpenReader\config.json`:

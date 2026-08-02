@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace OpenReader.UI.Dialogs;
 
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 public partial class ExitDialog : Window
 {
     /// <summary>True after the user clicked Yes; false on No / Cancel / X.</summary>

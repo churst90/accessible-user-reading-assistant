@@ -10,7 +10,7 @@ using OpenReader.Diagnostics;
 using OpenReader.Input.Commands;
 using OpenReader.Input.Echo;
 using OpenReader.Input.Gestures;
-using OpenReader.Platform.Windows.Accessibility;
+using OpenReader.Platform.Windows.Accessibility.Native;
 using OpenReader.Platform.Windows.Input;
 using OpenReader.Platform.Windows.Speech;
 using OpenReader.Platform.Windows.Text;
@@ -24,7 +24,7 @@ using Serilog.Events;
 
 namespace OpenReader.Host;
 
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal static class Program
 {
     private const string SingleInstanceMutexName = "Global\\OpenReader.SingleInstance";
@@ -115,7 +115,10 @@ internal static class Program
         ApplyDiagnosticsConfig(configStore.Current);
 
         // --- Speech ---
-        await using var provider = new UiaAccessibilityProvider();
+        // Native UI Automation client. The managed System.Windows.Automation
+        // client cannot raise live-region or notification events at all, and
+        // exposes no heading-level or link text attributes — see ASSESSMENT.md S2.
+        await using var provider = new NativeUiaProvider();
         await using var sapiEngine = new Sapi5Engine();
         // eSpeak NG is opt-in: throws DllNotFoundException when libespeak-ng.dll
         // isn't on the search path (no install). Catch and fall back so the
@@ -177,7 +180,7 @@ internal static class Program
         // above it has to know which backend answered. Review, say-all and
         // caret following all read through it, which is what keeps them
         // agreeing with each other about where a word or line ends.
-        var textSurfaces = new UiaTextSurfaceProvider(provider);
+        var textSurfaces = new NativeUiaTextSurfaceProvider(provider);
         var reviewCursor = new ReviewCursor(textSurfaces);
         var caretTracker = new CaretTracker(
             textSurfaces,
@@ -210,10 +213,8 @@ internal static class Program
                 // Edit — preempt each other via the "focus" cancel-group, so
                 // the dialog title would otherwise be dropped before it could
                 // play. A Now-priority announcement plays first.
-                var element = provider.TryGetElement(n.Id);
-                if (element is not null)
                 {
-                    var (handle, name) = provider.GetTopLevelWindowInfo(element);
+                    var (handle, name) = provider.GetFocusedWindowInfo();
                     if (handle != 0 && handle != lastTopLevelWindow && !string.IsNullOrEmpty(name))
                     {
                         lastTopLevelWindow = handle;
@@ -559,8 +560,7 @@ internal static class Program
         var k = config.Keyboard;
         return new KeyEchoSettings
         {
-            SpeakModifiers = k?.SpeakModifiers ?? false,
-            SpeakNavigationKeys = k?.SpeakNavigationKeys ?? false,
+            SpeakCommandKeys = k?.SpeakCommandKeys ?? false,
             SpeakCharacters = k?.SpeakCharacters ?? false,
             SpeakWords = k?.SpeakWords ?? true,
             SpeakDeletedCharacters = k?.SpeakDeletedCharacters ?? true,

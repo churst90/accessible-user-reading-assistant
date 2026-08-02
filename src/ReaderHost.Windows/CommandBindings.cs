@@ -8,7 +8,7 @@ using OpenReader.Abstractions.Accessibility;
 using OpenReader.Core.Review;
 using OpenReader.Input.Commands;
 using OpenReader.Input.Gestures;
-using OpenReader.Platform.Windows.Accessibility;
+using OpenReader.Platform.Windows.Accessibility.Native;
 using OpenReader.Speech;
 using OpenReader.Speech.Punctuation;
 using OpenReader.Speech.Queue;
@@ -20,7 +20,7 @@ namespace OpenReader.Host;
 /// <see cref="CommandBus"/>. Extracted from <c>Program.cs</c> so the host's
 /// boot sequence stays under one screen.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal static class CommandBindings
 {
     /// <summary>Cycles through punctuation levels each time CyclePunctuationLevel is invoked.</summary>
@@ -33,7 +33,7 @@ internal static class CommandBindings
         CommandBus bus,
         SpeechPipeline pipeline,
         ReviewCursor cursor,
-        UiaAccessibilityProvider provider,
+        NativeUiaProvider provider,
         SpeechQueue queue,
         ISpeechEngine engine,
         SettingsHost settingsHost,

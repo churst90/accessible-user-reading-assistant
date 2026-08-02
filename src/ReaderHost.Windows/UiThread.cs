@@ -21,7 +21,7 @@ namespace OpenReader.Host;
 /// host process.
 /// </para>
 /// </remarks>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal sealed class UiThread : IDisposable
 {
     private readonly Thread _thread;

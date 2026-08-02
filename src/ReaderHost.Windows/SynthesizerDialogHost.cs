@@ -15,7 +15,7 @@ namespace OpenReader.Host;
 /// effectively forward-looking — but the chord and persistence path are
 /// in place so adding eSpeak-NG (Phase 4a) is a one-line registration.
 /// </summary>
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("windows6.1")]
 internal sealed class SynthesizerDialogHost
 {
     private readonly ConfigStore _store;
