@@ -1,5 +1,6 @@
 using System.Text;
 using Aura.Abstractions.Input;
+using Aura.Abstractions.Navigation;
 using Aura.Abstractions.Text;
 using Aura.Diagnostics;
 using Serilog;
@@ -48,6 +49,7 @@ public sealed class KeyEchoService : IDisposable
     private readonly IInputSource _source;
     private readonly Action<string> _speak;
     private readonly Action? _onTypingActivity;
+    private readonly Func<ReaderMode>? _currentMode;
     private readonly StringBuilder _wordBuffer = new(64);
     private readonly object _gate = new();
     private readonly ILogger _log;
@@ -59,11 +61,13 @@ public sealed class KeyEchoService : IDisposable
         IInputSource source,
         Action<string> speak,
         KeyEchoSettings? initialSettings = null,
-        Action? onTypingActivity = null)
+        Action? onTypingActivity = null,
+        Func<ReaderMode>? currentMode = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _speak = speak ?? throw new ArgumentNullException(nameof(speak));
         _onTypingActivity = onTypingActivity;
+        _currentMode = currentMode;
         _settings = initialSettings ?? KeyEchoSettings.Defaults;
         _log = LoggerFactory.ForComponent("Input.KeyEcho");
     }
@@ -189,7 +193,7 @@ public sealed class KeyEchoService : IDisposable
             if (WordBoundary.IsTerminator(typed))
             {
                 FlushWord();
-                if (_settings.SpeakCharacters && !char.IsWhiteSpace(typed))
+                if (_settings.SpeakCharacters && EchoApplies() && !char.IsWhiteSpace(typed))
                 {
                     _speak(typed.ToString());
                 }
@@ -200,7 +204,7 @@ public sealed class KeyEchoService : IDisposable
             {
                 _wordBuffer.Append(typed);
             }
-            if (_settings.SpeakCharacters)
+            if (_settings.SpeakCharacters && EchoApplies())
             {
                 _speak(typed.ToString());
             }
@@ -236,6 +240,16 @@ public sealed class KeyEchoService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Whether typing echo applies right now. In Read mode a single letter is
+    /// a navigation command rather than input, so echoing it is usually noise;
+    /// <see cref="KeyEchoSettings.ApplyEchoInReadMode"/> opts back in.
+    /// </summary>
+    private bool EchoApplies()
+        => _settings.ApplyEchoInReadMode
+        || _currentMode is null
+        || _currentMode() != ReaderMode.Read;
+
     private void FlushWord()
     {
         string word;
@@ -248,7 +262,7 @@ public sealed class KeyEchoService : IDisposable
             word = _wordBuffer.ToString();
             _wordBuffer.Clear();
         }
-        if (_settings.SpeakWords)
+        if (_settings.SpeakWords && EchoApplies())
         {
             _speak(word);
         }

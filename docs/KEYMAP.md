@@ -104,6 +104,19 @@ Settings → Keyboard. Four independent toggles:
 | Each typed character | off | Every printable character as you type it |
 | Each completed word | **on** | The word, at a space or sentence punctuation |
 | Character removed by Backspace/Delete | **on** | The character a deletion removed |
+| Apply echo in Read mode | off | Extends the two echoes above into Read mode |
+
+Character and word echo are **independent checkboxes** and both may be on at
+once. NVDA presents these as a single four-way choice (off / characters /
+words / both); those four options are just the combinations of two booleans,
+and listing them makes you translate what you want into someone else's
+enumeration.
+
+**Apply echo in Read mode** is off by default because in Read mode a single
+letter is a *command*, not text — `h` jumps to the next heading, and echoing
+"h" before the heading is noise. Turn it on if you navigate mostly by
+quick-key and want confirmation the key registered. It does not affect
+deletion echo: deleting is destructive in either mode.
 
 Two deliberate asymmetries:
 

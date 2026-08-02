@@ -75,6 +75,9 @@ internal static class NativeUia
         UIA_PROPERTY_ID.UIA_ValueValuePropertyId,
         UIA_PROPERTY_ID.UIA_ValueIsReadOnlyPropertyId,
         UIA_PROPERTY_ID.UIA_RangeValueValuePropertyId,
+        // Combo boxes frequently expose the selected entry only here, which is
+        // why tabbing past one announced no value until it was expanded.
+        UIA_PROPERTY_ID.UIA_LegacyIAccessibleValuePropertyId,
 
         // Set membership and depth — "4 of 10", "level 2".
         UIA_PROPERTY_ID.UIA_PositionInSetPropertyId,

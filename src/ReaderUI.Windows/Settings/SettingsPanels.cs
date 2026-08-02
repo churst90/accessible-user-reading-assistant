@@ -101,6 +101,14 @@ internal static class SettingsPanels
         panel.Children.Add(BuildCheck("Each typed character", nameof(SettingsViewModel.SpeakCharacters)));
         panel.Children.Add(BuildCheck("Each completed word", nameof(SettingsViewModel.SpeakWords)));
 
+        // Independent checkboxes rather than NVDA's off/characters/words/both
+        // dropdown: "both" and "off" are just the two combinations of two
+        // booleans, and spelling them out as a four-way list makes the user
+        // translate their intent into someone else's enumeration.
+        panel.Children.Add(BuildCheck(
+            "Apply character and word echo in Read mode as well",
+            nameof(SettingsViewModel.ApplyEchoInReadMode)));
+
         // Its own group: deleting is not typing. Grouping it with the echo
         // checkboxes implies turning character echo off also silences
         // deletions, which is the opposite of what a user wants.

@@ -104,6 +104,12 @@ public sealed record KeyboardConfig
     /// </summary>
     public bool? SpeakDeletedCharacters { get; init; }
 
+    /// <summary>
+    /// Apply character and word echo in Read mode too. Off by default: in Read
+    /// mode a single letter is a navigation command, not typed text.
+    /// </summary>
+    public bool? ApplyEchoInReadMode { get; init; }
+
     public static KeyboardConfig Defaults() => new()
     {
         Layout = "desktop",
@@ -114,6 +120,7 @@ public sealed record KeyboardConfig
         SpeakCharacters = false,
         SpeakWords = true,
         SpeakDeletedCharacters = true,
+        ApplyEchoInReadMode = false,
     };
 }
 

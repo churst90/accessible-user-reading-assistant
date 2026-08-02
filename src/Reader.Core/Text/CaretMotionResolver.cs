@@ -80,6 +80,43 @@ public static class CaretMotionResolver
         return ResolveCaret(previous, current);
     }
 
+    /// <summary>
+    /// The line at <paramref name="current"/>, guarding against providers that
+    /// expand a blank line backwards onto the previous one.
+    /// </summary>
+    /// <remarks>
+    /// At the start of an empty line the caret position is identical to the end
+    /// of the line above, and several providers — Windows 11 Notepad among them
+    /// — resolve that ambiguity the wrong way and return the previous line. The
+    /// reader then repeats the line above instead of saying "blank".
+    ///
+    /// Position alone cannot distinguish the two cases, which is exactly why
+    /// the providers get it wrong. Comparing the two <em>expansions</em> can:
+    /// if expanding from the new caret yields the same range as expanding from
+    /// the old one, the caret demonstrably crossed a line boundary and yet the
+    /// provider handed back the line we already left. That only happens when
+    /// the new line is empty.
+    /// </remarks>
+    private static string ReadLineAt(ITextRange current, ITextRange previous)
+    {
+        var here = current.Clone();
+        here.Collapse(toStart: true);
+        here.ExpandToUnit(TextUnit.Line);
+
+        var there = previous.Clone();
+        there.Collapse(toStart: true);
+        there.ExpandToUnit(TextUnit.Line);
+
+        var sameStart = here.CompareEndpoints(RangeEndpoint.Start, there, RangeEndpoint.Start) == 0;
+        var sameEnd = here.CompareEndpoints(RangeEndpoint.End, there, RangeEndpoint.End) == 0;
+        if (sameStart && sameEnd)
+        {
+            return string.Empty;
+        }
+
+        return here.GetText(UnitReadCap);
+    }
+
     /// <summary>Read the text of the unit enclosing <paramref name="range"/> without disturbing it.</summary>
     public static string ReadUnit(ITextRange range, TextUnit unit)
     {
@@ -134,7 +171,7 @@ public static class CaretMotionResolver
         var crossed = span.GetText(UnitReadCap);
         if (crossed.Contains('\n') || crossed.Contains('\r'))
         {
-            return new CaretMotion(CaretMotionKind.Line, ReadUnit(current, TextUnit.Line));
+            return new CaretMotion(CaretMotionKind.Line, ReadLineAt(current, previous));
         }
 
         // Exactly one grapheme crossed means a character move. Measuring in

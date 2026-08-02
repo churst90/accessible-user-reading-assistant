@@ -1,9 +1,11 @@
 using System.Runtime.Versioning;
 using Aura.Abstractions.Accessibility;
 using Aura.Abstractions.Input;
+using Aura.Abstractions.Navigation;
 using Aura.Abstractions.Speech;
 using Aura.Config;
 using Aura.Core.Diagnostics;
+using Aura.Core.Navigation;
 using Aura.Core.Review;
 using Aura.Core.Text;
 using Aura.Diagnostics;
@@ -182,6 +184,24 @@ internal static class Program
         // agreeing with each other about where a word or line ends.
         var textSurfaces = new NativeUiaTextSurfaceProvider(provider);
         var reviewCursor = new ReviewCursor(textSurfaces);
+
+        // Read / Type mode. No read-mode buffer exists yet, so nothing claims
+        // a document and the policy keeps us in Type mode — the manager is
+        // wired now so the echo gate and Reader+Space behave correctly the
+        // moment a buffer does exist.
+        var modeManager = new ModeManager(new DefaultModePolicy());
+        modeManager.ModeChanged += (mode, byUser) =>
+        {
+            // Silent mode switches leave the user unable to explain why their
+            // keystrokes stopped working.
+            if (byUser)
+            {
+                pipeline.Submit(new SpeechRequest(
+                    SpeechReason.UserAnnouncement, Node: null,
+                    RawText: mode == ReaderMode.Read ? "read mode" : "type mode",
+                    AppExecutableName: null));
+            }
+        };
         var caretTracker = new CaretTracker(
             textSurfaces,
             focusedNode: () => provider.Focused,
@@ -202,6 +222,7 @@ internal static class Program
             {
                 // The cached surface belongs to the control we just left.
                 textSurfaces.Invalidate();
+                modeManager.OnFocusChanged(n);
                 reviewCursor.SyncTo(n);
                 var exe = focusContext.ResolveExecutableName(n);
                 appLayer.SwitchTo(exe);
@@ -273,7 +294,8 @@ internal static class Program
             keyboard,
             text => pipeline.Submit(new SpeechRequest(SpeechReason.UserAnnouncement, Node: null, RawText: text, AppExecutableName: null)),
             ToEchoSettings(configStore.Current),
-            onTypingActivity: typingState.NotifyTyping);
+            onTypingActivity: typingState.NotifyTyping,
+            currentMode: () => modeManager.Mode);
         using var lockKeyAnnouncer = new LockKeyAnnouncer(
             keyboard,
             text => pipeline.Submit(new SpeechRequest(SpeechReason.UserAnnouncement, Node: null, RawText: text, AppExecutableName: null)),
@@ -355,6 +377,7 @@ internal static class Program
             settingsHost, exitDialogHost, synthesizerDialogHost, sayAll, doubleTap, router, log,
             onEnabledChanged: enabled => uiDispatcher.BeginInvoke(() => tray?.SetEnabled(enabled)),
             currentConfig: () => configStore.Current,
+            toggleReaderMode: () => modeManager.Toggle(provider.Focused),
             // Clipboard access requires an STA thread with a message pump;
             // the main thread is busy draining the speech queue.
             copyToClipboard: text => uiDispatcher.Invoke(() =>
@@ -564,6 +587,7 @@ internal static class Program
             SpeakCharacters = k?.SpeakCharacters ?? false,
             SpeakWords = k?.SpeakWords ?? true,
             SpeakDeletedCharacters = k?.SpeakDeletedCharacters ?? true,
+            ApplyEchoInReadMode = k?.ApplyEchoInReadMode ?? false,
         };
     }
 

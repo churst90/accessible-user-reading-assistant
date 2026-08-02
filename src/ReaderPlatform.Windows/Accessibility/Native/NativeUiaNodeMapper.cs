@@ -152,7 +152,10 @@ internal static class NativeUiaNodeMapper
         {
             return d.ToString("0.##", CultureInfo.CurrentCulture);
         }
-        return null;
+        // Last resort. Combo boxes commonly report their selected entry only
+        // through the legacy bridge, so without this one tabbing past a combo
+        // announced its label and nothing else.
+        return GetString(element, UIA_PROPERTY_ID.UIA_LegacyIAccessibleValuePropertyId, cached);
     }
 
     private static Dictionary<string, object?>? BuildExtras(IUIAutomationElement element, bool cached)

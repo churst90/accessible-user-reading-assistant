@@ -45,6 +45,7 @@ internal static class CommandBindings
         Serilog.ILogger log,
         Action<bool> onEnabledChanged,
         Func<ReaderConfig> currentConfig,
+        Action toggleReaderMode,
         Action<string> copyToClipboard)
     {
         bus.Bind(ReaderCommand.StopSpeech, _ =>
@@ -93,6 +94,12 @@ internal static class CommandBindings
                 cursor.SyncTo(focusedNode);
             }
             sayAll.StartFromBeginningAsync().ContinueWith(_ => { }, TaskScheduler.Default);
+            return ValueTask.CompletedTask;
+        });
+
+        bus.Bind(ReaderCommand.ToggleReaderMode, _ =>
+        {
+            toggleReaderMode();
             return ValueTask.CompletedTask;
         });
 

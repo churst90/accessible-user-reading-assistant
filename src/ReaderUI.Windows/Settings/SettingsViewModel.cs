@@ -29,6 +29,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     // Keyboard
     private string _layout = "desktop";
     private bool _speakCommandKeys;
+    private bool _applyEchoInReadMode;
     private bool _speakCharacters;
     private bool _speakDeletedCharacters = true;
     private bool _speakWords = true;
@@ -67,6 +68,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             _speakCharacters = k.SpeakCharacters ?? false;
             _speakWords = k.SpeakWords ?? true;
             _speakDeletedCharacters = k.SpeakDeletedCharacters ?? true;
+            _applyEchoInReadMode = k.ApplyEchoInReadMode ?? false;
         }
 
         BuildKeyBindings(source.Input?.KeyBindings, ResolveLayout(_layout));
@@ -254,6 +256,16 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     /// destructive and cannot be verified any other way, so a user who finds
     /// per-character echo too chatty still needs to hear what vanished.
     /// </summary>
+    /// <summary>
+    /// Extends character and word echo into Read mode, where a single letter
+    /// is otherwise a navigation command rather than input.
+    /// </summary>
+    public bool ApplyEchoInReadMode
+    {
+        get => _applyEchoInReadMode;
+        set => Set(ref _applyEchoInReadMode, value);
+    }
+
     public bool SpeakDeletedCharacters
     {
         get => _speakDeletedCharacters;
@@ -284,6 +296,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             SpeakCharacters = _speakCharacters,
             SpeakWords = _speakWords,
             SpeakDeletedCharacters = _speakDeletedCharacters,
+            ApplyEchoInReadMode = _applyEchoInReadMode,
         },
         Input = new InputConfig
         {

@@ -226,6 +226,26 @@ public class CaretMotionResolverTests
     }
 
     [Fact]
+    public void Arrowing_onto_a_blank_line_says_blank_not_the_line_above()
+    {
+        var s = new StringTextSurface("alpha\n\nbravo", caretOffset: 2);
+        var (before, after) = Move(s, 6); // the empty line
+
+        var motion = CaretMotionResolver.Resolve(before, after);
+        motion.Kind.Should().Be(CaretMotionKind.Line);
+        motion.Text.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void A_real_line_below_still_reads_its_own_text()
+    {
+        var s = new StringTextSurface("alpha\nbravo", caretOffset: 2);
+        var (before, after) = Move(s, 8);
+
+        CaretMotionResolver.Resolve(before, after).Text.Should().Be("bravo");
+    }
+
+    [Fact]
     public void Text_for_reads_the_unit_a_motion_implies()
     {
         var s = new StringTextSurface("alpha beta", caretOffset: 0);

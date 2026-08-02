@@ -78,6 +78,8 @@ public static class ConfigMerger
         {
             Layout = upper.Layout ?? lower.Layout,
             SpeakCommandKeys = upper.SpeakCommandKeys ?? lower.SpeakCommandKeys,
+            SpeakDeletedCharacters = upper.SpeakDeletedCharacters ?? lower.SpeakDeletedCharacters,
+            ApplyEchoInReadMode = upper.ApplyEchoInReadMode ?? lower.ApplyEchoInReadMode,
             SpeakCharacters = upper.SpeakCharacters ?? lower.SpeakCharacters,
             SpeakWords = upper.SpeakWords ?? lower.SpeakWords,
         };

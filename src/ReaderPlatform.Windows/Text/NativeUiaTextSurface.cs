@@ -187,7 +187,32 @@ public sealed class NativeUiaTextSurfaceProvider : ITextSurfaceProvider
             return new NativeUiaTextSurface(element, node.Id);
         }
 
-        // 2. Win32 messages, for classic edits that expose no text pattern.
+        // 2. A descendant that has one. Console hosts (conhost, Windows
+        //    Terminal) put focus on the window while the text pattern lives on
+        //    a child text area, so numpad review found no surface at all and
+        //    silently did nothing. The same shape covers any framework that
+        //    focuses a container rather than its text.
+        if (element is not null && _provider.Automation is { } automation)
+        {
+            try
+            {
+                var condition = automation.CreatePropertyCondition(
+                    UIA_PROPERTY_ID.UIA_IsTextPatternAvailablePropertyId, true);
+                var textChild = element.FindFirst(TreeScope.TreeScope_Descendants, condition);
+                if (textChild is not null)
+                {
+                    _log.Verbose("text surface for {NodeId}: descendant TextPattern", node.Id);
+                    return new NativeUiaTextSurface(textChild, node.Id);
+                }
+            }
+            catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+            {
+                // A subtree walk can fail on a hostile or dying provider;
+                // the cheaper fallbacks below still apply.
+            }
+        }
+
+        // 3. Win32 messages, for classic edits that expose no text pattern.
         var hwnd = Extra(node, "uia.NativeWindowHandle") is int h ? (nint)h : 0;
         if (hwnd != 0 && Win32Text.TryGetText(hwnd, out _))
         {
@@ -195,7 +220,7 @@ public sealed class NativeUiaTextSurfaceProvider : ITextSurfaceProvider
             return new Win32TextSurface(hwnd, node.Id);
         }
 
-        // 3. The node's own value. No caret, but review and say-all still work.
+        // 4. The node's own value. No caret, but review and say-all still work.
         if (!string.IsNullOrEmpty(node.Value))
         {
             _log.Verbose("text surface for {NodeId}: node value (read-only)", node.Id);

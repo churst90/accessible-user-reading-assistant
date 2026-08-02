@@ -57,5 +57,29 @@ public sealed record KeyEchoSettings
     /// </remarks>
     public bool SpeakDeletedCharacters { get; init; } = true;
 
+    /// <summary>
+    /// Whether character and word echo also apply while in
+    /// <see cref="Abstractions.Navigation.ReaderMode.Read"/>. Defaults to
+    /// <c>false</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// In Read mode a single letter is a <em>command</em>, not typed text —
+    /// <c>h</c> jumps to the next heading. Echoing it announces "h" before the
+    /// heading, which is noise for most users most of the time.
+    /// </para>
+    /// <para>
+    /// It is a preference rather than a rule because some users navigate
+    /// largely by quick-key and want the confirmation that the key registered,
+    /// particularly on an unfamiliar keyboard. Off by default; on for those who
+    /// want it.
+    /// </para>
+    /// <para>
+    /// Only gates <see cref="SpeakCharacters"/> and <see cref="SpeakWords"/>.
+    /// Deletion echo is unaffected — deleting is destructive in either mode.
+    /// </para>
+    /// </remarks>
+    public bool ApplyEchoInReadMode { get; init; }
+
     public static KeyEchoSettings Defaults => new();
 }
