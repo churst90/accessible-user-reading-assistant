@@ -146,7 +146,10 @@ public class GestureMapTests
         var desktop = new GestureMap();
         GestureBindings.ApplyDefaults(desktop, KeyboardLayout.Desktop);
         desktop.Resolve(Down(0x4F /* O */, InputModifiers.Reader)).Should().Be(ReaderCommand.OpenSettings);
-        desktop.Resolve(Down(0x4E /* N */, InputModifiers.Reader)).Should().Be(ReaderCommand.OpenSettings);
+        // Reader+N is deliberately NOT bound: it is NVDA's menu key, and we
+        // have no menu. Binding it to settings meant two keys did the same
+        // thing while the one users reach for was ambiguous.
+        desktop.Resolve(Down(0x4E /* N */, InputModifiers.Reader)).Should().Be(ReaderCommand.None);
 
         var laptop = new GestureMap();
         GestureBindings.ApplyDefaults(laptop, KeyboardLayout.Laptop);

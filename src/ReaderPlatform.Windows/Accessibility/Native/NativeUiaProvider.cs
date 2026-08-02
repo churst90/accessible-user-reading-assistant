@@ -554,6 +554,16 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         // absence, exactly as NVDA does.
         if (kind == AccessibilityEventKind.SelectionChanged)
         {
+            // Arrowing a list raises BOTH FocusChanged and ElementSelected for
+            // the same item. The focus announcement already said it, so
+            // repeating it here is where "speech, speech" came from. Selection
+            // events are only interesting when selection moved WITHOUT focus
+            // — multi-select, or a selection driven programmatically.
+            if (IsFocused(element))
+            {
+                return;
+            }
+
             var key = kind + "" + FocusKey(node);
             lock (_gate)
             {
