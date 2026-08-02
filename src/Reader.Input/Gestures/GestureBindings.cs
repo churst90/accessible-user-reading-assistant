@@ -110,9 +110,9 @@ public static class GestureBindings
         map.Bind(new KeyChord(VK_1, InputModifiers.Reader), ReaderCommand.ToggleKeyboardHelp);
         map.Bind(new KeyChord(VK_F1, InputModifiers.Reader), ReaderCommand.OpenDocumentation);
 
-        // Settings (Reader+N mirrors NVDA's "open menu"; Reader+O kept as
-        // legacy direct-access alias). Quit (Reader+Q) matches NVDA.
-        map.Bind(new KeyChord(VK_N, InputModifiers.Reader), ReaderCommand.OpenSettings);
+        // Settings is Reader+O only. Reader+N is NVDA's *menu* key, and we
+        // have no menu — binding it to settings meant two keys did the same
+        // thing while the one users reach for was ambiguous.
         map.Bind(new KeyChord(VK_O, InputModifiers.Reader), ReaderCommand.OpenSettings);
         map.Bind(new KeyChord(VK_Q, InputModifiers.Reader), ReaderCommand.OpenExitDialog);
 

@@ -101,7 +101,7 @@ rules:
   - id: core.role.listitem
     priority: 10
     scope: { role: ListItem }
-    action: { type: emit, template: "{name}, list item, {posInSet}" }
+    action: { type: emit, template: "{name}, {posInSet}" }
 
   - id: core.role.table
     priority: 10

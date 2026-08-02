@@ -90,6 +90,7 @@ public static class CaretMotionResolver
         var probe = range.Clone();
         probe.Collapse(toStart: true);
         probe.ExpandToUnit(unit);
+
         return probe.GetText(UnitReadCap);
     }
 

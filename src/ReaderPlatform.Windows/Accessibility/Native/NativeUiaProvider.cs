@@ -56,10 +56,12 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
     private FocusSink? _focusSink;
     private EventSink? _eventSink;
     private NotificationSink? _notificationSink;
+    private PropertySink? _propertySink;
     private Task? _dispatchTask;
     private AccessibleNode? _focused;
     private IUIAutomationElement? _focusedElement;
     private string? _lastFocusKey;
+    private string? _lastEmitKey;
     private bool _started;
     private bool _disposed;
 
@@ -225,6 +227,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         }
 
         RegisterDesktopEvents();
+        RegisterPropertyChanges();
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
         {
             RegisterNotifications();
@@ -268,6 +271,58 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 // One unavailable event must not cost us the others.
                 _log.Warning(ex, "could not register {Event}", label);
             }
+        }
+    }
+
+    /// <summary>
+    /// Property-changed subscriptions, which are a <em>separate</em>
+    /// registration from the event handlers above.
+    /// </summary>
+    /// <remarks>
+    /// Without these, checking a checkbox, expanding a tree node, or changing
+    /// a combo box announced nothing at all: the control raises a property
+    /// change, not an automation event, and we were only listening for the
+    /// latter. This is the "controls don't announce their state change" gap.
+    /// </remarks>
+    private void RegisterPropertyChanges()
+    {
+        if (_automation is null || _cacheRequest is null)
+        {
+            return;
+        }
+        try
+        {
+            _propertySink = new PropertySink(this);
+            // The SAFEARRAY overload needs a marshalled array; the
+            // NativeArray variant takes a plain pointer and is simpler to
+            // get right.
+            Span<int> properties =
+            [
+                (int)UIA_PROPERTY_ID.UIA_ToggleToggleStatePropertyId,
+                (int)UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
+                (int)UIA_PROPERTY_ID.UIA_ValueValuePropertyId,
+                (int)UIA_PROPERTY_ID.UIA_RangeValueValuePropertyId,
+                (int)UIA_PROPERTY_ID.UIA_SelectionItemIsSelectedPropertyId,
+                (int)UIA_PROPERTY_ID.UIA_NamePropertyId,
+            ];
+            unsafe
+            {
+                fixed (int* ptr = properties)
+                {
+                    _automation.AddPropertyChangedEventHandlerNativeArray(
+                        _automation.GetRootElement(),
+                        TreeScope.TreeScope_Subtree,
+                        _cacheRequest,
+                        _propertySink,
+                        (UIA_PROPERTY_ID*)ptr,
+                        properties.Length);
+                }
+            }
+            _log.Debug("registered property-changed handler");
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            _log.Warning(ex, "could not register the property-changed handler");
         }
     }
 
@@ -335,6 +390,13 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             };
             owner.Queue(kind, sender);
         }
+    }
+
+    private sealed class PropertySink(NativeUiaProvider owner) : IUIAutomationPropertyChangedEventHandler
+    {
+        public void HandlePropertyChangedEvent(
+            IUIAutomationElement sender, UIA_PROPERTY_ID propertyId, object newValue)
+            => owner.Queue(RawKind.Value, sender);
     }
 
     private sealed class NotificationSink(NativeUiaProvider owner) : IUIAutomationNotificationEventHandler
@@ -433,6 +495,10 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             }
             _elementCache[node.Id] = element;
             _lastFocusKey = key;
+            if (!sameNode)
+            {
+                _lastEmitKey = null;
+            }
         }
 
         // The same control re-firing focus — common in editable combos, which
@@ -479,6 +545,26 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             // Nothing to say is not worth interrupting for.
             return;
         }
+
+        // Selection events repeat for the SAME item at a list boundary: arrow
+        // down on the last row and the control re-raises ElementSelected
+        // without anything having moved. Announcing that made the reader
+        // parrot the last item on every further press, when the correct
+        // behaviour is silence — the user learns they are at the end from the
+        // absence, exactly as NVDA does.
+        if (kind == AccessibilityEventKind.SelectionChanged)
+        {
+            var key = kind + "" + FocusKey(node);
+            lock (_gate)
+            {
+                if (string.Equals(_lastEmitKey, key, StringComparison.Ordinal))
+                {
+                    return;
+                }
+                _lastEmitKey = key;
+            }
+        }
+
         DispatchLocal(new AccessibilityEvent(kind, node, DateTimeOffset.UtcNow));
     }
 
@@ -586,6 +672,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         _focusSink = null;
         _eventSink = null;
         _notificationSink = null;
+        _propertySink = null;
         _cacheRequest = null;
         _automation = null;
     }

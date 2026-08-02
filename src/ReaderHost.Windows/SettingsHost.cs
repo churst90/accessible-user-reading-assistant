@@ -65,8 +65,16 @@ internal sealed class SettingsHost
         try
         {
             ConfigWriter.WriteToFile(ConfigPaths.UserConfigPath, updated);
-            _log.Information("settings saved to {Path}", ConfigPaths.UserConfigPath);
-            // ConfigStore's file watcher will pick the change up and raise Changed.
+            // Reload explicitly rather than waiting for the file watcher.
+            // The watcher round-trip has too many ways to silently not happen
+            // — a debounce that swallows the event, an atomic replace the
+            // watcher reports as a rename it is not filtering for, a first run
+            // where the directory did not exist when the watcher was created.
+            // Any one of those looks identical to the user: "Apply did
+            // nothing". Reloading here makes the save take effect regardless,
+            // and the watcher stays as the path for edits made outside the app.
+            _store.Reload();
+            _log.Information("settings saved to {Path} and reloaded", ConfigPaths.UserConfigPath);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
