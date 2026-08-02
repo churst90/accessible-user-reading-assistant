@@ -1,5 +1,10 @@
 using System.Runtime.Versioning;
 using OpenReader.Abstractions.Speech;
+using System.Globalization;
+using OpenReader.Config;
+using OpenReader.Core.Diagnostics;
+using OpenReader.Diagnostics;
+using OpenReader.Abstractions.Accessibility;
 using OpenReader.Core.Review;
 using OpenReader.Input.Commands;
 using OpenReader.Input.Gestures;
@@ -38,7 +43,9 @@ internal static class CommandBindings
         DoubleTapDetector doubleTap,
         GestureRouter router,
         Serilog.ILogger log,
-        Action<bool> onEnabledChanged)
+        Action<bool> onEnabledChanged,
+        Func<ReaderConfig> currentConfig,
+        Action<string> copyToClipboard)
     {
         bus.Bind(ReaderCommand.StopSpeech, _ =>
         {
@@ -86,6 +93,45 @@ internal static class CommandBindings
                 cursor.SyncTo(focusedNode);
             }
             sayAll.StartFromBeginningAsync().ContinueWith(_ => { }, TaskScheduler.Default);
+            return ValueTask.CompletedTask;
+        });
+
+        bus.Bind(ReaderCommand.ReportDiagnostics, _ =>
+        {
+            // The reporter cannot read the screen to gather any of this.
+            // Without it a bug report is "it stopped talking", and half a day
+            // goes on establishing facts that were always available.
+            try
+            {
+                var config = currentConfig();
+                var focused = provider.Focused;
+                var fields = new List<DiagnosticSnapshot.Field>
+                {
+                    new("OpenReader", typeof(CommandBindings).Assembly.GetName().Version?.ToString()),
+                    new(".NET", Environment.Version.ToString()),
+                    new("OS", Environment.OSVersion.VersionString),
+                    new("Architecture", System.Runtime.InteropServices.RuntimeInformation.OSArchitecture.ToString()),
+                    new("Engine", engine.Id),
+                    new("Voice", config.Speech?.VoiceId ?? "(engine default)"),
+                    new("Rate", (config.Speech?.RatePercent ?? 100f).ToString(CultureInfo.InvariantCulture) + "%"),
+                    new("Layout", config.Keyboard?.Layout),
+                    new("Reader modifier", config.Input?.ReaderModifier),
+                    new("Punctuation", _punctuationLevel.ToString()),
+                    new("Reader enabled", _enabled.ToString()),
+                    // Executable name only — never the control's name or value.
+                    new("Focused app", DescribeFocusedApp(focused)),
+                    new("Focused role", focused?.Role.ToString()),
+                    new("Log directory", LogPaths.LogDirectory),
+                };
+
+                copyToClipboard(DiagnosticSnapshot.Build("OpenReader diagnostics", fields));
+                Submit(SpeechReason.UserAnnouncement, DiagnosticSnapshot.SpokenSummary(fields.Count));
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                log.Warning(ex, "could not build diagnostics snapshot");
+                Submit(SpeechReason.UserAnnouncement, "could not copy diagnostics");
+            }
             return ValueTask.CompletedTask;
         });
 
@@ -208,6 +254,29 @@ internal static class CommandBindings
             // an empty line.
             var effectiveText = string.IsNullOrEmpty(text) ? "blank" : text;
             pipeline.Submit(new SpeechRequest(reason, Node: null, RawText: effectiveText, AppExecutableName: null));
+        }
+    }
+
+    /// <summary>
+    /// The focused application's executable name, from the process id the UIA
+    /// mapper already cached. Deliberately just the executable: the control's
+    /// name or value would be user content and must not reach a bug report.
+    /// </summary>
+    private static string? DescribeFocusedApp(AccessibleNode? node)
+    {
+        if (node is null || !node.Extras.TryGetValue("uia.ProcessId", out var raw) || raw is not int pid)
+        {
+            return null;
+        }
+        try
+        {
+            using var process = System.Diagnostics.Process.GetProcessById(pid);
+            return process.ProcessName;
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            // Process exited between the focus event and the report.
+            return null;
         }
     }
 

@@ -42,6 +42,14 @@ public enum ReaderCommand
     OpenDocumentation,
     OpenExitDialog,
     OpenSynthesizerDialog,
+
+    /// <summary>
+    /// Copy a diagnostic snapshot to the clipboard and say where the log is.
+    /// Exists so a bug report can contain facts instead of "it stopped
+    /// working" — the reporter is, by definition, unable to read the screen
+    /// to gather them.
+    /// </summary>
+    ReportDiagnostics,
 }
 
 /// <summary>Human-readable labels for <see cref="ReaderCommand"/>s. Centralized so the help-mode announcer and the rebind UI agree.</summary>
@@ -76,6 +84,7 @@ public static class ReaderCommandLabels
         ReaderCommand.OpenDocumentation => "open documentation",
         ReaderCommand.OpenExitDialog => "exit",
         ReaderCommand.OpenSynthesizerDialog => "open synthesizer",
+        ReaderCommand.ReportDiagnostics => "copy diagnostics",
         _ => command.ToString(),
     };
 }

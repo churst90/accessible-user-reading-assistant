@@ -352,7 +352,23 @@ internal static class Program
 
         CommandBindings.Apply(commandBus, pipeline, reviewCursor, provider, queue, engineRouter,
             settingsHost, exitDialogHost, synthesizerDialogHost, sayAll, doubleTap, router, log,
-            onEnabledChanged: enabled => uiDispatcher.BeginInvoke(() => tray?.SetEnabled(enabled)));
+            onEnabledChanged: enabled => uiDispatcher.BeginInvoke(() => tray?.SetEnabled(enabled)),
+            currentConfig: () => configStore.Current,
+            // Clipboard access requires an STA thread with a message pump;
+            // the main thread is busy draining the speech queue.
+            copyToClipboard: text => uiDispatcher.Invoke(() =>
+            {
+                try
+                {
+                    System.Windows.Clipboard.SetText(text);
+                }
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                {
+                    // The clipboard is a shared, lockable OS resource; another
+                    // process holding it is routine, not exceptional.
+                    log.Warning(ex, "could not write diagnostics to the clipboard");
+                }
+            }));
 
         // --- Live config reaction ---
         configStore.Changed += updated =>

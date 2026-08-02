@@ -35,6 +35,7 @@ public static class GestureBindings
     private const int VK_O = 0x4F;
     private const int VK_P = 0x50;
     private const int VK_Q = 0x51;
+    private const int VK_D = 0x44;
     private const int VK_S = 0x53;
     private const int VK_T = 0x54;
     private const int VK_OEM_PERIOD = 0xBE;
@@ -117,6 +118,10 @@ public static class GestureBindings
         // Synthesizer selection. Ctrl+Reader+S (so plain Ctrl+S still saves
         // in the focused app — chord matching is exact on modifiers).
         map.Bind(new KeyChord(VK_S, InputModifiers.Reader | InputModifiers.Control), ReaderCommand.OpenSynthesizerDialog);
+
+        // Diagnostics snapshot to the clipboard (Ctrl+Reader+D). Ctrl-qualified
+        // so plain Reader+D stays free for a user binding.
+        map.Bind(new KeyChord(VK_D, InputModifiers.Reader | InputModifiers.Control), ReaderCommand.ReportDiagnostics);
 
         // Read-current-line and say-all-from-cursor are bound on the main
         // letter row in both layouts so muscle memory carries between them

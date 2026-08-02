@@ -237,11 +237,11 @@ public sealed class StringTextSurface : ITextSurface
             i = _text.Length;
         }
         // If we're on whitespace, there is no enclosing word; report where we are.
-        if (i < _text.Length && char.IsWhiteSpace(_text[i]) && (i == 0 || char.IsWhiteSpace(_text[i - 1])))
+        if (i < _text.Length && WordBoundary.IsSeparator(_text[i]) && (i == 0 || WordBoundary.IsSeparator(_text[i - 1])))
         {
             return i;
         }
-        while (i > 0 && !char.IsWhiteSpace(_text[i - 1]))
+        while (i > 0 && !WordBoundary.IsSeparator(_text[i - 1]))
         {
             i--;
         }
@@ -252,7 +252,7 @@ public sealed class StringTextSurface : ITextSurface
     internal int WordEnd(int offset)
     {
         var i = Clamp(offset, _text.Length);
-        while (i < _text.Length && !char.IsWhiteSpace(_text[i]))
+        while (i < _text.Length && !WordBoundary.IsSeparator(_text[i]))
         {
             i++;
         }
@@ -263,7 +263,7 @@ public sealed class StringTextSurface : ITextSurface
     internal int NextWordStart(int offset)
     {
         var i = WordEnd(Clamp(offset, _text.Length));
-        while (i < _text.Length && char.IsWhiteSpace(_text[i]))
+        while (i < _text.Length && WordBoundary.IsSeparator(_text[i]))
         {
             i++;
         }
@@ -277,7 +277,7 @@ public sealed class StringTextSurface : ITextSurface
         // Step off the current word onto the whitespace before it.
         i = WordStart(i);
         i--;
-        while (i >= 0 && char.IsWhiteSpace(_text[i]))
+        while (i >= 0 && WordBoundary.IsSeparator(_text[i]))
         {
             i--;
         }

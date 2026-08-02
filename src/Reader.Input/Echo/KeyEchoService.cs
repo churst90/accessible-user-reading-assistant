@@ -1,5 +1,6 @@
 using System.Text;
 using OpenReader.Abstractions.Input;
+using OpenReader.Abstractions.Text;
 using OpenReader.Diagnostics;
 using Serilog;
 
@@ -130,18 +131,36 @@ public sealed class KeyEchoService : IDisposable
                 return;
             }
 
-            // Backspace — pop a buffered character.
+            // Backspace — announce the character it removes.
+            //
+            // Taken from the word buffer rather than read back from the
+            // control. The buffer already holds exactly what the user typed,
+            // so this is exact and free, with no race against the application
+            // processing the keystroke. Reading the control instead means
+            // racing the deletion: the low-level hook fires before the app
+            // sees the key, but our handler runs after the input channel, so
+            // by the time a read lands the character may already be gone.
+            //
+            // The buffer is empty when the user arrowed into existing text and
+            // started deleting. There is no cheap exact answer there, so we
+            // fall back to naming the key. See docs/ROADMAP.md 3.6 #6.
             if (input.KeyCode == VK_BACK)
             {
                 _onTypingActivity?.Invoke();
+                string? removed = null;
                 lock (_gate)
                 {
                     if (_wordBuffer.Length > 0)
                     {
+                        removed = _wordBuffer[^1].ToString();
                         _wordBuffer.Length--;
                     }
                 }
-                if (_settings.SpeakNavigationKeys)
+                if (removed is not null && _settings.SpeakCharacters)
+                {
+                    _speak(removed);
+                }
+                else if (_settings.SpeakNavigationKeys)
                 {
                     _speak("backspace");
                 }
@@ -160,10 +179,14 @@ public sealed class KeyEchoService : IDisposable
             // value bug).
             _onTypingActivity?.Invoke();
 
-            if (typed == ' ' || char.IsPunctuation(typed) || char.IsSymbol(typed))
+            // A word is finished by whitespace or sentence punctuation — NOT by
+            // apostrophes or hyphens. char.IsPunctuation includes both, which
+            // is why this used to say "don" then "t". WordBoundary is the one
+            // definition, shared with the text model.
+            if (WordBoundary.IsTerminator(typed))
             {
                 FlushWord();
-                if (_settings.SpeakCharacters && typed != ' ')
+                if (_settings.SpeakCharacters && !char.IsWhiteSpace(typed))
                 {
                     _speak(typed.ToString());
                 }
