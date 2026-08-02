@@ -10,7 +10,7 @@ namespace Aura.Abstractions.Text;
 /// <para>
 /// This is the third seam between platform and core, alongside
 /// <see cref="IAccessibilityProvider"/> and
-/// <see cref="ITextContentProvider"/>. It exists so that every text behaviour
+/// <c>ITextSurface</c>. It exists so that every text behaviour
 /// is written <em>once</em>, against <see cref="ITextRange"/>, and works
 /// unchanged over each backend:
 /// </para>

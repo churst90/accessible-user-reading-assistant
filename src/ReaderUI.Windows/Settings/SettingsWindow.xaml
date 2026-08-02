@@ -65,7 +65,9 @@
     <Border Grid.Row="0" Grid.Column="1" Margin="0,12,12,12" Padding="20"
             BorderBrush="#22000000" BorderThickness="1" CornerRadius="2"
             AutomationProperties.Name="Settings details">
-      <ContentControl x:Name="DetailHost" />
+      <!-- Not a tab stop: an unnamed focusable host is the dead step that
+           made Tab go silent before reaching the actual options. -->
+      <ContentControl x:Name="DetailHost" Focusable="False" IsTabStop="False" />
     </Border>
 
     <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"

@@ -46,8 +46,9 @@ scripts/     Build/dev tooling
 3. [`docs/DESIGN_PRINCIPLES.md`](docs/DESIGN_PRINCIPLES.md) — what we will and won't do
 4. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the layering and key abstractions
 5. [`docs/TEXT_MODEL.md`](docs/TEXT_MODEL.md) — the text range contract and its migration path
-6. [`docs/READ_TYPE_MODES.md`](docs/READ_TYPE_MODES.md) — Read/Type mode framework (Phase 4c)
-7. [`docs/EXTENSIONS.md`](docs/EXTENSIONS.md) — plugin model, maintainability rules, NVDA Remote interop
-8. [`docs/SPEECH_PIPELINE.md`](docs/SPEECH_PIPELINE.md) — customization model
-9. [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased milestones
-10. [`docs/FIRST_STEPS.md`](docs/FIRST_STEPS.md) — Phase 0 checklist (already done)
+6. [`docs/OUTPUT_PIPELINE.md`](docs/OUTPUT_PIPELINE.md) — the single path every spoken word travels
+7. [`docs/READ_TYPE_MODES.md`](docs/READ_TYPE_MODES.md) — Read/Type mode framework (Phase 4c)
+8. [`docs/EXTENSIONS.md`](docs/EXTENSIONS.md) — plugin model, maintainability rules, NVDA Remote interop
+9. [`docs/SPEECH_PIPELINE.md`](docs/SPEECH_PIPELINE.md) — customization model
+10. [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased milestones
+11. [`docs/FIRST_STEPS.md`](docs/FIRST_STEPS.md) — Phase 0 checklist (already done)

@@ -61,7 +61,6 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
     private AccessibleNode? _focused;
     private IUIAutomationElement? _focusedElement;
     private string? _lastFocusKey;
-    private string? _lastEmitKey;
     private bool _started;
     private bool _disposed;
 
@@ -495,10 +494,6 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             }
             _elementCache[node.Id] = element;
             _lastFocusKey = key;
-            if (!sameNode)
-            {
-                _lastEmitKey = null;
-            }
         }
 
         // The same control re-firing focus — common in editable combos, which
@@ -544,35 +539,6 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             // Nothing to say is not worth interrupting for.
             return;
-        }
-
-        // Selection events repeat for the SAME item at a list boundary: arrow
-        // down on the last row and the control re-raises ElementSelected
-        // without anything having moved. Announcing that made the reader
-        // parrot the last item on every further press, when the correct
-        // behaviour is silence — the user learns they are at the end from the
-        // absence, exactly as NVDA does.
-        if (kind == AccessibilityEventKind.SelectionChanged)
-        {
-            // Arrowing a list raises BOTH FocusChanged and ElementSelected for
-            // the same item. The focus announcement already said it, so
-            // repeating it here is where "speech, speech" came from. Selection
-            // events are only interesting when selection moved WITHOUT focus
-            // — multi-select, or a selection driven programmatically.
-            if (IsFocused(element))
-            {
-                return;
-            }
-
-            var key = kind + "" + FocusKey(node);
-            lock (_gate)
-            {
-                if (string.Equals(_lastEmitKey, key, StringComparison.Ordinal))
-                {
-                    return;
-                }
-                _lastEmitKey = key;
-            }
         }
 
         DispatchLocal(new AccessibilityEvent(kind, node, DateTimeOffset.UtcNow));

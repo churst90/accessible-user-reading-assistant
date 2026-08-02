@@ -231,7 +231,11 @@ internal static class SettingsPanels
 
     private static StackPanel NewPanel(string title)
     {
-        var panel = new StackPanel();
+        // A layout container must never be a tab stop. WPF makes panels
+        // focusable by default, so tabbing landed on an unnamed StackPanel
+        // that announced nothing — the "tab, silence, tab again" dead step in
+        // the focus order.
+        var panel = new StackPanel { Focusable = false, IsHitTestVisible = true };
         panel.Children.Add(new TextBlock
         {
             Text = title,

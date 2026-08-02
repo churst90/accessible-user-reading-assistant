@@ -2,6 +2,7 @@ using Aura.Abstractions.Accessibility;
 using Aura.Abstractions.Plugins;
 using Aura.Abstractions.Speech;
 using Aura.Diagnostics;
+using Aura.Output;
 using Aura.Speech.Punctuation;
 using Aura.Speech.Queue;
 using Aura.Speech.Rules;
@@ -26,6 +27,7 @@ public sealed class SpeechPipeline : IDisposable
     private readonly ILogger _log;
     private readonly Func<ProcessInfo?>? _processInfo;
     private readonly TypingState? _typingState;
+    private readonly OutputArbiter _arbiter = new();
     private IDisposable? _subscription;
     private bool _started;
     private bool _disposed;
@@ -64,6 +66,12 @@ public sealed class SpeechPipeline : IDisposable
         ArgumentNullException.ThrowIfNull(engine);
         _engine = engine;
     }
+
+    /// <summary>
+    /// Decides which announcements survive when several producers describe the
+    /// same user action. Every path into the queue goes through it.
+    /// </summary>
+    public OutputArbiter Arbiter => _arbiter;
 
     /// <summary>
     /// Punctuation level applied to every composed utterance before queueing.
@@ -142,6 +150,11 @@ public sealed class SpeechPipeline : IDisposable
             utterance = ApplyPunctuation(utterance);
             utterance = ApplyCapitalCue(utterance);
 
+            if (_arbiter.Evaluate(request, ev.Node?.Id.Value, utterance.Text) == OutputDecision.Drop)
+            {
+                return;
+            }
+
             var enqueued = _queue.Enqueue(utterance);
             if (!enqueued)
             {
@@ -169,6 +182,10 @@ public sealed class SpeechPipeline : IDisposable
         }
         utterance = ApplyPunctuation(utterance);
         utterance = ApplyCapitalCue(utterance);
+        if (_arbiter.Evaluate(request, request.Node?.Id.Value, utterance.Text) == OutputDecision.Drop)
+        {
+            return false;
+        }
         return _queue.Enqueue(utterance);
     }
 

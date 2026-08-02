@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Reader.Abstractions\Reader.Abstractions.csproj" />
+    <ProjectReference Include="..\Reader.Output\Reader.Output.csproj" />
     <ProjectReference Include="..\Reader.Diagnostics\Reader.Diagnostics.csproj" />
   </ItemGroup>
 
