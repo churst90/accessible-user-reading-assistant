@@ -457,13 +457,22 @@ internal static class Program
 
         queue.PreemptiveEnqueued += _ => FireAndForgetCancel(engineRouter, log);
 
-        // NVDA-style speech interrupt: any non-modifier key-down kills
-        // in-flight speech immediately. Pure modifier presses (Shift, Ctrl,
-        // Alt, Win, Reader-key) are excluded so users can hold them down
-        // without silencing playback. Navigation keys are also excluded —
-        // the CaretMoved cancel-group preempts the previous utterance via
-        // PreemptiveEnqueued already, and adding a second cancel here just
-        // gave SAPI two cancels per keystroke and audible start-up latency.
+        // Any non-modifier key-down kills in-flight speech immediately, as
+        // NVDA does. Pure modifiers are excluded so a held Shift or Ctrl does
+        // not silence playback.
+        //
+        // Arrow keys used to be excluded too, on the theory that the
+        // CaretMoved cancel-group already preempts. That holds for caret moves
+        // inside text, but NOT for focus and selection moves through a folder,
+        // list or the desktop: those carry a different cancel group, so the new
+        // announcement queued behind the one still playing and the user heard
+        // the item they had just left. Arrowing quickly, speech ran a full item
+        // behind the cursor.
+        //
+        // Cancelling unconditionally also gives the right behaviour at a list
+        // boundary: the keypress silences the current utterance, no new focus
+        // event follows, and the result is silence — which is how the user
+        // learns they are at the end.
         keyboard.RawInputReceived += (_, raw) =>
         {
             if (raw.Kind != InputEventKind.KeyDown)
@@ -472,13 +481,6 @@ internal static class Program
             }
             if (IsPureModifierKey(raw.KeyCode))
             {
-                return;
-            }
-            if (IsNavigationKey(raw.KeyCode))
-            {
-                // Navigation still has to produce speech, so the watchdog
-                // watches it even though we skip the extra cancel.
-                watchdog.NotifyInput();
                 return;
             }
             watchdog.NotifyInput();
@@ -681,24 +683,6 @@ internal static class Program
         _ => false,
     };
 
-    /// <summary>
-    /// True for cursor-navigation vk codes. CaretFollowService samples these
-    /// and the CaretMoved cancel-group preempts in-flight speech already; a
-    /// second cancel in parallel gave SAPI two cancels per keystroke and
-    /// audible start-up latency.
-    /// </summary>
-    private static bool IsNavigationKey(int vk) => vk switch
-    {
-        0x21 /* VK_PRIOR   */ => true,
-        0x22 /* VK_NEXT    */ => true,
-        0x23 /* VK_END     */ => true,
-        0x24 /* VK_HOME    */ => true,
-        0x25 /* VK_LEFT    */ => true,
-        0x26 /* VK_UP      */ => true,
-        0x27 /* VK_RIGHT   */ => true,
-        0x28 /* VK_DOWN    */ => true,
-        _ => false,
-    };
 
     /// <summary>
     /// Play a bare tone. Used for the stall cue, which must not depend on the

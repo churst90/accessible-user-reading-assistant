@@ -35,13 +35,30 @@ public class OutputArbiterTests
     }
 
     [Fact]
-    public void The_same_item_announced_again_at_a_list_boundary_is_dropped()
+    public void The_same_reason_twice_is_two_real_actions_not_a_duplicate()
     {
-        // Arrowing past the end re-raises the event for an item that never
-        // moved. Silence is how the user learns they are at the boundary.
+        // Arrowing through consecutive blank lines raises CaretMoved each time
+        // for the same control, legitimately, and each must be heard. Only a
+        // DIFFERENT reason about the same subject means two producers
+        // describing one action.
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "last", "Mouse").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "last", "Mouse").Should().Be(OutputDecision.Drop);
+        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
+    }
+
+    [Fact]
+    public void Repeated_identical_text_is_NOT_suppressed()
+    {
+        // A content-based rule cannot tell "nothing moved" from "the next thing
+        // reads the same". Arrowing up through consecutive blank lines
+        // legitimately produces "blank" every time, and an earlier version of
+        // this class swallowed all but the first — silence where the user
+        // needed feedback. Boundary silence comes from the keypress cancelling
+        // in-flight speech, not from matching words.
+        var (a, _) = Make();
+        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
@@ -108,12 +125,13 @@ public class OutputArbiterTests
     }
 
     [Fact]
-    public void Reset_lets_a_control_announce_again()
+    public void Reset_clears_the_coincidence_state()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "x", "Same").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Req(SpeechReason.FocusChanged), "x", "One").Should().Be(OutputDecision.Speak);
         a.Reset();
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "x", "Same").Should().Be(OutputDecision.Speak);
+        // Without the reset this would lose to the focus announcement above.
+        a.Evaluate(Req(SpeechReason.ValueChanged), "x", "Two").Should().Be(OutputDecision.Speak);
     }
 
     [Fact]

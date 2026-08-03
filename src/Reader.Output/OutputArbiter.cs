@@ -30,10 +30,19 @@ public enum OutputDecision
 ///   raises focus <em>and</em> selection for one arrow press; the caret moves
 ///   and both a keystroke sample and a UIA event describe it. The user
 ///   performed one action and should hear one announcement.</item>
-///   <item><b>Identical text repeated immediately → drop.</b> Arrowing at the
-///   end of a list re-raises the same event for the same item. Repeating it
-///   tells the user nothing; silence tells them they are at the boundary.</item>
 /// </list>
+/// <para>
+/// There was briefly a second rule — drop identical text repeated immediately —
+/// meant to silence a list boundary. It was wrong, and wrong in the dangerous
+/// direction: arrowing up through consecutive blank lines in a document
+/// produces the same word ("blank") each time, legitimately, and the rule
+/// swallowed every one after the first. Suppressing on <em>content</em> cannot
+/// tell "nothing moved" from "the next thing happens to read the same", so it
+/// does not belong here. <c>SpeechQueue</c> already coalesces genuine
+/// duplicates within a tighter, cancel-group-aware window, and a keypress now
+/// cancels in-flight speech, which is what actually produces silence at a
+/// boundary.
+/// </para>
 /// <para>
 /// Everything else is left to the queue, which already handles priority,
 /// cancel groups and preemption. This class decides <em>whether</em> to speak;
@@ -54,7 +63,7 @@ public sealed class OutputArbiter
 
     private string? _lastSubject;
     private OutputCategory _lastCategory;
-    private string? _lastText;
+    private SpeechReason _lastReason;
     private long _lastAtTicks;
     private bool _hasLast;
 
@@ -81,7 +90,7 @@ public sealed class OutputArbiter
     /// What it is about — normally the node id. Announcements about different
     /// subjects never suppress each other, however close together they arrive.
     /// </param>
-    /// <param name="text">The composed text, used for the repeat check.</param>
+    /// <param name="text">The composed text. Retained for future rules and logging.</param>
     public OutputDecision Evaluate(SpeechRequest request, string? subject, string? text)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -96,18 +105,18 @@ public sealed class OutputArbiter
                 var sameSubject = subject is not null
                     && string.Equals(_lastSubject, subject, StringComparison.Ordinal);
 
-                // The user acted once; two producers described it. Keep the
-                // one that ranks higher.
-                if (sameSubject && category < _lastCategory)
-                {
-                    return OutputDecision.Drop;
-                }
-
-                // The same words again, immediately. At a list boundary this is
-                // the control re-raising an event for an item that never moved.
-                if (!string.IsNullOrEmpty(text)
-                    && string.Equals(_lastText, text, StringComparison.Ordinal)
-                    && category != OutputCategory.UserRequested)
+                // Two DIFFERENT reasons about the same subject, moments apart,
+                // means two producers described one user action — a list
+                // raising focus and selection for a single arrow press. Keep
+                // whichever ranks higher.
+                //
+                // The same reason twice is the opposite case: two real actions
+                // that happen to look alike, such as arrowing through
+                // consecutive blank lines. Those must both be heard, which is
+                // why this compares reasons rather than content.
+                if (sameSubject
+                    && request.Reason != _lastReason
+                    && category <= _lastCategory)
                 {
                     return OutputDecision.Drop;
                 }
@@ -115,7 +124,7 @@ public sealed class OutputArbiter
 
             _lastSubject = subject;
             _lastCategory = category;
-            _lastText = text;
+            _lastReason = request.Reason;
             _lastAtTicks = now;
             _hasLast = true;
         }
@@ -133,7 +142,6 @@ public sealed class OutputArbiter
         {
             _hasLast = false;
             _lastSubject = null;
-            _lastText = null;
         }
     }
 
