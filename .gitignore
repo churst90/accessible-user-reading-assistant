@@ -2,6 +2,8 @@
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
+publish/
+*.zip
 [Ll]og/
 [Ll]ogs/
 artifacts/
