@@ -455,7 +455,7 @@ internal static class Program
         };
         watchdog.Start();
 
-        queue.PreemptiveEnqueued += _ => FireAndForgetCancel(engineRouter, log);
+        queue.PreemptiveEnqueued += _ => CancelSpeechNow(engineRouter, log);
 
         // Any non-modifier key-down kills in-flight speech immediately, as
         // NVDA does. Pure modifiers are excluded so a held Shift or Ctrl does
@@ -484,7 +484,7 @@ internal static class Program
                 return;
             }
             watchdog.NotifyInput();
-            FireAndForgetCancel(engineRouter, log);
+            CancelSpeechNow(engineRouter, log);
         };
 
         pipeline.Start();
@@ -700,11 +700,43 @@ internal static class Program
         }
     }
 
-    private static async void FireAndForgetCancel(EngineRouter engine, Serilog.ILogger log)
+    /// <summary>
+    /// Cancel in-flight speech, synchronously.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This must NOT be fire-and-forget. It used to be <c>async void</c> on the
+    /// thread pool, which gave no ordering guarantee against the announcement
+    /// the same keystroke was about to produce:
+    /// </para>
+    /// <list type="number">
+    ///   <item>key down — cancel scheduled</item>
+    ///   <item>the focus or caret event lands a few milliseconds later, its
+    ///   announcement is queued, and the engine starts speaking</item>
+    ///   <item>the scheduled cancel finally runs and kills the announcement
+    ///   that keystroke had just caused</item>
+    /// </list>
+    /// <para>
+    /// The symptom was silence — backspace saying nothing, blank lines not
+    /// read — and the stall watchdog beeping, correctly, because input had
+    /// arrived and no speech followed.
+    /// </para>
+    /// <para>
+    /// Running it inline on the input path completes the cancel before any
+    /// resulting event can be dispatched, so the ordering is the one the user
+    /// experiences: the old utterance stops, the new one starts. SAPI's
+    /// cancel is a local call and does not block meaningfully.
+    /// </para>
+    /// </remarks>
+    private static void CancelSpeechNow(EngineRouter engine, Serilog.ILogger log)
     {
         try
         {
-            await engine.CancelAsync().ConfigureAwait(false);
+            var cancel = engine.CancelAsync();
+            if (!cancel.IsCompleted)
+            {
+                cancel.AsTask().GetAwaiter().GetResult();
+            }
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
