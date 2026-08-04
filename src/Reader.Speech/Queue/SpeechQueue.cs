@@ -1,10 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 
 namespace Aura.Speech.Queue;
 
 /// <summary>
-/// Priority queue of <see cref="SpeechUtterance"/>s with cancel-group and
+/// Priority queue of <see cref="Utterance"/>s with cancel-group and
 /// coalescing semantics.
 /// </summary>
 /// <remarks>
@@ -15,7 +16,7 @@ namespace Aura.Speech.Queue;
 /// </para>
 /// <para>
 /// <b>Cancel groups.</b> Enqueueing an utterance with a non-null
-/// <see cref="SpeechUtterance.CancelGroup"/> drops any pending utterance with
+/// <see cref="Utterance.CancelGroup"/> drops any pending utterance with
 /// the same group. This is how stale focus speech gets cut when focus moves
 /// quickly.
 /// </para>
@@ -38,7 +39,7 @@ namespace Aura.Speech.Queue;
 public sealed class SpeechQueue : IDisposable
 {
     private readonly object _gate = new();
-    private readonly LinkedList<SpeechUtterance> _items = new();
+    private readonly LinkedList<Utterance> _items = new();
     private readonly SemaphoreSlim _signal = new(0);
     private readonly TimeProvider _time;
     private string? _lastCoalesceGroup;
@@ -57,7 +58,7 @@ public sealed class SpeechQueue : IDisposable
     public TimeSpan CoalesceWindow { get; }
 
     /// <summary>Raised when a <see cref="SpeechPriority.Now"/> item is enqueued.</summary>
-    public event Action<SpeechUtterance>? PreemptiveEnqueued;
+    public event Action<Utterance>? PreemptiveEnqueued;
 
     /// <summary>Number of pending items.</summary>
     public int Count
@@ -75,7 +76,7 @@ public sealed class SpeechQueue : IDisposable
     /// Enqueue an utterance. Returns true if the utterance was queued, false if
     /// it was coalesced away.
     /// </summary>
-    public bool Enqueue(SpeechUtterance utterance)
+    public bool Enqueue(Utterance utterance)
     {
         ArgumentNullException.ThrowIfNull(utterance);
 
@@ -85,7 +86,8 @@ public sealed class SpeechQueue : IDisposable
             ObjectDisposedException.ThrowIf(_disposed, this);
 
             var nowTicks = _time.GetUtcNow().UtcTicks;
-            if (ShouldCoalesce(utterance, nowTicks))
+            var plain = utterance.PlainText();
+            if (ShouldCoalesce(utterance, plain, nowTicks))
             {
                 _lastEnqueueTicks = nowTicks;
                 return false;
@@ -118,7 +120,7 @@ public sealed class SpeechQueue : IDisposable
 
             InsertByPriority(utterance);
             _lastCoalesceGroup = utterance.CancelGroup;
-            _lastCoalesceText = utterance.Text;
+            _lastCoalesceText = plain;
             _lastEnqueueTicks = nowTicks;
             _signal.Release();
         }
@@ -145,7 +147,7 @@ public sealed class SpeechQueue : IDisposable
     }
 
     /// <summary>Try to dequeue the highest-priority pending item synchronously.</summary>
-    public bool TryDequeue(out SpeechUtterance? utterance)
+    public bool TryDequeue(out Utterance? utterance)
     {
         lock (_gate)
         {
@@ -163,7 +165,7 @@ public sealed class SpeechQueue : IDisposable
     }
 
     /// <summary>Asynchronously wait for and dequeue the next item.</summary>
-    public async ValueTask<SpeechUtterance> DequeueAsync(CancellationToken cancellationToken)
+    public async ValueTask<Utterance> DequeueAsync(CancellationToken cancellationToken)
     {
         while (true)
         {
@@ -182,7 +184,7 @@ public sealed class SpeechQueue : IDisposable
     }
 
     /// <summary>Synchronous test helper. Block up to <paramref name="timeout"/> for the next item.</summary>
-    public SpeechUtterance? WaitForNext(TimeSpan timeout)
+    public Utterance? WaitForNext(TimeSpan timeout)
     {
         if (!_signal.Wait(timeout))
         {
@@ -197,6 +199,40 @@ public sealed class SpeechQueue : IDisposable
             var u = _items.First.Value;
             _items.RemoveFirst();
             return u;
+        }
+    }
+
+    /// <summary>
+    /// Drop every pending item whose reason has passed. Returns how many went.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Call this <b>after</b> the state a predicate reads has been updated —
+    /// after the new focus has been recorded, not before — or every predicate
+    /// answers about the world as it was and nothing is swept.
+    /// </para>
+    /// <para>
+    /// This is what replaces cancelling speech on every keypress. Cancelling on
+    /// input cannot tell a stale announcement from a valid one that happens to
+    /// be queued, so it produced both failure modes in turn: speech running an
+    /// item behind when it cancelled too little, and silence on backspace when
+    /// it cancelled too much. Asking each item whether it is still wanted has
+    /// no timing in it, and therefore no race.
+    /// </para>
+    /// </remarks>
+    public int SweepInvalid()
+    {
+        lock (_gate)
+        {
+            var dropped = DropMatching(static node => node.Value.Validity is { } v && !v.IsStillValid());
+            DrainSignal(dropped);
+            if (dropped > 0)
+            {
+                // Otherwise a swept item keeps suppressing its own re-announcement.
+                _lastCoalesceGroup = null;
+                _lastCoalesceText = null;
+            }
+            return dropped;
         }
     }
 
@@ -246,7 +282,7 @@ public sealed class SpeechQueue : IDisposable
         _signal.Dispose();
     }
 
-    private bool ShouldCoalesce(SpeechUtterance utterance, long nowTicks)
+    private bool ShouldCoalesce(Utterance utterance, string plain, long nowTicks)
     {
         if (utterance.CancelGroup is null)
         {
@@ -256,7 +292,7 @@ public sealed class SpeechQueue : IDisposable
         {
             return false;
         }
-        if (!string.Equals(_lastCoalesceText, utterance.Text, StringComparison.Ordinal))
+        if (!string.Equals(_lastCoalesceText, plain, StringComparison.Ordinal))
         {
             return false;
         }
@@ -264,7 +300,7 @@ public sealed class SpeechQueue : IDisposable
         return elapsed >= TimeSpan.Zero && elapsed < CoalesceWindow;
     }
 
-    private int DropMatching(Predicate<LinkedListNode<SpeechUtterance>> predicate)
+    private int DropMatching(Predicate<LinkedListNode<Utterance>> predicate)
     {
         var dropped = 0;
         var node = _items.First;
@@ -281,7 +317,7 @@ public sealed class SpeechQueue : IDisposable
         return dropped;
     }
 
-    private void InsertByPriority(SpeechUtterance utterance)
+    private void InsertByPriority(Utterance utterance)
     {
         var node = _items.First;
         while (node is not null && (int)node.Value.Priority >= (int)utterance.Priority)

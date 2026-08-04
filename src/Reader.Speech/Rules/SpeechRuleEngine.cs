@@ -1,12 +1,12 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 
 namespace Aura.Speech.Rules;
 
 /// <summary>
-/// Composes a <see cref="SpeechUtterance"/> from a <see cref="SpeechRequest"/>
+/// Composes a <see cref="Presentation"/> from a <see cref="SpeechRequest"/>
 /// by evaluating an ordered list of <see cref="SpeechRule"/>s.
 /// </summary>
 /// <remarks>
@@ -37,14 +37,20 @@ public sealed class SpeechRuleEngine
     public IReadOnlyList<SpeechRule> Rules => _rules;
 
     /// <summary>
-    /// Compose an utterance from the request, or return <c>null</c> if no rule
-    /// produces text (or a suppress rule matches).
+    /// Compose a presentation from the request, or return <c>null</c> if no
+    /// rule produces anything (or a suppress rule matches).
     /// </summary>
-    public SpeechUtterance? Compose(SpeechRequest request)
+    /// <param name="request">What happened.</param>
+    /// <param name="validity">
+    /// Whether the announcement will still be worth making by the time it is
+    /// spoken. Supplied by the caller because only the caller knows what would
+    /// make it stale. <c>null</c> means unconditionally valid.
+    /// </param>
+    public Presentation? Compose(SpeechRequest request, IValidityPredicate? validity = null)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var text = new StringBuilder();
+        List<PresentationSegment>? segments = null;
         var prosody = ProsodyHint.Default;
         string? voiceId = null;
         var trace = new List<string>();
@@ -60,18 +66,30 @@ public sealed class SpeechRuleEngine
             switch (rule.Action)
             {
                 case SpeechRuleAction.Emit emit when !hasEmit:
-                    text.Append(SpeechTemplate.Render(emit.Template, request));
+                    segments = SpeechTemplate.RenderSegments(emit.Template, request);
                     trace.Add(rule.Id);
                     hasEmit = true;
                     break;
 
-                case SpeechRuleAction.Rewrite rewrite when hasEmit:
-                    var current = text.ToString();
-                    var replaced = GetRegex(rewrite.Pattern).Replace(current, rewrite.Replacement);
-                    if (!string.Equals(current, replaced, StringComparison.Ordinal))
+                // A rewrite applies per segment rather than to one joined
+                // string. That is not merely tidier: a pattern anchored with ^
+                // or $ used to match the whole composed line, so a rule meant
+                // to rewrite a control's name could fire on its role instead.
+                case SpeechRuleAction.Rewrite rewrite when hasEmit && segments is not null:
+                    var rx = GetRegex(rewrite.Pattern);
+                    var changed = false;
+                    for (var s = 0; s < segments.Count; s++)
                     {
-                        text.Clear();
-                        text.Append(replaced);
+                        var before = segments[s].Text;
+                        var after = rx.Replace(before, rewrite.Replacement);
+                        if (!string.Equals(before, after, StringComparison.Ordinal))
+                        {
+                            segments[s] = segments[s] with { Text = after };
+                            changed = true;
+                        }
+                    }
+                    if (changed)
+                    {
                         trace.Add(rule.Id);
                     }
                     break;
@@ -92,21 +110,30 @@ public sealed class SpeechRuleEngine
             }
         }
 
-        if (!hasEmit || text.Length == 0)
+        if (!hasEmit || segments is null)
         {
             return null;
         }
 
-        var priority = PriorityFor(request.Reason);
-        var cancelGroup = CancelGroupFor(request.Reason);
+        // A rewrite can empty a segment; drop those rather than speaking a gap.
+        segments.RemoveAll(static s => s.Kind is not SegmentKind.Cue && s.Text.Length == 0);
+        if (segments.Count == 0)
+        {
+            return null;
+        }
 
-        return new SpeechUtterance(
-            Text: text.ToString(),
-            Prosody: prosody,
-            VoiceId: voiceId,
-            Priority: priority,
-            CancelGroup: cancelGroup,
-            RuleTrace: trace.ToArray());
+        return new Presentation(
+            Segments: segments,
+            Reason: request.Reason,
+            Subject: request.Node?.Id.Value,
+            Priority: PriorityFor(request.Reason),
+            CancelGroup: CancelGroupFor(request.Reason),
+            Validity: validity,
+            RuleTrace: trace.ToArray())
+        {
+            Prosody = prosody,
+            VoiceId = voiceId,
+        };
     }
 
     private static SpeechPriority PriorityFor(SpeechReason reason) => reason switch

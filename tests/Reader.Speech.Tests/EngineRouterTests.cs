@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Speech.Engines;
 using Xunit;
@@ -72,8 +73,8 @@ public class EngineRouterTests
         notified.Should().BeSameAs(b);
     }
 
-    private static SpeechUtterance MakeUtterance(string text)
-        => new(text, ProsodyHint.Default, VoiceId: null, SpeechPriority.Next, CancelGroup: null,
+    private static Utterance MakeUtterance(string text)
+        => new([new TextPart(text)], SpeechPriority.Next, CancelGroup: null, Validity: null,
             RuleTrace: Array.Empty<string>());
 
     private sealed class FakeEngine : ISpeechEngine
@@ -85,9 +86,13 @@ public class EngineRouterTests
         public List<string> SpokenTexts { get; } = new();
         public int CancelCount { get; private set; }
 
-        public ValueTask SpeakAsync(SpeechUtterance utterance, CancellationToken cancellationToken)
+#pragma warning disable CS0067 // contract surface; this fake never synthesises
+        public event Action<int>? MarkerReached;
+#pragma warning restore CS0067
+
+        public ValueTask SpeakAsync(Utterance utterance, CancellationToken cancellationToken)
         {
-            SpokenTexts.Add(utterance.Text);
+            SpokenTexts.Add(utterance.PlainText());
             return ValueTask.CompletedTask;
         }
 

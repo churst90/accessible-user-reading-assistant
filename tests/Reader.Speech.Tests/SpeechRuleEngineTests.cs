@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Speech.Rules;
 using Aura.TestKit;
@@ -29,9 +30,9 @@ public class SpeechRuleEngineTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Contain("OK").And.Contain("button");
-        u.CancelGroup.Should().Be("focus");
-        u.Priority.Should().Be(SpeechPriority.Next);
+        u!.Spoken().Should().Contain("OK").And.Contain("button");
+        u!.CancelGroup.Should().Be("focus");
+        u!.Priority.Should().Be(SpeechPriority.Next);
     }
 
     [Fact]
@@ -43,7 +44,7 @@ public class SpeechRuleEngineTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("Open, menu item");
+        u!.Spoken().Should().Be("Open, menu item");
     }
 
     [Fact]
@@ -57,7 +58,7 @@ public class SpeechRuleEngineTests
 
         var u = engine.Compose(request);
 
-        u!.Text.Should().Contain("checked").And.NotContain("not checked");
+        u!.Spoken().Should().Contain("checked").And.NotContain("not checked");
     }
 
     [Fact]
@@ -87,7 +88,7 @@ public class SpeechRuleEngineTests
 
         var u = engine.Compose(new SpeechRequest(SpeechReason.FocusChanged, Node(AccessibleRole.Button, "OK"), null, null));
 
-        u!.Text.Should().Be("OK, btn");
+        u!.Spoken().Should().Be("OK, btn");
     }
 
     [Fact]
@@ -101,7 +102,7 @@ public class SpeechRuleEngineTests
 
         var u = engine.Compose(request);
 
-        u!.Text.Should().EndWith(", disabled");
+        u!.Spoken().Should().EndWith(", disabled");
     }
 
     [Fact]
@@ -123,7 +124,7 @@ public class SpeechRuleEngineTests
 
         var u = engine.Compose(request);
 
-        u!.Text.Should().Be("h");
+        u!.Spoken().Should().Be("h");
     }
 
     [Fact]
@@ -134,7 +135,7 @@ public class SpeechRuleEngineTests
 
         var u = engine.Compose(request);
 
-        u!.Text.Should().Be("button");
+        u!.Spoken().Should().Be("button");
     }
 
     [Fact]
@@ -165,6 +166,6 @@ public class SpeechRuleEngineTests
 
         var u = queue.WaitForNext(TimeSpan.FromSeconds(1));
         u.Should().NotBeNull();
-        u!.Text.Should().Contain("OK").And.Contain("button");
+        u!.Spoken().Should().Contain("OK").And.Contain("button");
     }
 }

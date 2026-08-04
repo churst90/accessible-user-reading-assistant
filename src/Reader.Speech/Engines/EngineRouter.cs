@@ -1,3 +1,4 @@
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Diagnostics;
 using Serilog;
@@ -32,6 +33,7 @@ public sealed class EngineRouter : ISpeechEngine
     public EngineRouter(ISpeechEngine initial)
     {
         _current = initial ?? throw new ArgumentNullException(nameof(initial));
+        _current.MarkerReached += OnInnerMarker;
         _log = LoggerFactory.ForComponent("Speech.EngineRouter");
     }
 
@@ -76,6 +78,8 @@ public sealed class EngineRouter : ISpeechEngine
             {
                 return previous;
             }
+            previous.MarkerReached -= OnInnerMarker;
+            next.MarkerReached += OnInnerMarker;
             _current = next;
         }
         // Cancel the outgoing engine outside the lock — its CancelAsync may
@@ -91,7 +95,23 @@ public sealed class EngineRouter : ISpeechEngine
         return previous;
     }
 
-    public ValueTask SpeakAsync(SpeechUtterance utterance, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    /// <remarks>
+    /// Re-pointed at the new engine on every <see cref="Switch"/>, so a synth
+    /// swap part-way through a say-all does not silently stop reporting
+    /// position — which would leave it unable to resume.
+    /// </remarks>
+    public event Action<int>? MarkerReached;
+
+    /// <inheritdoc />
+    public OutputCapabilities Capabilities
+    {
+        get { lock (_gate) { return _current.Capabilities; } }
+    }
+
+    private void OnInnerMarker(int id) => MarkerReached?.Invoke(id);
+
+    public ValueTask SpeakAsync(Utterance utterance, CancellationToken cancellationToken)
     {
         ISpeechEngine target;
         lock (_gate) { target = _current; }

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Speech.Queue;
 using Xunit;
@@ -7,8 +8,19 @@ namespace Aura.Speech.Tests;
 
 public class SpeechQueueTests
 {
-    private static SpeechUtterance Make(string text, SpeechPriority priority = SpeechPriority.Next, string? cancelGroup = null)
-        => new(text, ProsodyHint.Default, VoiceId: null, priority, cancelGroup, RuleTrace: Array.Empty<string>());
+    private static Utterance Make(
+        string text,
+        SpeechPriority priority = SpeechPriority.Next,
+        string? cancelGroup = null,
+        IValidityPredicate? validity = null)
+        => new([new TextPart(text)], priority, cancelGroup, validity, RuleTrace: Array.Empty<string>());
+
+    /// <summary>A predicate whose answer the test controls.</summary>
+    private sealed class Gate(bool valid) : IValidityPredicate
+    {
+        public bool Valid { get; set; } = valid;
+        public bool IsStillValid() => Valid;
+    }
 
     [Fact]
     public void Enqueue_then_dequeue_in_priority_order()
@@ -21,10 +33,10 @@ public class SpeechQueueTests
         q.Enqueue(Make("background later", SpeechPriority.Background));
         q.Enqueue(Make("next later", SpeechPriority.Next));
 
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("next");
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("next later");
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("background");
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("background later");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("next");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("next later");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("background");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("background later");
     }
 
     [Fact]
@@ -36,7 +48,7 @@ public class SpeechQueueTests
         q.Enqueue(Make("third focus", cancelGroup: "focus"));
 
         q.Count.Should().Be(1);
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("third focus");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("third focus");
     }
 
     [Fact]
@@ -48,14 +60,14 @@ public class SpeechQueueTests
         // otherwise focus changes feel sluggish (you hear the previous icon
         // finish before the new one starts).
         using var q = new SpeechQueue();
-        SpeechUtterance? preempted = null;
+        Utterance? preempted = null;
         q.PreemptiveEnqueued += u => preempted = u;
 
         q.SetCurrentSpeakingGroup("focus");
         q.Enqueue(Make("second focus", cancelGroup: "focus"));
 
         preempted.Should().NotBeNull();
-        preempted!.Text.Should().Be("second focus");
+        preempted!.Spoken().Should().Be("second focus");
     }
 
     [Fact]
@@ -64,7 +76,7 @@ public class SpeechQueueTests
         // If the engine is speaking a UserAnnouncement (no cancel group), a
         // focus change shouldn't cut it off.
         using var q = new SpeechQueue();
-        SpeechUtterance? preempted = null;
+        Utterance? preempted = null;
         q.PreemptiveEnqueued += u => preempted = u;
 
         q.SetCurrentSpeakingGroup(null);
@@ -82,8 +94,8 @@ public class SpeechQueueTests
         q.Enqueue(Make("focus 2", cancelGroup: "focus"));
 
         q.Count.Should().Be(2);
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("alert");
-        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Text.Should().Be("focus 2");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("alert");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50))!.Spoken().Should().Be("focus 2");
     }
 
     [Fact]
@@ -102,7 +114,7 @@ public class SpeechQueueTests
     public void Now_priority_drops_pending_non_now_and_raises_event()
     {
         using var q = new SpeechQueue();
-        SpeechUtterance? preempted = null;
+        Utterance? preempted = null;
         q.PreemptiveEnqueued += u => preempted = u;
 
         q.Enqueue(Make("background", SpeechPriority.Background));
@@ -111,7 +123,7 @@ public class SpeechQueueTests
 
         q.Count.Should().Be(1);
         preempted.Should().NotBeNull();
-        preempted!.Text.Should().Be("alert");
+        preempted!.Spoken().Should().Be("alert");
     }
 
     [Fact]
@@ -124,7 +136,7 @@ public class SpeechQueueTests
         q.Enqueue(Make("hello"));
 
         var u = await dequeueTask;
-        u.Text.Should().Be("hello");
+        u.Spoken().Should().Be("hello");
     }
 
     [Fact]
@@ -136,5 +148,53 @@ public class SpeechQueueTests
         q.Clear();
         q.IsEmpty.Should().BeTrue();
         q.WaitForNext(TimeSpan.FromMilliseconds(20)).Should().BeNull();
+    }
+
+    [Fact]
+    public void SweepInvalid_drops_only_the_announcements_whose_reason_has_passed()
+    {
+        // The replacement for cancelling speech on every keypress. Cancelling
+        // on input cannot tell a stale announcement from a valid one that
+        // happens to be queued behind it, which is how the same fix produced
+        // speech running an item behind AND silence on backspace, in turn.
+        using var q = new SpeechQueue();
+        var gone = new Gate(false);
+        var here = new Gate(true);
+
+        q.Enqueue(Make("the item you just left", validity: gone));
+        q.Enqueue(Make("the item you are on", validity: here));
+        q.Enqueue(Make("a toast nobody focused"));
+
+        q.SweepInvalid().Should().Be(1);
+        q.Count.Should().Be(2);
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("the item you are on");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("a toast nobody focused");
+    }
+
+    [Fact]
+    public void An_announcement_with_no_predicate_is_never_swept()
+    {
+        // Anything the user pressed a key to hear. Silence in answer to a
+        // keystroke is never right.
+        using var q = new SpeechQueue();
+        q.Enqueue(Make("read current line"));
+
+        q.SweepInvalid().Should().Be(0);
+        q.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void Sweeping_clears_the_coalesce_memory_so_the_same_words_can_return()
+    {
+        // Otherwise a swept announcement keeps suppressing its own
+        // re-announcement when the user comes back to the control.
+        using var q = new SpeechQueue();
+        var gate = new Gate(true);
+        q.Enqueue(Make("Documents", cancelGroup: "focus", validity: gate));
+        gate.Valid = false;
+        q.SweepInvalid().Should().Be(1);
+
+        q.Enqueue(Make("Documents", cancelGroup: "focus")).Should().BeTrue();
+        q.Count.Should().Be(1);
     }
 }

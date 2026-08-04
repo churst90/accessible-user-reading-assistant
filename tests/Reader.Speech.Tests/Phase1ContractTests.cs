@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Speech.Queue;
 using Aura.Speech.Rules;
@@ -32,7 +33,7 @@ public class Phase1ContractTests
 
         var utterance = queue.WaitForNext(TimeSpan.FromSeconds(1));
         utterance.Should().NotBeNull();
-        utterance!.Text.Should().Contain("OK").And.Contain("button");
+        utterance!.Spoken().Should().Contain("OK").And.Contain("button");
     }
 
     [Fact]
@@ -55,7 +56,7 @@ public class Phase1ContractTests
         submitted.Should().BeTrue();
         var utterance = queue.WaitForNext(TimeSpan.FromSeconds(1));
         utterance.Should().NotBeNull();
-        utterance!.Text.Should().Be("h");
+        utterance!.Spoken().Should().Be("h");
     }
 
     [Fact]

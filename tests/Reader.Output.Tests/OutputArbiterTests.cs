@@ -1,3 +1,4 @@
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Output;
 using FluentAssertions;
@@ -13,8 +14,16 @@ namespace Aura.Output.Tests;
 /// </summary>
 public class OutputArbiterTests
 {
-    private static SpeechRequest Req(SpeechReason reason)
-        => new(reason, Node: null, RawText: "x", AppExecutableName: null);
+    /// <summary>An announcement about <paramref name="subject"/> saying <paramref name="text"/>.</summary>
+    private static Presentation Pres(SpeechReason reason, string subject, string text)
+        => new(
+            Segments: [new PresentationSegment(text, SegmentKind.Content)],
+            Reason: reason,
+            Subject: subject,
+            Priority: SpeechPriority.Next,
+            CancelGroup: null,
+            Validity: null,
+            RuleTrace: []);
 
     private static (OutputArbiter Arbiter, FakeTimeProvider Time) Make()
     {
@@ -28,9 +37,9 @@ public class OutputArbiterTests
         // A ListBox raises both for a single keypress. This produced
         // "speech, speech" on the settings categories list.
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.FocusChanged), "item-1", "Speech")
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "item-1", "Speech"))
             .Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "item-1", "Speech")
+        a.Evaluate(Pres(SpeechReason.SelectionChanged, "item-1", "Speech"))
             .Should().Be(OutputDecision.Drop);
     }
 
@@ -42,8 +51,8 @@ public class OutputArbiterTests
         // DIFFERENT reason about the same subject means two producers
         // describing one action.
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.CaretMoved, "doc", "blank")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.CaretMoved, "doc", "blank")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
@@ -56,17 +65,17 @@ public class OutputArbiterTests
         // needed feedback. Boundary silence comes from the keypress cancelling
         // in-flight speech, not from matching words.
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.CaretMoved), "doc", "blank").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.CaretMoved, "doc", "blank")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.CaretMoved, "doc", "blank")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.CaretMoved, "doc", "blank")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
     public void Moving_to_a_genuinely_different_item_still_speaks()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "a", "General").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.SelectionChanged), "b", "Speech").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.SelectionChanged, "a", "General")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.SelectionChanged, "b", "Speech")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
@@ -75,16 +84,16 @@ public class OutputArbiterTests
         // Pressing "read current line" twice must say the line twice. The user
         // asked, twice, on purpose.
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.ReadLine), "doc", "hello").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.ReadLine), "doc", "hello").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ReadLine, "doc", "hello")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ReadLine, "doc", "hello")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
     public void A_user_request_is_not_dropped_by_a_preceding_navigation()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.FocusChanged), "n", "Button").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.ReadLine), "n", "Button").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "n", "Button")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ReadLine, "n", "Button")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
@@ -92,16 +101,16 @@ public class OutputArbiterTests
     {
         // A toast arriving mid-navigation must not eat the focus announcement.
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.LiveRegionUpdate), "n", "saved").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.FocusChanged), "n", "OK button").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.LiveRegionUpdate, "n", "saved")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "n", "OK button")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
     public void Navigation_supersedes_a_state_change_for_the_same_control()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.FocusChanged), "cb", "Enabled, check box").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.ValueChanged), "cb", "on").Should().Be(OutputDecision.Drop);
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "cb", "Enabled, check box")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ValueChanged, "cb", "on")).Should().Be(OutputDecision.Drop);
     }
 
     [Fact]
@@ -110,17 +119,17 @@ public class OutputArbiterTests
         // Checking a box a second after landing on it is a real event, not a
         // duplicate of the focus announcement.
         var (a, time) = Make();
-        a.Evaluate(Req(SpeechReason.FocusChanged), "cb", "Enabled, check box").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "cb", "Enabled, check box")).Should().Be(OutputDecision.Speak);
         time.Advance(TimeSpan.FromSeconds(1));
-        a.Evaluate(Req(SpeechReason.ValueChanged), "cb", "checked").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ValueChanged, "cb", "checked")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
     public void Echo_outranks_navigation_so_typing_feedback_is_never_starved()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.CaretMoved), "edit", "a").Should().Be(OutputDecision.Speak);
-        a.Evaluate(new SpeechRequest(SpeechReason.UserAnnouncement, null, "b", null), "edit", "b")
+        a.Evaluate(Pres(SpeechReason.CaretMoved, "edit", "a")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.UserAnnouncement, "edit", "b"))
             .Should().Be(OutputDecision.Speak);
     }
 
@@ -128,18 +137,18 @@ public class OutputArbiterTests
     public void Reset_clears_the_coincidence_state()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.FocusChanged), "x", "One").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "x", "One")).Should().Be(OutputDecision.Speak);
         a.Reset();
         // Without the reset this would lose to the focus announcement above.
-        a.Evaluate(Req(SpeechReason.ValueChanged), "x", "Two").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ValueChanged, "x", "Two")).Should().Be(OutputDecision.Speak);
     }
 
     [Fact]
     public void Announcements_about_different_subjects_never_suppress_each_other()
     {
         var (a, _) = Make();
-        a.Evaluate(Req(SpeechReason.FocusChanged), "a", "One").Should().Be(OutputDecision.Speak);
-        a.Evaluate(Req(SpeechReason.ValueChanged), "b", "Two").Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.FocusChanged, "a", "One")).Should().Be(OutputDecision.Speak);
+        a.Evaluate(Pres(SpeechReason.ValueChanged, "b", "Two")).Should().Be(OutputDecision.Speak);
     }
 
     [Theory]

@@ -2,10 +2,12 @@ using System.Runtime.Versioning;
 using Aura.Abstractions.Accessibility;
 using Aura.Abstractions.Input;
 using Aura.Abstractions.Navigation;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Config;
 using Aura.Core.Diagnostics;
 using Aura.Core.Navigation;
+using Aura.Core.Output;
 using Aura.Core.Review;
 using Aura.Core.Text;
 using Aura.Diagnostics;
@@ -215,11 +217,35 @@ internal static class Program
             },
             isTyping: () => typingState.IsTyping);
         var focusContext = new FocusContextResolver();
+
+        // Which announcements are still worth speaking by the time they reach
+        // the engine. Only focus-driven announcements get a predicate: anything
+        // the user pressed a key to hear stays unconditionally valid, because
+        // silence in answer to a keystroke is never right.
+        var focusTracker = new FocusTracker();
+        pipeline.ValidityFor = request => request.Reason switch
+        {
+            SpeechReason.FocusChanged or SpeechReason.SelectionChanged
+                => focusTracker.For(request.Node?.Id.Value),
+            _ => null,
+        };
+
         nint lastTopLevelWindow = 0;
         using var focusBinding = provider.Subscribe(AccessibilityEventKind.FocusChanged, ev =>
         {
             if (ev.Node is { } n)
             {
+                // Order matters and is the whole trick. Record the new focus
+                // first, then ask the queue what has gone stale — a predicate
+                // evaluated before this line answers about the world as it was,
+                // and nothing would be swept.
+                focusTracker.OnFocusChanged(n);
+                var swept = queue.SweepInvalid();
+                if (swept > 0)
+                {
+                    log.Verbose("swept {Count} stale announcements on focus change", swept);
+                }
+
                 // The cached surface belongs to the control we just left.
                 textSurfaces.Invalidate();
                 modeManager.OnFocusChanged(n);
@@ -457,22 +483,19 @@ internal static class Program
 
         queue.PreemptiveEnqueued += _ => CancelSpeechNow(engineRouter, log);
 
-        // Any non-modifier key-down kills in-flight speech immediately, as
-        // NVDA does. Pure modifiers are excluded so a held Shift or Ctrl does
-        // not silence playback.
+        // A keystroke means the user has moved on, so whatever is playing about
+        // where they *were* should stop. It does not mean every queued
+        // announcement is unwanted — that distinction is what the validity
+        // predicates make, at the point of speaking, and it is why this handler
+        // no longer cancels unconditionally.
         //
-        // Arrow keys used to be excluded too, on the theory that the
-        // CaretMoved cancel-group already preempts. That holds for caret moves
-        // inside text, but NOT for focus and selection moves through a folder,
-        // list or the desktop: those carry a different cancel group, so the new
-        // announcement queued behind the one still playing and the user heard
-        // the item they had just left. Arrowing quickly, speech ran a full item
-        // behind the cursor.
-        //
-        // Cancelling unconditionally also gives the right behaviour at a list
-        // boundary: the keypress silences the current utterance, no new focus
-        // event follows, and the result is silence — which is how the user
-        // learns they are at the end.
+        // The history is worth keeping because the same fix was attempted five
+        // times: cancel on every key (speech went silent on backspace), exclude
+        // the arrows (speech ran a full item behind through a folder), put them
+        // back, make the cancel synchronous so it could not race the
+        // announcement it had caused, and a duplicate-text window that swallowed
+        // consecutive blank lines. Every one of those answers "is this still
+        // wanted?" with *when*. It is a question about *what has focus*.
         keyboard.RawInputReceived += (_, raw) =>
         {
             if (raw.Kind != InputEventKind.KeyDown)
@@ -484,7 +507,6 @@ internal static class Program
                 return;
             }
             watchdog.NotifyInput();
-            CancelSpeechNow(engineRouter, log);
         };
 
         pipeline.Start();
@@ -748,7 +770,7 @@ internal static class Program
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            SpeechUtterance utterance;
+            Utterance utterance;
             try
             {
                 utterance = await queue.DequeueAsync(cancellationToken).ConfigureAwait(false);
@@ -756,6 +778,17 @@ internal static class Program
             catch (OperationCanceledException)
             {
                 return;
+            }
+
+            // The last possible moment to ask whether this is still wanted, and
+            // therefore the right one. An announcement about a control that has
+            // since lost focus is stale however recently it was queued; one
+            // about the control that still has focus is wanted however long it
+            // waited. Nothing here is timing-dependent, so nothing here races.
+            if (utterance.Validity is { } validity && !validity.IsStillValid())
+            {
+                log.Verbose("dropped a stale utterance at speak time");
+                continue;
             }
 
             try
@@ -774,7 +807,7 @@ internal static class Program
                 // minimum, so the raw text reached the log file on disk.
                 // Whatever the synthesiser choked on was, by definition,
                 // something the user was reading.
-                log.Warning(ex, "speech engine threw on utterance {Text}", Redaction.Text(utterance.Text));
+                log.Warning(ex, "speech engine threw on utterance {Text}", Redaction.Text(utterance.PlainText()));
             }
             finally
             {

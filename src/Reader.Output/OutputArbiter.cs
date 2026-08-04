@@ -1,3 +1,4 @@
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 
 namespace Aura.Output;
@@ -84,18 +85,18 @@ public sealed class OutputArbiter
     /// </remarks>
     public TimeSpan CoincidenceWindow { get; set; } = TimeSpan.FromMilliseconds(120);
 
-    /// <summary>Decide whether <paramref name="request"/> should be spoken.</summary>
-    /// <param name="request">The announcement.</param>
-    /// <param name="subject">
-    /// What it is about — normally the node id. Announcements about different
-    /// subjects never suppress each other, however close together they arrive.
-    /// </param>
-    /// <param name="text">The composed text. Retained for future rules and logging.</param>
-    public OutputDecision Evaluate(SpeechRequest request, string? subject, string? text)
+    /// <summary>Decide whether <paramref name="presentation"/> should be conveyed.</summary>
+    /// <remarks>
+    /// The presentation already carries its own subject and reason, which is
+    /// why this takes one argument where it used to take three: the thing being
+    /// arbitrated and the facts needed to arbitrate it are now the same object.
+    /// </remarks>
+    public OutputDecision Evaluate(Presentation presentation)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(presentation);
 
-        var category = Categorize(request.Reason);
+        var subject = presentation.Subject;
+        var category = Categorize(presentation.Reason);
         var now = _time.GetTimestamp();
 
         lock (_gate)
@@ -115,7 +116,7 @@ public sealed class OutputArbiter
                 // consecutive blank lines. Those must both be heard, which is
                 // why this compares reasons rather than content.
                 if (sameSubject
-                    && request.Reason != _lastReason
+                    && presentation.Reason != _lastReason
                     && category <= _lastCategory)
                 {
                     return OutputDecision.Drop;
@@ -124,7 +125,7 @@ public sealed class OutputArbiter
 
             _lastSubject = subject;
             _lastCategory = category;
-            _lastReason = request.Reason;
+            _lastReason = presentation.Reason;
             _lastAtTicks = now;
             _hasLast = true;
         }

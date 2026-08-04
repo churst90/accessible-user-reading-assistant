@@ -1,9 +1,11 @@
 using Aura.Abstractions.Accessibility;
 using Aura.Abstractions.Plugins;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Diagnostics;
 using Aura.Output;
 using Aura.Speech.Punctuation;
+using Aura.Speech.Rendering;
 using Aura.Speech.Queue;
 using Aura.Speech.Rules;
 using Serilog;
@@ -28,6 +30,7 @@ public sealed class SpeechPipeline : IDisposable
     private readonly Func<ProcessInfo?>? _processInfo;
     private readonly TypingState? _typingState;
     private readonly OutputArbiter _arbiter = new();
+    private readonly SpeechRenderer _renderer = new();
     private IDisposable? _subscription;
     private bool _started;
     private bool _disposed;
@@ -53,7 +56,11 @@ public sealed class SpeechPipeline : IDisposable
     /// <c>"beep"</c> needs the audio mixer (Phase 4b) and silently degrades
     /// to <c>"off"</c> until then.
     /// </summary>
-    public string CapitalLetterAnnouncement { get; set; } = "pitch";
+    public string CapitalLetterAnnouncement
+    {
+        get => _renderer.CapitalLetterAnnouncement;
+        set => _renderer.CapitalLetterAnnouncement = value;
+    }
 
     /// <summary>
     /// Atomically swap the rule engine. Used by the host when plugins
@@ -77,7 +84,21 @@ public sealed class SpeechPipeline : IDisposable
     /// Punctuation level applied to every composed utterance before queueing.
     /// Cycled by <c>ReaderCommand.CyclePunctuationLevel</c>.
     /// </summary>
-    public PunctuationLevel PunctuationLevel { get; set; } = PunctuationLevel.Some;
+    public PunctuationLevel PunctuationLevel
+    {
+        get => _renderer.PunctuationLevel;
+        set => _renderer.PunctuationLevel = value;
+    }
+
+    /// <summary>
+    /// Decides whether a queued announcement is still worth speaking. Supplied
+    /// by the host, which is the only thing that knows what the current focus
+    /// is. Returning <c>null</c> means "unconditionally valid".
+    /// </summary>
+    public Func<SpeechRequest, IValidityPredicate?>? ValidityFor { get; set; }
+
+    /// <summary>Renders presentations to utterances. Exposed for the transcript harness.</summary>
+    public SpeechRenderer Renderer => _renderer;
 
     /// <summary>Subscribe to provider events. Idempotent.</summary>
     public void Start()
@@ -140,25 +161,27 @@ public sealed class SpeechPipeline : IDisposable
                 AppExecutableName: _processInfo?.Invoke()?.ExecutableName,
                 Extras: null));
 
-            var utterance = _engine.Compose(request);
-            if (utterance is null)
+            var presentation = _engine.Compose(request, ValidityFor?.Invoke(request));
+            if (presentation is null)
             {
-                _log.Verbose("No utterance for {Reason} on {Node}", reason, Redaction.Text(ev.Node?.Name));
+                _log.Verbose("Nothing to say for {Reason} on {Node}", reason, Redaction.Text(ev.Node?.Name));
                 return;
             }
 
-            utterance = ApplyPunctuation(utterance);
-            utterance = ApplyCapitalCue(utterance);
-
-            if (_arbiter.Evaluate(request, ev.Node?.Id.Value, utterance.Text) == OutputDecision.Drop)
+            if (_arbiter.Evaluate(presentation) == OutputDecision.Drop)
             {
                 return;
             }
 
-            var enqueued = _queue.Enqueue(utterance);
-            if (!enqueued)
+            var utterance = _renderer.Render(presentation);
+            if (utterance.IsEmpty)
             {
-                _log.Verbose("Coalesced utterance: {Text}", Redaction.Text(utterance.Text));
+                return;
+            }
+
+            if (!_queue.Enqueue(utterance))
+            {
+                _log.Verbose("Coalesced utterance: {Text}", Redaction.Text(utterance.PlainText()));
             }
         }
         catch (Exception ex) when (!IsCriticalException(ex))
@@ -175,18 +198,17 @@ public sealed class SpeechPipeline : IDisposable
     {
         ArgumentNullException.ThrowIfNull(request);
         request = NameSingleCharacter(request);
-        var utterance = _engine.Compose(request);
-        if (utterance is null)
+        var presentation = _engine.Compose(request, ValidityFor?.Invoke(request));
+        if (presentation is null)
         {
             return false;
         }
-        utterance = ApplyPunctuation(utterance);
-        utterance = ApplyCapitalCue(utterance);
-        if (_arbiter.Evaluate(request, request.Node?.Id.Value, utterance.Text) == OutputDecision.Drop)
+        if (_arbiter.Evaluate(presentation) == OutputDecision.Drop)
         {
             return false;
         }
-        return _queue.Enqueue(utterance);
+        var utterance = _renderer.Render(presentation);
+        return !utterance.IsEmpty && _queue.Enqueue(utterance);
     }
 
     /// <summary>
@@ -206,45 +228,6 @@ public sealed class SpeechPipeline : IDisposable
         }
         var name = PunctuationFilter.SpokenName(raw[0]);
         return name is null ? request : request with { RawText = name };
-    }
-
-    private SpeechUtterance ApplyPunctuation(SpeechUtterance utterance)
-    {
-        var filtered = PunctuationFilter.Apply(utterance.Text, PunctuationLevel);
-        return ReferenceEquals(filtered, utterance.Text) ? utterance : utterance with { Text = filtered };
-    }
-
-    /// <summary>
-    /// When the speech pipeline is announcing a single uppercase character
-    /// (read-character, char echo on backspace etc.), bump the pitch so the
-    /// user hears the difference between "A" and "a". Strategy is configurable;
-    /// the audio-cue ("beep") variant needs the audio mixer (Phase 4b) and
-    /// degrades to no-op for now.
-    /// </summary>
-    private SpeechUtterance ApplyCapitalCue(SpeechUtterance utterance)
-    {
-        var mode = CapitalLetterAnnouncement;
-        if (string.IsNullOrEmpty(mode) || string.Equals(mode, "off", StringComparison.OrdinalIgnoreCase))
-        {
-            return utterance;
-        }
-        if (utterance.Text.Length != 1)
-        {
-            return utterance;
-        }
-        if (!char.IsUpper(utterance.Text[0]))
-        {
-            return utterance;
-        }
-        // "pitch" or "both" — boost pitch by ~6 semitones so it's clearly
-        // distinguishable. "beep" alone is a no-op until audio themes ship.
-        if (string.Equals(mode, "pitch", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(mode, "both", StringComparison.OrdinalIgnoreCase))
-        {
-            var bumped = utterance.Prosody with { PitchDelta = utterance.Prosody.PitchDelta + 6f };
-            return utterance with { Prosody = bumped };
-        }
-        return utterance;
     }
 
     public void Dispose()

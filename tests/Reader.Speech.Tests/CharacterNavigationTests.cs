@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Speech.Punctuation;
 using Aura.Speech.Queue;
@@ -36,7 +37,7 @@ public class CharacterNavigationTests
 
         var u = queue.WaitForNext(TimeSpan.FromSeconds(1));
         u.Should().NotBeNull();
-        u!.Text.Should().Be(expected);
+        u!.Spoken().Should().Be(expected);
     }
 
     [Fact]
@@ -52,7 +53,7 @@ public class CharacterNavigationTests
 
         var u = queue.WaitForNext(TimeSpan.FromSeconds(1));
         u.Should().NotBeNull();
-        u!.Text.Should().Be("a");
+        u!.Spoken().Should().Be("a");
     }
 
     [Theory]

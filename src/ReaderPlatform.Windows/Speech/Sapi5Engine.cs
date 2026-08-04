@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.Versioning;
 using System.Speech.Synthesis;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Diagnostics;
 using Serilog;
@@ -65,7 +66,17 @@ public sealed class Sapi5Engine : ISpeechEngine
     /// </summary>
     public ProsodyHint DefaultProsody { get; set; } = ProsodyHint.Default;
 
-    public ValueTask SpeakAsync(SpeechUtterance utterance, CancellationToken cancellationToken)
+
+    /// <inheritdoc />
+    // Contract surface. Nothing raises it yet: emitting markers needs
+    // MarkerPart to reach the engine as an SSML bookmark / index, which is the
+    // say-all-resume work. Capabilities deliberately does not advertise
+    // OutputCapabilities.Marker, so nothing depends on it in the meantime.
+#pragma warning disable CS0067
+    public event Action<int>? MarkerReached;
+#pragma warning restore CS0067
+
+    public ValueTask SpeakAsync(Utterance utterance, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(utterance);
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -88,6 +99,7 @@ public sealed class Sapi5Engine : ISpeechEngine
 
         try
         {
+            var text = utterance.PlainText();
             ApplyVoice(utterance.VoiceId);
             // Compose the per-utterance prosody on top of the user's defaults.
             // Rate is multiplicative (a "slow this down to 80%" rule on top of
@@ -106,8 +118,8 @@ public sealed class Sapi5Engine : ISpeechEngine
             // expose a Pitch property — only Rate and Volume). When pitch
             // delta is zero, send plain text to skip SSML parse cost.
             var prompt = effective.PitchDelta != 0f
-                ? _synth.SpeakSsmlAsync(BuildPitchSsml(utterance.Text, effective.PitchDelta))
-                : _synth.SpeakAsync(utterance.Text);
+                ? _synth.SpeakSsmlAsync(BuildPitchSsml(text, effective.PitchDelta))
+                : _synth.SpeakAsync(text);
             lock (_gate)
             {
                 if (ReferenceEquals(_currentTcs, newTcs))

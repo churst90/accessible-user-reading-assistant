@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Aura.Abstractions.Accessibility;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Speech.Rules;
 using Xunit;
@@ -47,9 +48,9 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Contain("report.txt");
-        u.Text.Should().Contain("list item");
-        u.Text.Should().Contain("4 of 10");
+        u!.Spoken().Should().Contain("report.txt");
+        u.Spoken().Should().Contain("list item");
+        u.Spoken().Should().Contain("4 of 10");
     }
 
     [Fact]
@@ -62,7 +63,7 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("lonely, list item");
+        u!.Spoken().Should().Be("lonely, list item");
     }
 
     [Fact]
@@ -75,9 +76,9 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Contain("Documents");
-        u.Text.Should().Contain("level 2");
-        u.Text.Should().Contain("3 of 8");
+        u!.Spoken().Should().Contain("Documents");
+        u.Spoken().Should().Contain("level 2");
+        u.Spoken().Should().Contain("3 of 8");
     }
 
     [Fact]
@@ -91,7 +92,7 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Contain("read only edit");
+        u!.Spoken().Should().Contain("read only edit");
     }
 
     [Fact]
@@ -104,8 +105,8 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("second line");
-        u.CancelGroup.Should().Be("caret",
+        u!.Spoken().Should().Be("second line");
+        u!.CancelGroup.Should().Be("caret",
             "rapid arrow presses must preempt one another to feel snappy");
     }
 
@@ -119,7 +120,7 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("David");
+        u!.Spoken().Should().Be("David");
     }
 
     [Fact]
@@ -135,9 +136,9 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("Body, edit, line two");
-        u.Text.Should().NotContain("line one");
-        u.Text.Should().NotContain("line three");
+        u!.Spoken().Should().Be("Body, edit, line two");
+        u.Spoken().Should().NotContain("line one");
+        u.Spoken().Should().NotContain("line three");
     }
 
     [Fact]
@@ -153,7 +154,7 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("Open, edit, notepad");
+        u!.Spoken().Should().Be("Open, edit, notepad");
     }
 
     [Fact]
@@ -170,7 +171,7 @@ public class PositionAndLevelTests
         var u = engine.Compose(request);
 
         u.Should().NotBeNull();
-        u!.Text.Should().Be("Password, password edit");
-        u.Text.Should().NotContain("hunter2");
+        u!.Spoken().Should().Be("Password, password edit");
+        u.Spoken().Should().NotContain("hunter2");
     }
 }

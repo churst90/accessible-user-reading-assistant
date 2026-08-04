@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NAudio.Wave;
+using Aura.Abstractions.Output;
 using Aura.Abstractions.Speech;
 using Aura.Diagnostics;
 using Serilog;
@@ -129,7 +130,17 @@ public sealed class EspeakNgEngine : ISpeechEngine
         return 0;
     }
 
-    public ValueTask SpeakAsync(SpeechUtterance utterance, CancellationToken cancellationToken)
+
+    /// <inheritdoc />
+    // Contract surface. Nothing raises it yet: emitting markers needs
+    // MarkerPart to reach the engine as an SSML bookmark / index, which is the
+    // say-all-resume work. Capabilities deliberately does not advertise
+    // OutputCapabilities.Marker, so nothing depends on it in the meantime.
+#pragma warning disable CS0067
+    public event Action<int>? MarkerReached;
+#pragma warning restore CS0067
+
+    public ValueTask SpeakAsync(Utterance utterance, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(utterance);
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -141,7 +152,7 @@ public sealed class EspeakNgEngine : ISpeechEngine
         return new ValueTask(SpeakInternalAsync(utterance, cancellationToken));
     }
 
-    private async Task SpeakInternalAsync(SpeechUtterance utterance, CancellationToken cancellationToken)
+    private async Task SpeakInternalAsync(Utterance utterance, CancellationToken cancellationToken)
     {
         // Clear the cancellation flag so the next callback iteration accepts
         // samples again. Any leftover audio in the buffer from a preempted
@@ -162,7 +173,7 @@ public sealed class EspeakNgEngine : ISpeechEngine
 
         try
         {
-            await Task.Run(() => SynthBlocking(utterance.Text), cancellationToken).ConfigureAwait(false);
+            await Task.Run(() => SynthBlocking(utterance.PlainText()), cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
