@@ -1,6 +1,8 @@
 # F5 — Evidence
 
-**Status:** specified, not built. F5c can start immediately.
+**Status:** F5a **built** 2026-08-03 — `tests/Reader.Transcripts.Tests`, eight
+scenarios, and it caught a live bug on its first run (see below). F5b, F5c and
+F5d still to do; F5c can start immediately on the VM.
 **Depends on:** F1 for F5a (the transcript renders a `Presentation`).
 **Blocks:** safe change to anything.
 

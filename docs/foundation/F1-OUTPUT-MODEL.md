@@ -1,6 +1,9 @@
 # F1 — The output model
 
-**Status:** specified, not built. Build first.
+**Status:** **built** 2026-08-03 (migration steps 1–6). Not yet heard on
+hardware — the interrupt behaviour changed everywhere, so that is the gate
+before anything is built on top. See `SESSION_HANDOFF.md` for what to listen
+for.
 **Depends on:** nothing.
 **Blocks:** F5a (golden transcripts), braille (4g), audio themes (4b), say-all
 resume, per-language voices, and the permanent fix for the speech-staleness
@@ -342,6 +345,29 @@ Steps 1–3 are additive and safe. Step 5 is the one with user-visible risk.
 
 ---
 
+## What building it changed from the spec
+
+- **`Presentation` carries `Prosody` and `VoiceId`** as hints, which the spec
+  did not have. The rule engine's `Modulate` and `SetVoice` actions produce
+  them, and dropping them would have lost a shipped feature. They are documented
+  as hints that non-speech renderers ignore.
+- **`Utterance` carries a baseline `Prosody` and `VoiceId` too.** SAPI and eSpeak
+  both split the same way — voice settings for the utterance, inline markup for
+  spans — so this is one mechanism with a baseline, not two competing ones.
+- **Rewrites apply per segment, not to a joined string.** This fell out of the
+  decomposition and is a fix: a pattern anchored with `^` or `$` used to match
+  the whole composed line, so a rule meant to rewrite a control's name could
+  fire on its role instead.
+- **`SegmentKind.Literal` exists.** Templates say `"{name}, check box, checked"`;
+  nothing in that string declares that "check box" is a role and "checked" is a
+  state, and guessing would be wrong. Literal is faithful now, and
+  `{state:checked}` is the declared form for migrating later. Verbosity
+  filtering by kind therefore does not work on today's shipped rules yet —
+  that is the follow-up, and it is a `defaults.yaml` edit rather than code.
+- **`SpeechUtterance` was replaced outright rather than shimmed.** The migration
+  plan kept it for one API version; in practice there were four implementors and
+  a `.Text` property, and a clean cut was smaller than the shim.
+
 ## Open questions the implementing session must close
 
 1. **Does `SegmentKind.Cue` belong here or in F-audio?** It is defined here so
@@ -351,10 +377,11 @@ Steps 1–3 are additive and safe. Step 5 is the one with user-visible risk.
    problem?** Holding a UIA-backed range on a queued announcement means holding
    a COM object across threads — which is exactly what F4b is about. It may need
    to be a bookmark rather than a live range. **Resolve with F4b, not before.**
+   *Nothing populates `Source` yet, so this is not yet load-bearing.*
 3. **How does the symbol/punctuation level interact with segments?** Punctuation
    processing is per-`Content`-segment today by assumption. Confirm that role
    and state segments must never be punctuation-processed.
-4. **Does `SpeechPriority.Now` resume what it interrupted?** NVDA's does — after
+4. **Still open. Does `SpeechPriority.Now` resume what it interrupted?** NVDA's does — after
    a `NOW` utterance completes, interrupted speech resumes. AURA's `Now` is
    documented as "cancel the current utterance and speak immediately", with no
    resumption. Decide deliberately; resumption is better behaviour and more work.

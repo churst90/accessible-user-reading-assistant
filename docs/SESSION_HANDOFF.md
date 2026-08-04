@@ -1,6 +1,43 @@
 # Session Handoff
 
-Last updated: 2026-08-03
+Last updated: 2026-08-03 (F1 + F5a landed)
+
+---
+
+## For the next hardware session: what to listen for
+
+**F1 changed how interruption works, everywhere.** Nothing else in this round is
+risky; this is. Test it first and stop if it is wrong.
+
+The old behaviour answered *"is this announcement still wanted?"* by cancelling
+speech on every keypress. The new behaviour splits that into two mechanisms that
+do different jobs — a keypress still cancels the **sound that is playing**, and a
+**validity predicate** decides which **queued** announcements are still worth
+speaking, asked at the moment each would be spoken.
+
+| Try this | Expected | If it is wrong |
+|---|---|---|
+| Arrow quickly through a folder in Explorer | Only the item you land on. No backlog, no reading an item behind | The predicate is not matching — check `FocusTracker.OnFocusChanged` runs *before* `SweepInvalid` |
+| Arrow up through consecutive blank lines in Notepad | "blank" **every time** | The queue's content suppression is back somehow |
+| Tab across a toolbar of unnamed icon buttons | "button" every time | Same as above |
+| Press Down on the last item of a list | Silence | The keypress cancel is not firing |
+| Backspace over text | The deleted character | Something is cancelling the announcement the keystroke caused |
+| Win+R | The dialog title, then the edit | The window announcement is being swept as stale — it should be exempt as the owning window |
+| Let a toast or notification appear while focus is elsewhere | It speaks | "Never had focus" is not exempting it |
+| Anything with capital letters, read by character | Higher pitch on capitals, no "cap" | Prosody spans are not reaching the engine |
+
+**Two things I could not check from Linux and would like an ear on:**
+
+1. **Whether a UIA notification's text arrives at all.** `core.alert.raised` and
+   `core.liveregion.changed` emit `{name}`, but `NativeUiaProvider.HandleNotification`
+   puts the notification's spoken text in `CaretLine`, which becomes `{text}`.
+   If toasts are silent, that is why, and the fix is a rule, not code.
+2. **Fast typing with character echo on.** Echo announcements have no cancel
+   group, so a burst of keystrokes queues rather than superseding. It behaved
+   this way before too, so it is not a regression — but it may be audible now
+   that nothing else is dropping them.
+
+---
 
 This is the load-on-startup brief for whoever picks up next. Read it before
 opening anything else.

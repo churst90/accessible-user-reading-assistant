@@ -483,19 +483,33 @@ internal static class Program
 
         queue.PreemptiveEnqueued += _ => CancelSpeechNow(engineRouter, log);
 
-        // A keystroke means the user has moved on, so whatever is playing about
-        // where they *were* should stop. It does not mean every queued
-        // announcement is unwanted — that distinction is what the validity
-        // predicates make, at the point of speaking, and it is why this handler
-        // no longer cancels unconditionally.
+        // Two different questions, and conflating them is what made this so hard
+        // to get right:
         //
-        // The history is worth keeping because the same fix was attempted five
-        // times: cancel on every key (speech went silent on backspace), exclude
-        // the arrows (speech ran a full item behind through a folder), put them
-        // back, make the cancel synchronous so it could not race the
-        // announcement it had caused, and a duplicate-text window that swallowed
-        // consecutive blank lines. Every one of those answers "is this still
-        // wanted?" with *when*. It is a question about *what has focus*.
+        //   "Stop the sound that is playing"   — the user pressed a key, so
+        //      whatever is currently coming out of the speaker is about where
+        //      they *were*. That is this handler, and it cancels the ENGINE.
+        //      It is what produces silence at a list boundary — the keypress
+        //      stops the audio, no focus event follows, and the silence is what
+        //      tells the user they are at the end.
+        //
+        //   "Is this queued announcement still wanted?" — a state question
+        //      about what has focus, answered by IValidityPredicate at the
+        //      moment of speaking, and by SweepInvalid on focus change. That is
+        //      NOT this handler, and it is what the queue is for.
+        //
+        // Five attempts tried to answer the second question with the first:
+        // cancel on every key, exclude the arrows, put them back, make the
+        // cancel synchronous, add a duplicate-text window. Cancelling can only
+        // ever say "stop"; it cannot say "that one is stale but this one is
+        // not", which is why every version silenced something it should not
+        // have. Now each mechanism does only its own job.
+        //
+        // The cancel is synchronous on the input path, deliberately. As
+        // async-void on the thread pool it raced: key down scheduled a cancel,
+        // the focus event landed a few milliseconds later and started speaking,
+        // and the scheduled cancel then killed the announcement that keystroke
+        // had just caused.
         keyboard.RawInputReceived += (_, raw) =>
         {
             if (raw.Kind != InputEventKind.KeyDown)
@@ -507,6 +521,7 @@ internal static class Program
                 return;
             }
             watchdog.NotifyInput();
+            CancelSpeechNow(engineRouter, log);
         };
 
         pipeline.Start();
