@@ -1,0 +1,17 @@
+# Arrowing quickly through a folder. Announcements for items already left must
+# evaporate rather than play in sequence behind the cursor.
+#
+# Note there is no "drain" between the moves: the user did not wait. Only the
+# item they landed on should be heard. This is what the validity predicate buys
+# and what cancelling on keypress could never get right without also silencing
+# things that were still wanted.
+
+node f1 ListItem "Documents" pos=1 size=3
+node f2 ListItem "Downloads" pos=2 size=3
+node f3 ListItem "Music" pos=3 size=3
+focus f1
+focus f2
+focus f3
+
+expect
+  Music, list item, 3 of 3

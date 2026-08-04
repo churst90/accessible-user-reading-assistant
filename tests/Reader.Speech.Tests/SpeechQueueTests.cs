@@ -99,15 +99,37 @@ public class SpeechQueueTests
     }
 
     [Fact]
-    public void Coalesce_drops_identical_consecutive_enqueue_within_window()
+    public void Identical_words_are_not_a_duplicate_and_are_not_suppressed()
     {
-        using var q = new SpeechQueue(coalesceWindow: TimeSpan.FromSeconds(1));
-        var queued1 = q.Enqueue(Make("OK, button", cancelGroup: "focus"));
-        var queued2 = q.Enqueue(Make("OK, button", cancelGroup: "focus"));
+        // This asserts the opposite of what it used to. The queue dropped a
+        // second enqueue whose group and text matched the first within a
+        // window, which is the same content-based mistake the arbiter had
+        // already had removed from it — and it swallowed the second of two
+        // consecutive blank lines and every unnamed toolbar button after the
+        // first. Words cannot distinguish "sent twice" from "reads the same".
+        //
+        // Note the queue still ends up with one item here, because they share a
+        // cancel group and the later one supersedes the earlier. That is
+        // suppression by identity, which is correct, and it is why removing the
+        // content rule costs nothing for the case it was meant to cover.
+        using var q = new SpeechQueue();
+        q.Enqueue(Make("OK, button", cancelGroup: "focus")).Should().BeTrue();
+        q.Enqueue(Make("OK, button", cancelGroup: "focus")).Should().BeTrue();
 
-        queued1.Should().BeTrue();
-        queued2.Should().BeFalse();
         q.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void The_same_words_twice_with_no_cancel_group_are_both_heard()
+    {
+        // Arrowing up through two consecutive blank lines, once speech for the
+        // first has already played.
+        using var q = new SpeechQueue();
+        q.Enqueue(Make("blank")).Should().BeTrue();
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("blank");
+        q.Enqueue(Make("blank")).Should().BeTrue();
+
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("blank");
     }
 
     [Fact]

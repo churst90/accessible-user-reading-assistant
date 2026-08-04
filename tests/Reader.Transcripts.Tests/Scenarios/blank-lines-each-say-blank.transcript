@@ -1,0 +1,21 @@
+# Arrowing up through consecutive blank lines must say "blank" every time.
+#
+# Regression from commit c8a54e1. The arbiter had grown a rule that dropped an
+# announcement whose text matched the previous one, added to quieten a list
+# boundary. It swallowed every blank line after the first, and the user got
+# silence exactly where they needed feedback. Suppressing on CONTENT cannot
+# tell "nothing moved" from "the next thing reads the same".
+
+caret "last line"
+drain
+caret "blank"
+drain
+caret "blank"
+drain
+caret "first line"
+
+expect
+  last line
+  blank
+  blank
+  first line

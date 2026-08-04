@@ -29,6 +29,7 @@
     <Project Path="tests/Reader.Scripting.Tests/Reader.Scripting.Tests.csproj" />
     <Project Path="tests/Reader.Speech.Tests/Reader.Speech.Tests.csproj" />
     <Project Path="tests/Reader.TestKit/Reader.TestKit.csproj" />
+    <Project Path="tests/Reader.Transcripts.Tests/Reader.Transcripts.Tests.csproj" />
     <Project Path="tests/ReaderPlatform.Windows.Tests/ReaderPlatform.Windows.Tests.csproj" />
     <Project Path="tests/PluginFixtures/HelloPlugin/HelloPlugin.csproj" />
   </Folder>

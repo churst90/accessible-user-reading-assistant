@@ -1,0 +1,16 @@
+# The mirror of the previous scenario, and the one that is easy to break while
+# fixing it. Two announcements with the SAME reason about the same subject are
+# two real actions that happen to look alike — not two producers describing one
+# action — and both must be heard.
+
+node doc Document "Notes"
+focus doc
+drain
+caret "blank"
+drain
+caret "blank"
+
+expect
+  Notes, document
+  blank
+  blank

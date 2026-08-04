@@ -1,0 +1,12 @@
+# A list raises focus AND selection for a single arrow press. The user
+# performed one action and must hear one announcement.
+#
+# This is the whole reason OutputArbiter exists. It used to be patched at each
+# producer, which meant the next producer inherited nothing.
+
+node item1 ListItem "Speech" pos=2 size=5
+focus item1
+select item1
+
+expect
+  Speech, list item, 2 of 5

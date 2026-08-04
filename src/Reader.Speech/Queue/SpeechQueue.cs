@@ -21,8 +21,21 @@ namespace Aura.Speech.Queue;
 /// quickly.
 /// </para>
 /// <para>
-/// <b>Coalesce.</b> Two enqueues of the same group + identical text within
-/// <see cref="CoalesceWindow"/> are deduplicated — the second is dropped.
+/// <b>There is no content-based suppression here, deliberately.</b> This class
+/// used to drop a second enqueue whose group and text matched the first within
+/// a time window. That is the same mistake <see cref="Aura.Output.OutputArbiter"/>
+/// had removed from it, made a layer lower: comparing <em>words</em> cannot
+/// tell "the provider sent that twice" from "the next thing legitimately reads
+/// the same". Arrowing up through consecutive blank lines says "blank" every
+/// time, and a toolbar of unnamed icon buttons says "button" every time, and
+/// both were being swallowed after the first.
+/// </para>
+/// <para>
+/// Genuine duplicates are already handled twice over, by mechanisms that key on
+/// identity rather than content: the arbiter drops two producers describing one
+/// action, and the cancel group below drops a superseded announcement about the
+/// same kind of thing. A provider re-firing focus for the same element leaves
+/// one item queued because of the cancel group, not because of its text.
 /// </para>
 /// <para>
 /// <b>Now preemption.</b> Enqueueing a <c>Now</c> drops all pending non-Now
@@ -42,20 +55,13 @@ public sealed class SpeechQueue : IDisposable
     private readonly LinkedList<Utterance> _items = new();
     private readonly SemaphoreSlim _signal = new(0);
     private readonly TimeProvider _time;
-    private string? _lastCoalesceGroup;
-    private string? _lastCoalesceText;
-    private long _lastEnqueueTicks;
     private string? _currentSpeakingGroup;
     private bool _disposed;
 
-    public SpeechQueue(TimeSpan? coalesceWindow = null, TimeProvider? timeProvider = null)
+    public SpeechQueue(TimeProvider? timeProvider = null)
     {
-        CoalesceWindow = coalesceWindow ?? TimeSpan.FromMilliseconds(150);
         _time = timeProvider ?? TimeProvider.System;
     }
-
-    /// <summary>Window during which identical group+text enqueues are deduped.</summary>
-    public TimeSpan CoalesceWindow { get; }
 
     /// <summary>Raised when a <see cref="SpeechPriority.Now"/> item is enqueued.</summary>
     public event Action<Utterance>? PreemptiveEnqueued;
@@ -85,14 +91,6 @@ public sealed class SpeechQueue : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var nowTicks = _time.GetUtcNow().UtcTicks;
-            var plain = utterance.PlainText();
-            if (ShouldCoalesce(utterance, plain, nowTicks))
-            {
-                _lastEnqueueTicks = nowTicks;
-                return false;
-            }
-
             var dropped = 0;
 
             if (utterance.CancelGroup is not null)
@@ -119,9 +117,6 @@ public sealed class SpeechQueue : IDisposable
             DrainSignal(dropped);
 
             InsertByPriority(utterance);
-            _lastCoalesceGroup = utterance.CancelGroup;
-            _lastCoalesceText = plain;
-            _lastEnqueueTicks = nowTicks;
             _signal.Release();
         }
 
@@ -226,12 +221,6 @@ public sealed class SpeechQueue : IDisposable
         {
             var dropped = DropMatching(static node => node.Value.Validity is { } v && !v.IsStillValid());
             DrainSignal(dropped);
-            if (dropped > 0)
-            {
-                // Otherwise a swept item keeps suppressing its own re-announcement.
-                _lastCoalesceGroup = null;
-                _lastCoalesceText = null;
-            }
             return dropped;
         }
     }
@@ -244,8 +233,6 @@ public sealed class SpeechQueue : IDisposable
             var n = _items.Count;
             _items.Clear();
             DrainSignal(n);
-            _lastCoalesceGroup = null;
-            _lastCoalesceText = null;
         }
     }
 
@@ -280,24 +267,6 @@ public sealed class SpeechQueue : IDisposable
             _disposed = true;
         }
         _signal.Dispose();
-    }
-
-    private bool ShouldCoalesce(Utterance utterance, string plain, long nowTicks)
-    {
-        if (utterance.CancelGroup is null)
-        {
-            return false;
-        }
-        if (!string.Equals(_lastCoalesceGroup, utterance.CancelGroup, StringComparison.Ordinal))
-        {
-            return false;
-        }
-        if (!string.Equals(_lastCoalesceText, plain, StringComparison.Ordinal))
-        {
-            return false;
-        }
-        var elapsed = TimeSpan.FromTicks(nowTicks - _lastEnqueueTicks);
-        return elapsed >= TimeSpan.Zero && elapsed < CoalesceWindow;
     }
 
     private int DropMatching(Predicate<LinkedListNode<Utterance>> predicate)

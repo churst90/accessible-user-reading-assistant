@@ -1,0 +1,8 @@
+# Position in set is how a user knows where they are in a list, and it is the
+# first thing missing when a provider is read with the wrong API.
+
+node item ListItem "report.txt" pos=4 size=10
+focus item
+
+expect
+  report.txt, list item, 4 of 10

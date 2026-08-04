@@ -1,0 +1,16 @@
+# "level" with no level is noise. The template's segment is dropped whole
+# rather than rendering "Documents, tree item, level ,".
+#
+# The old string-tidying pass collapsed doubled separators after the fact and
+# could not catch this one, because "level " is not an empty segment — it is a
+# label that lost its value.
+
+node t1 TreeItem "Documents" level=2 pos=3 size=8
+node t2 TreeItem "Pictures"
+focus t1
+drain
+focus t2
+
+expect
+  Documents, tree item, level 2, 3 of 8
+  Pictures, tree item

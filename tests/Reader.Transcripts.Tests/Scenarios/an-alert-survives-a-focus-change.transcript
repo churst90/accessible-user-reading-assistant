@@ -1,0 +1,18 @@
+# The other half of staleness, and the direction that is dangerous to get
+# wrong. An alert fires on an element that by definition does not have focus.
+# Treating "not the current focus" as "stale" would silence exactly the
+# announcements a user least expects and most needs.
+#
+# The alert is Now priority, so it also drops the pending focus announcement
+# for the button the user has already left. Both of those are correct.
+
+node btn Button "Save"
+node toast Alert "Battery low"
+node other Button "Cancel"
+focus btn
+alert toast
+focus other
+
+expect
+  Battery low
+  Cancel, button

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Aura.Transcripts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Reader.Speech\Reader.Speech.csproj" />
+    <ProjectReference Include="..\..\src\Reader.Core\Reader.Core.csproj" />
+    <ProjectReference Include="..\..\src\Reader.Output\Reader.Output.csproj" />
+    <ProjectReference Include="..\Reader.TestKit\Reader.TestKit.csproj" />
+  </ItemGroup>
+
+  <!-- The scenarios are the tests. They must reach the test binary. -->
+  <ItemGroup>
+    <None Include="Scenarios\**\*.transcript" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

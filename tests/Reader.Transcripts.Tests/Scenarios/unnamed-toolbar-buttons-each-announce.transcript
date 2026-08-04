@@ -1,0 +1,19 @@
+# A toolbar of icon buttons with no accessible name. Every one must announce.
+#
+# ASSESSMENT S5: focus dedup was keyed on (role, name) with null matching null,
+# so every button after the first went silent — and this is precisely the case
+# where the user depends most on hearing something, because there is no text.
+
+node b1 Button
+node b2 Button
+node b3 Button
+focus b1
+drain
+focus b2
+drain
+focus b3
+
+expect
+  button
+  button
+  button
