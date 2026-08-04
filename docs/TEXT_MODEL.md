@@ -277,6 +277,28 @@ for the same movement resolve identically and the second announces nothing.
 
 ### How the resolver decides
 
+> **Corrected 2026-08-03, after listening on hardware.** This section used to
+> say the keystroke carried no meaning and the positions told you everything.
+> That is half right, and the missing half shipped a bug: **the positions say
+> what happened, the keystroke says what granularity was asked for.** Inferring
+> the unit from ground covered means Left at the start of a line reports a
+> *line* move, because a newline was crossed — so a request for one character
+> is answered with a whole paragraph of speech, which is exactly what was
+> heard.
+>
+> `Resolve` now takes an optional requested `TextUnit`. Left/Right ask for a
+> character, Ctrl+Left/Right for a word, Up/Down/PageUp/PageDown for a line,
+> Home/End for a character. The hint is held on `CaretTracker` rather than
+> passed as an argument, because the keystroke and the provider's caret event
+> are both triggers to re-sample and either may be the one that observes the
+> movement; without that they would resolve the same motion differently
+> depending on which won the race.
+>
+> The table below still applies **when no unit was requested** — a mouse click,
+> a find result, autocomplete. It is the best answer available when nobody
+> asked for anything, and it remains the reason a keystroke classifier alone
+> could never be right either.
+
 `CaretMotionResolver.Resolve(previous, current)` builds a range spanning the
 ground covered and reads it. The text between the two positions already encodes
 which unit was crossed:

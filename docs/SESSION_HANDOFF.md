@@ -4,7 +4,47 @@ Last updated: 2026-08-03 (F1 + F5a landed)
 
 ---
 
-## For the next hardware session: what to listen for
+## Round 2 — the four things heard on hardware, and what changed
+
+First listening session on F1 found four. All were real; three were in the caret
+path, which none of the F1 work had touched.
+
+| Heard | Cause | Fix |
+|---|---|---|
+| Blank lines don't read at all | A provider expanding an empty line returns the line terminator. `"\r\n"` is not `IsNullOrEmpty`, so the reader spoke two characters that make no sound | `ToRequest` uses `Blank.Is`, and trims the terminator off a line |
+| Wrapping to the previous line reads the whole line | The unit was inferred from ground covered, so Left crossing a newline reported a line move | The keystroke supplies the granularity; positions still say what happened |
+| End of line said nothing useful | — | Says "line feed" |
+| Desktop icon name replaced by its tooltip, intermittently | `ToolTipOpened` was mapped onto `AlertRaised`; alerts are `Now`, and `Now` cuts off what is playing | Tooltips are their own event kind and reason, at `Background`. They wait |
+
+**The model correction worth keeping.** `TEXT_MODEL.md` said the keystroke
+carries no meaning and the position tells you everything. That is half right and
+the missing half was load-bearing: **positions say what happened, the keystroke
+says what granularity was asked for.** Left is a character move even when it
+wraps, and answering a one-character request with a paragraph is what Cody
+heard. A caller with no key behind it — a mouse click, a find result — still
+falls back to inference, which is the best answer available when nobody asked.
+
+Also fixed unheard: notification text now goes on the node's `Name`. Every rule
+that announces a non-focus event reads `{name}`, so text carried only in
+`CaretLine` was structurally unreachable and toasts said nothing.
+
+### What to check this round
+
+1. **Notepad, arrow up and down through blank lines** — "blank" each time.
+2. **Left-arrow at the start of a line** — one character or "line feed", never
+   the whole line above.
+3. **Press End** — "line feed".
+4. **Arrow across the desktop** — the icon name, then its tooltip after,
+   never instead.
+5. **Everything in the round-1 table below** still holds.
+
+Two things I still cannot check from Linux: whether real toasts now speak, and
+whether fast typing with character echo on backs up (echo has no cancel group,
+so a burst queues; it behaved this way before F1 too).
+
+---
+
+## Round 1 — what to listen for
 
 **F1 changed how interruption works, everywhere.** Nothing else in this round is
 risky; this is. Test it first and stop if it is wrong.
