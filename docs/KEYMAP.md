@@ -28,7 +28,7 @@ a binding and do not document it, that test fails.
 | `Reader+Q` | Exit dialog |
 | `Ctrl+Reader+S` | Choose synthesiser |
 | `Ctrl+Reader+D` | **Copy diagnostics to the clipboard** — use this in bug reports |
-| `Reader+Space` | Switch between Read mode and Type mode (same key as NVDA) |
+| `Reader+Space` | Switch between Read mode and Write mode (same key as NVDA) |
 
 ---
 
@@ -186,7 +186,7 @@ including the two with no default chord.
 | `OpenExitDialog` | Open the exit confirmation | `Reader+Q` |
 | `OpenSynthesizerDialog` | Choose the speech synthesiser | `Ctrl+Reader+S` |
 | `ReportDiagnostics` | Copy a diagnostic snapshot to the clipboard | `Ctrl+Reader+D` |
-| `ToggleReaderMode` | Switch between Read mode and Type mode | `Reader+Space` |
+| `ToggleReaderMode` | Switch between Read mode and Write mode | `Reader+Space` |
 
 ---
 
@@ -203,4 +203,4 @@ Bindings resolve through context-scoped layers, most specific first:
 
 This is what lets Read mode bind bare `h` to "next heading" without breaking
 the letter `h` everywhere else. Nothing populates `readmode` yet; see
-[`READ_TYPE_MODES.md`](READ_TYPE_MODES.md).
+[`READ_WRITE_MODES.md`](READ_WRITE_MODES.md).

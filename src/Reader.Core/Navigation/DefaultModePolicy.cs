@@ -13,7 +13,7 @@ namespace Aura.Core.Navigation;
 /// formed and surprising them costs more than any improvement would gain.
 /// </para>
 /// <para>
-/// Replaceable by design. Per-site and per-app preferences ("always Type on
+/// Replaceable by design. Per-site and per-app preferences ("always Write on
 /// this webmail", "never auto-switch in this editor") belong in a policy that
 /// wraps this one, not in extra conditions here — that is how this method
 /// stays readable instead of becoming a pile of application names.
@@ -42,13 +42,13 @@ public sealed class DefaultModePolicy : IModePolicy
         // would only eat keystrokes.
         if (!_isInReadableDocument(node))
         {
-            return current == ReaderMode.Read ? ReaderMode.Type : null;
+            return current == ReaderMode.Read ? ReaderMode.Write : null;
         }
 
         // Landing somewhere the user types means they are about to type.
         if (IsTypingTarget(node))
         {
-            return ReaderMode.Type;
+            return ReaderMode.Write;
         }
 
         // Everything else in a document is for reading.

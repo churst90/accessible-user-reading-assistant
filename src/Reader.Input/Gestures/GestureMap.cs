@@ -154,7 +154,7 @@ public sealed class GestureMap
         }
     }
 
-    /// <summary>Resolve using the default context — nothing known, Type mode.</summary>
+    /// <summary>Resolve using the default context — nothing known, Write mode.</summary>
     public ReaderCommand Resolve(RawInput input) => Resolve(input, GestureContext.Default);
 
     /// <summary>

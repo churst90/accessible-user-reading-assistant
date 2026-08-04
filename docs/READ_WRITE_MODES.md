@@ -1,4 +1,4 @@
-# Read mode and Type mode
+# Read mode and Write mode
 
 Status: **contracts sketched, nothing implemented.** This is the frame for
 Phase 4c, written so the work can be picked up and filled in.
@@ -9,18 +9,26 @@ Phase 4c, written so the work can be picked up and filled in.
 
 Traditionally these are "browse mode" and "focus mode" (NVDA), or the virtual
 cursor being on and off (JAWS). Those names describe the *screen reader's*
-internal state. **Read** and **Type** describe what the user is doing.
+internal state. **Read** and **Write** describe what the user is doing.
 
 That is not cosmetic. "Am I in browse mode or focus mode" has needed explaining
 to every new user for twenty years, and the confusion is real: people cannot
 tell you which mode they are in, so they cannot tell you what went wrong.
-"Am I reading, or am I typing" needs no explanation at all, and the failure
-mode — "I'm trying to type and it's reading" — describes itself.
+"Am I reading, or am I writing" needs no explanation at all, and the failure
+mode — "I'm trying to write and it's reading" — describes itself.
+
+**Write, not Type.** The pair has to read as a pair, and Read/Write is a
+distinction every computer user already holds. It also covers the cases that
+are not literally typing — pressing a button, ticking a checkbox, dragging a
+slider — all of which are "the application gets the keystroke", and none of
+which are typing. The third reason is local: this is a C# codebase, `Type` is
+already the most overloaded word in it, and `ReaderMode.Type` sitting next to
+`System.Type` helps nobody.
 
 | Mode | Keystrokes go to | Arrows do | Single letters do |
 |---|---|---|---|
 | **Read** | The reader | Move through the document | Jump between elements (`h` heading, `k` link) |
-| **Type** | The application | Whatever the app does | Type |
+| **Write** | The application | Whatever the app does | Type |
 
 ---
 
@@ -37,7 +45,7 @@ to make this explicit rather than hoped for.
 
 **Mode switching.** Automatic switching is what makes the feature usable and
 also what makes users furious. Land in a search box, start typing, and the
-reader must already be in Type mode. Land in a rich-text editor to proof-read,
+reader must already be in Write mode. Land in a rich-text editor to proof-read,
 and it must not be. There is no universally correct answer, which is exactly
 why `IModePolicy` is a separate, replaceable interface with per-app and
 per-site overrides, and why `RespectsManualOverride` exists — a user who
@@ -149,7 +157,7 @@ COM migration — see below.
    the mode-switching behaviour before any of the hard work.
 2. **A buffer over one browser**, flattening the UIA tree. Reading only.
 3. **Quick nav** — `FindNext` over `TextAttributes`.
-4. **`Activate` / `SetFocus`** — following links, auto-switch to Type mode.
+4. **`Activate` / `SetFocus`** — following links, auto-switch to Write mode.
 5. **Staleness handling** — structure-changed events, position recovery.
 6. **Per-site overrides**, persisted in the profile.
 7. **Second browser**, to prove the provider seam is real.

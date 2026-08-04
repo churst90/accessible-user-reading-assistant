@@ -1,4 +1,5 @@
 IUIAutomation
+IUIAutomation2
 IUIAutomation6
 IUIAutomationElement
 IUIAutomationElement4

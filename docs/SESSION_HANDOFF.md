@@ -1,11 +1,101 @@
 # Session Handoff
 
-Last updated: 2026-07-30
+Last updated: 2026-08-03
 
 This is the load-on-startup brief for whoever picks up next. Read it before
 opening anything else.
 
-## Where we are: architectural pass done; Phase 3.6 mostly closed
+---
+
+## Where we are: feature work is paused; the foundation is specified
+
+An NVDA analysis ran on 2026-08-03 and produced a plan. **Do not start feature
+work without reading it.** In order:
+
+1. [`NVDA_ANALYSIS.md`](NVDA_ANALYSIS.md) — what NVDA is, what to take, what to
+   avoid, and the honest size of the gap.
+2. [`CAPABILITIES.md`](CAPABILITIES.md) — the scoreboard, including the
+   deliberate never-list.
+3. [`FOUNDATION.md`](FOUNDATION.md) — the seven foundations and the order.
+4. [`foundation/`](foundation/) — one implementation spec per foundation:
+   contracts in real C#, file-by-file plan, migration, proof, and the open
+   questions the implementing session has to close.
+
+**Build and test status**
+
+```
+dotnet build AURA.slnx -p:EnableWindowsTargeting=true   →  0 Warning(s)  0 Error(s)
+dotnet test  AURA.slnx --no-build                       →  338 passed, 1 skipped, 0 failed
+```
+
+### The three findings that changed the plan
+
+**1. Two contract holes block almost everything.** `SpeechUtterance` is a flat
+string — it cannot carry a language change, a prosody span, an inline earcon, a
+say-all resume marker, or a validity predicate. `ITextRange.GetAttributes()` is
+flat per-range — it cannot say what structure was entered and left. Those are
+F1 and F2, and braille, audio themes, say-all resume, per-language voices, Read
+mode and table navigation are all downstream of them.
+
+**2. The recurring speech bugs are one bug, and it is not a timing bug.**
+Cancel on keypress, exclude arrows, un-exclude arrows, make the cancel
+synchronous, add a duplicate-text window, remove it because blank lines went
+silent — every round was an attempt to answer *"is this announcement still
+wanted?"* with timing. NVDA answers it with state: an announcement carries a
+predicate that the queue evaluates at the moment it would be spoken. Stale ones
+evaporate; valid ones survive; there is no race because there is no timing.
+**Do not attempt a seventh tuning pass.** It needs F1.
+
+**3. Object navigation is missing entirely.** Not a missing feature — a missing
+*axis*. NVDA's navigator object walks the tree independently of focus, and it is
+how a user reads a status bar, inspects a toolbar, or investigates a control
+that announces nothing. This is F3, and it is among the first things a switching
+NVDA user will reach for and not find.
+
+### What to do next, in order
+
+1. **Measure, on the VM.** `PerfTimer` on the hot path (F5c) and the R2 spike —
+   the cross-process cost of a `TreeScope_Subtree` `BuildUpdatedCache` over a
+   large page. R2 can invalidate the whole Read-mode design and it is cheap to
+   run. Both are gates, not work; do them before building.
+2. **Start the uiAccess certificate.** Weeks of lead time, nothing gates on it,
+   and without it the keyboard hook does not fire in any elevated window — the
+   reader looks frozen and the user cannot even stop speech.
+3. **Build F1** ([`foundation/F1-OUTPUT-MODEL.md`](foundation/F1-OUTPUT-MODEL.md)).
+   Everything else keys off it, including the test harness.
+4. **Build F5a** — golden transcripts. From that point every bug becomes a
+   permanent test. The first two files backfill the last two commits' bugs.
+5. Then F4b (COM ownership) → F2 → F3 → 4c.
+
+### Landed 2026-08-03
+
+- **Read/Write mode rename.** `ReaderMode.Type` → `ReaderMode.Write` (`Write = 0`
+  keeps the safe default), spoken string "write mode",
+  `READ_TYPE_MODES.md` → `READ_WRITE_MODES.md`. Cody's call, and right: the pair
+  has to read as a pair, it covers cases that are not literally typing, and
+  `ReaderMode.Type` next to `System.Type` helped nobody.
+- **UIA connection and transaction timeouts** (`NativeUia.TrySetTimeouts`,
+  F4c). The dispatch loop could previously block forever against a hung
+  provider — the one path `ASSESSMENT.md` S1's `SendMessageTimeout` fix did not
+  cover. The values are a starting point and should be set from measurement.
+
+### Known-broken, and deliberately not fixed one at a time
+
+These are all symptoms of the missing seams above. Fix them against the model,
+not individually — that is what produced the last four rounds of regressions.
+
+- Notepad reads a whole line on left-arrow to the line above.
+- Blank lines unreliable. *(F1: blankness is a property of the composed
+  presentation, not of a string compared with the last string.)*
+- Line endings not announced.
+- PowerShell numpad review dead. *(F3: the console is the first tree
+  interceptor, and it should be built before Read mode.)*
+- Backspace/Delete announcement missing (roadmap 3.6 #6). *(F1: the deleted text
+  is a segment captured before the keystroke.)*
+
+---
+
+## History: architectural pass done; Phase 3.6 mostly closed *(2026-07-30)*
 
 An outside architectural review (`docs/ASSESSMENT.md`) ran on 2026-07-30 and
 its findings were implemented in the same pass. Phase 3.6 items #1–#4 and the
@@ -371,8 +461,8 @@ Phase 4 has no fixed deadline; users will tell us what to build by then.
 ## Useful commands
 
 ```
-cd F:/data/Github/Aura
-dotnet build AURA.slnx
+cd "/run/media/cody/Personal Data/Data/Github/OpenReader"
+dotnet build AURA.slnx -p:EnableWindowsTargeting=true
 dotnet test  AURA.slnx --no-build
 dotnet run   --project src/ReaderHost.Windows
 

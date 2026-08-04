@@ -42,13 +42,16 @@ scripts/     Build/dev tooling
 ## What to read in order
 
 1. [`docs/SESSION_HANDOFF.md`](docs/SESSION_HANDOFF.md) — **read first** — current state, next concrete move
-2. [`docs/ASSESSMENT.md`](docs/ASSESSMENT.md) — outside architectural review, ranked by consequence
-3. [`docs/DESIGN_PRINCIPLES.md`](docs/DESIGN_PRINCIPLES.md) — what we will and won't do
-4. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the layering and key abstractions
-5. [`docs/TEXT_MODEL.md`](docs/TEXT_MODEL.md) — the text range contract and its migration path
-6. [`docs/OUTPUT_PIPELINE.md`](docs/OUTPUT_PIPELINE.md) — the single path every spoken word travels
-7. [`docs/READ_TYPE_MODES.md`](docs/READ_TYPE_MODES.md) — Read/Type mode framework (Phase 4c)
-8. [`docs/EXTENSIONS.md`](docs/EXTENSIONS.md) — plugin model, maintainability rules, NVDA Remote interop
-9. [`docs/SPEECH_PIPELINE.md`](docs/SPEECH_PIPELINE.md) — customization model
-10. [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased milestones
-11. [`docs/FIRST_STEPS.md`](docs/FIRST_STEPS.md) — Phase 0 checklist (already done)
+2. [`docs/NVDA_ANALYSIS.md`](docs/NVDA_ANALYSIS.md) — what NVDA is made of, what to take, what to avoid, and how far the gap actually is
+3. [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) — the scoreboard, including what we will deliberately never build
+4. [`docs/FOUNDATION.md`](docs/FOUNDATION.md) — **the plan** — the seams and harnesses to build before more features
+5. [`docs/ASSESSMENT.md`](docs/ASSESSMENT.md) — outside architectural review, ranked by consequence
+6. [`docs/DESIGN_PRINCIPLES.md`](docs/DESIGN_PRINCIPLES.md) — what we will and won't do
+7. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the layering and key abstractions
+8. [`docs/TEXT_MODEL.md`](docs/TEXT_MODEL.md) — the text range contract and its migration path
+9. [`docs/OUTPUT_PIPELINE.md`](docs/OUTPUT_PIPELINE.md) — the single path every spoken word travels
+10. [`docs/READ_WRITE_MODES.md`](docs/READ_WRITE_MODES.md) — Read/Write mode framework (Phase 4c)
+11. [`docs/EXTENSIONS.md`](docs/EXTENSIONS.md) — plugin model, maintainability rules, NVDA Remote interop
+12. [`docs/SPEECH_PIPELINE.md`](docs/SPEECH_PIPELINE.md) — customization model
+13. [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased milestones
+14. [`docs/FIRST_STEPS.md`](docs/FIRST_STEPS.md) — Phase 0 checklist (already done)

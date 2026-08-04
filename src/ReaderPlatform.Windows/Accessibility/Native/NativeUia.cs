@@ -33,8 +33,50 @@ internal static class NativeUia
     {
         var type = Type.GetTypeFromCLSID(CUIAutomation8Clsid, throwOnError: true)
             ?? throw new InvalidOperationException("CUIAutomation8 is not registered on this system.");
-        return (IUIAutomation)(Activator.CreateInstance(type)
+        var automation = (IUIAutomation)(Activator.CreateInstance(type)
             ?? throw new InvalidOperationException("Could not create the UI Automation client."));
+        if (OperatingSystem.IsWindowsVersionAtLeast(8))
+        {
+            TrySetTimeouts(automation);
+        }
+        return automation;
+    }
+
+    /// <summary>How long to spend reaching a provider that may not be there.</summary>
+    internal const int ConnectionTimeoutMs = 1000;
+
+    /// <summary>How long to spend on one call to a provider that may be wedged.</summary>
+    internal const int TransactionTimeoutMs = 2000;
+
+    /// <summary>
+    /// Bound every call to a provider. Without this the dispatch loop blocks
+    /// forever against a hung application and the reader goes silent with no
+    /// signal and no recovery — the failure <c>ASSESSMENT.md</c> S1 is about,
+    /// on the one path its <c>SendMessageTimeout</c> fix did not cover.
+    /// </summary>
+    /// <remarks>
+    /// The values are a starting point, not a measurement: two seconds is two
+    /// orders of magnitude longer than a healthy call and shorter than a user
+    /// will tolerate silence. Set them from data once <c>PerfTimer</c> is on
+    /// this path — see <c>docs/foundation/F5-EVIDENCE.md</c>.
+    /// </remarks>
+    [SupportedOSPlatform("windows8.0")]
+    private static void TrySetTimeouts(IUIAutomation automation)
+    {
+        try
+        {
+            if (automation is IUIAutomation2 two)
+            {
+                two.ConnectionTimeout = ConnectionTimeoutMs;
+                two.TransactionTimeout = TransactionTimeoutMs;
+            }
+        }
+        catch (Exception ex) when (ex is InvalidCastException or NotSupportedException
+            or System.Runtime.InteropServices.COMException)
+        {
+            // A client that will not take the timeouts still works; it is just
+            // unbounded, which is what the watchdog is for.
+        }
     }
 
     /// <summary>

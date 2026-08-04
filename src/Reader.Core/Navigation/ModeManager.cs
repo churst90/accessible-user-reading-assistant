@@ -10,7 +10,7 @@ namespace Aura.Core.Navigation;
 /// <para>
 /// Automatic mode switching is what makes Read mode usable and also what makes
 /// users furious. Land in a search box and the reader must already be in
-/// <see cref="ReaderMode.Type"/>; land in a rich-text editor to proof-read and
+/// <see cref="ReaderMode.Write"/>; land in a rich-text editor to proof-read and
 /// it must not be. There is no universally correct answer, so the decision
 /// lives behind <see cref="IModePolicy"/> and this class only enforces the
 /// rules around it.
@@ -28,7 +28,7 @@ public sealed class ModeManager
 {
     private readonly IModePolicy _policy;
     private readonly object _gate = new();
-    private ReaderMode _mode = ReaderMode.Type;
+    private ReaderMode _mode = ReaderMode.Write;
     private NodeId _overriddenFor;
     private bool _hasOverride;
 
@@ -45,7 +45,7 @@ public sealed class ModeManager
 
     /// <summary>
     /// Raised when the mode actually changes, with the new mode and whether
-    /// the user asked for it. The host announces "read mode" / "type mode";
+    /// the user asked for it. The host announces "read mode" / "write mode";
     /// silent switching leaves the user unable to explain why their keystrokes
     /// stopped working.
     /// </summary>
@@ -60,7 +60,7 @@ public sealed class ModeManager
         ReaderMode next;
         lock (_gate)
         {
-            next = _mode == ReaderMode.Read ? ReaderMode.Type : ReaderMode.Read;
+            next = _mode == ReaderMode.Read ? ReaderMode.Write : ReaderMode.Read;
             _mode = next;
             if (focused is not null)
             {

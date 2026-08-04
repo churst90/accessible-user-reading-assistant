@@ -9,7 +9,7 @@ namespace Aura.Abstractions.Navigation;
 /// <para>
 /// Separated from the mode manager because this is the part users argue about,
 /// and the part that needs per-site and per-app overrides. Whether an edit box
-/// should auto-switch to <see cref="ReaderMode.Type"/> has no universally
+/// should auto-switch to <see cref="ReaderMode.Write"/> has no universally
 /// right answer: it does in a search field, and it does not in a rich-text
 /// editor where the user is proof-reading.
 /// </para>

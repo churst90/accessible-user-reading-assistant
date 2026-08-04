@@ -26,7 +26,7 @@ public class GestureLayerTests
         var map = new GestureMap();
         map.Bind(GestureMap.ReadModeLayer, new KeyChord(VK_H, InputModifiers.None), ReaderCommand.ReadNextLine);
 
-        map.Resolve(Key(VK_H), new GestureContext(ReaderMode.Type))
+        map.Resolve(Key(VK_H), new GestureContext(ReaderMode.Write))
             .Should().Be(ReaderCommand.None);
     }
 
@@ -45,9 +45,9 @@ public class GestureLayerTests
     {
         // Swallowing a keystroke is far worse than missing a shortcut: the
         // user's typing silently vanishes and they cannot see why. This
-        // depends on ReaderMode.Type being the zero value — a default struct
+        // depends on ReaderMode.Write being the zero value — a default struct
         // must not land in Read mode.
-        default(GestureContext).Mode.Should().Be(ReaderMode.Type);
+        default(GestureContext).Mode.Should().Be(ReaderMode.Write);
 
         var map = new GestureMap();
         map.Bind(GestureMap.ReadModeLayer, new KeyChord(VK_H, InputModifiers.None), ReaderCommand.ReadNextLine);

@@ -21,13 +21,13 @@ namespace Aura.Input.Gestures;
 /// </para>
 /// </remarks>
 public readonly record struct GestureContext(
-    ReaderMode Mode = ReaderMode.Type,
+    ReaderMode Mode = ReaderMode.Write,
     string? AppExecutableName = null,
     bool HasReadModeBuffer = false)
 {
     /// <summary>
     /// The context when nothing is known — a plain application with no
-    /// document. Deliberately <see cref="ReaderMode.Type"/>: assuming Read
+    /// document. Deliberately <see cref="ReaderMode.Write"/>: assuming Read
     /// mode would swallow the user's keystrokes, and swallowing input is a far
     /// worse failure than missing a shortcut.
     /// </summary>

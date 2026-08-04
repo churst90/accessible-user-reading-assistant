@@ -79,7 +79,7 @@ public interface IReadModeBuffer : ITextSurface
 
     /// <summary>
     /// Move the application's real focus to the element at this position,
-    /// which is how Read mode hands over to <see cref="ReaderMode.Type"/>.
+    /// which is how Read mode hands over to <see cref="ReaderMode.Write"/>.
     /// </summary>
     bool SetFocus(ITextRange position);
 }

@@ -23,7 +23,7 @@ public class ModeManagerTests
     {
         // Starting in Read mode would swallow keystrokes before the reader has
         // learned anything about where focus is.
-        InDocument().Mode.Should().Be(ReaderMode.Type);
+        InDocument().Mode.Should().Be(ReaderMode.Write);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class ModeManagerTests
     {
         var m = InDocument();
         m.OnFocusChanged(Node("para", AccessibleRole.Paragraph));
-        m.OnFocusChanged(Node("search", AccessibleRole.Edit)).Should().Be(ReaderMode.Type);
+        m.OnFocusChanged(Node("search", AccessibleRole.Edit)).Should().Be(ReaderMode.Write);
     }
 
     [Fact]
@@ -50,13 +50,13 @@ public class ModeManagerTests
     }
 
     [Fact]
-    public void Leaving_a_readable_document_returns_to_type()
+    public void Leaving_a_readable_document_returns_to_write()
     {
         // A plain dialog has nothing to read; staying in Read mode there would
         // eat the user's keystrokes with no way to explain why.
         var m = new ModeManager(new DefaultModePolicy(n => n.Id.Value.StartsWith("web", StringComparison.Ordinal)));
         m.OnFocusChanged(Node("web-para", AccessibleRole.Paragraph)).Should().Be(ReaderMode.Read);
-        m.OnFocusChanged(Node("dialog-button", AccessibleRole.Button)).Should().Be(ReaderMode.Type);
+        m.OnFocusChanged(Node("dialog-button", AccessibleRole.Button)).Should().Be(ReaderMode.Write);
     }
 
     [Fact]
@@ -76,11 +76,11 @@ public class ModeManagerTests
     public void A_manual_override_survives_focus_events_on_the_same_control()
     {
         // Proof-reading a text box in Read mode is a real workflow. Being
-        // yanked back to Type mode on every focus event is what makes
+        // yanked back to Write mode on every focus event is what makes
         // automatic switching feel hostile.
         var m = InDocument();
         var edit = Node("editor", AccessibleRole.Edit);
-        m.OnFocusChanged(edit).Should().Be(ReaderMode.Type);
+        m.OnFocusChanged(edit).Should().Be(ReaderMode.Write);
 
         m.Toggle(edit).Should().Be(ReaderMode.Read);
         m.OnFocusChanged(edit).Should().Be(ReaderMode.Read);
@@ -95,7 +95,7 @@ public class ModeManagerTests
         m.OnFocusChanged(edit);
         m.Toggle(edit).Should().Be(ReaderMode.Read);
 
-        m.OnFocusChanged(Node("other", AccessibleRole.Edit)).Should().Be(ReaderMode.Type);
+        m.OnFocusChanged(Node("other", AccessibleRole.Edit)).Should().Be(ReaderMode.Write);
     }
 
     [Fact]
@@ -130,10 +130,10 @@ public class ModeManagerTests
         m.OnFocusChanged(edit);
         m.Toggle(edit);
 
-        m.Set(ReaderMode.Type);
+        m.Set(ReaderMode.Write);
 
-        m.Mode.Should().Be(ReaderMode.Type);
-        m.OnFocusChanged(edit).Should().Be(ReaderMode.Type);
+        m.Mode.Should().Be(ReaderMode.Write);
+        m.OnFocusChanged(edit).Should().Be(ReaderMode.Write);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class ModeManagerTests
         var m = InDocument();
         var node = Node("para");
         m.Toggle(node).Should().Be(ReaderMode.Read);
-        m.Toggle(node).Should().Be(ReaderMode.Type);
+        m.Toggle(node).Should().Be(ReaderMode.Write);
         m.Toggle(node).Should().Be(ReaderMode.Read);
     }
 }

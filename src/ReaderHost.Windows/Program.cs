@@ -185,8 +185,8 @@ internal static class Program
         var textSurfaces = new NativeUiaTextSurfaceProvider(provider);
         var reviewCursor = new ReviewCursor(textSurfaces);
 
-        // Read / Type mode. No read-mode buffer exists yet, so nothing claims
-        // a document and the policy keeps us in Type mode — the manager is
+        // Read / Write mode. No read-mode buffer exists yet, so nothing claims
+        // a document and the policy keeps us in Write mode — the manager is
         // wired now so the echo gate and Reader+Space behave correctly the
         // moment a buffer does exist.
         var modeManager = new ModeManager(new DefaultModePolicy());
@@ -198,7 +198,7 @@ internal static class Program
             {
                 pipeline.Submit(new SpeechRequest(
                     SpeechReason.UserAnnouncement, Node: null,
-                    RawText: mode == ReaderMode.Read ? "read mode" : "type mode",
+                    RawText: mode == ReaderMode.Read ? "read mode" : "write mode",
                     AppExecutableName: null));
             }
         };

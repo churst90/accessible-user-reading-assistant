@@ -124,7 +124,7 @@ public static class GestureBindings
         // so plain Reader+D stays free for a user binding.
         map.Bind(new KeyChord(VK_D, InputModifiers.Reader | InputModifiers.Control), ReaderCommand.ReportDiagnostics);
 
-        // Read / Type mode toggle. Reader+Space is NVDA's browse/focus toggle;
+        // Read / Write mode toggle. Reader+Space is NVDA's browse/focus toggle;
         // keeping it costs nothing and preserves the reflex for every user
         // switching over.
         map.Bind(new KeyChord(VK_SPACE, InputModifiers.Reader), ReaderCommand.ToggleReaderMode);
