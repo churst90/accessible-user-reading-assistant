@@ -54,3 +54,6 @@ secrets.json
 
 # Logs
 *.log
+
+# Editor/agent temp files
+*.tmp.*
