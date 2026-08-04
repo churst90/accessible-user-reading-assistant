@@ -43,17 +43,56 @@ public class CaretMotionResolverTests
     }
 
     [Fact]
-    public void Left_arrow_at_the_start_of_a_line_is_a_line_move_not_a_character_move()
+    public void With_no_key_behind_it_a_wrap_is_inferred_as_a_line_move()
     {
-        // The keystroke says "character" — VK_LEFT with no modifiers. The app
-        // disagrees: it wrapped to the previous line. Only the resulting
-        // position knows that.
+        // No requested unit: a mouse click, a find result, or a caret event
+        // with no keystroke behind it. Nobody asked for a granularity, so the
+        // distance covered is the best available answer — and it crossed a
+        // line, so read the line.
         var s = new StringTextSurface("ab\ncd", caretOffset: 3);
         var (before, after) = Move(s, 2);
 
         var motion = CaretMotionResolver.Resolve(before, after);
         motion.Kind.Should().Be(CaretMotionKind.Line);
         motion.Text.Should().Be("ab");
+    }
+
+    [Fact]
+    public void Left_arrow_wrapping_to_the_previous_line_still_reports_a_character()
+    {
+        // The same movement, with the key's granularity supplied — and this is
+        // the case that inference gets wrong. The user pressed Left once and
+        // asked for one character. Reading the whole previous line back to them
+        // because a newline happened to be crossed answers a one-character
+        // request with a paragraph, and it is what Cody heard on hardware.
+        var s = new StringTextSurface("ab\ncd", caretOffset: 3);
+        var (before, after) = Move(s, 2);
+
+        var motion = CaretMotionResolver.Resolve(before, after, TextUnit.Character);
+        motion.Kind.Should().Be(CaretMotionKind.Character);
+        motion.Text.Should().NotBe("ab");
+    }
+
+    [Fact]
+    public void A_requested_line_move_still_reads_the_line()
+    {
+        var s = new StringTextSurface("first\nsecond", caretOffset: 2);
+        var (before, after) = Move(s, 8);
+
+        var motion = CaretMotionResolver.Resolve(before, after, TextUnit.Line);
+        motion.Kind.Should().Be(CaretMotionKind.Line);
+        motion.Text.Should().Be("second");
+    }
+
+    [Fact]
+    public void A_requested_word_move_reads_the_word_even_when_it_crossed_a_line()
+    {
+        var s = new StringTextSurface("alpha\nbravo charlie", caretOffset: 0);
+        var (before, after) = Move(s, 6);
+
+        var motion = CaretMotionResolver.Resolve(before, after, TextUnit.Word);
+        motion.Kind.Should().Be(CaretMotionKind.Word);
+        motion.Text.Should().Be("bravo");
     }
 
     [Fact]

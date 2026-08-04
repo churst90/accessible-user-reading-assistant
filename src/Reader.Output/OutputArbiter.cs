@@ -160,7 +160,8 @@ public sealed class OutputArbiter
 
         SpeechReason.ValueChanged => OutputCategory.StateChange,
 
-        SpeechReason.AlertRaised or SpeechReason.LiveRegionUpdate => OutputCategory.Ambient,
+        SpeechReason.AlertRaised or SpeechReason.LiveRegionUpdate
+            or SpeechReason.ToolTipOpened => OutputCategory.Ambient,
 
         // An unmapped reason must not outrank a real one, but must still be
         // heard — Ambient is the safe floor.

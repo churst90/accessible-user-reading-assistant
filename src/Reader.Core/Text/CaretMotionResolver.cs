@@ -27,10 +27,25 @@ namespace Aura.Core.Text;
 ///   by wall-clock window, so either can win and both can lose.</item>
 /// </list>
 /// <para>
-/// Comparing observed positions has none of those. The keystroke stops being
-/// a source of truth and becomes what it actually is — a hint that it is worth
-/// re-reading the caret. Controls that raise a real caret event don't need
-/// even that.
+/// Comparing observed positions removes all of those. But it does not remove
+/// the keystroke entirely, and an earlier version of this class was wrong to
+/// try. The two carry <em>different</em> information:
+/// </para>
+/// <list type="bullet">
+///   <item><b>The positions say what happened.</b> Where the caret went, and
+///   whether it went anywhere at all.</item>
+///   <item><b>The keystroke says what granularity was asked for.</b> Left is a
+///   character move even when it wraps to the previous line, and reporting the
+///   whole line because a newline happened to be crossed is exactly the bug
+///   that behaviour produced — the user asked for one character and heard a
+///   paragraph.</item>
+/// </list>
+/// <para>
+/// So a caller that knows which key was pressed passes the unit it implies, and
+/// gets that unit reported. A caller that does not — a mouse click, a find
+/// result, autocomplete, a caret event with no keystroke behind it — passes
+/// nothing and the unit is inferred from the distance covered, which is the
+/// best available answer when nobody asked for anything.
 /// </para>
 /// <para>
 /// The caller owns the "when to sample" decision and must not diff across a
@@ -50,7 +65,11 @@ public static class CaretMotionResolver
     /// </param>
     /// <param name="current">The position now, or <c>null</c> if the surface lost its caret.</param>
     /// <returns>The motion to announce. Never <c>null</c>.</returns>
-    public static CaretMotion Resolve(ITextRange? previous, ITextRange? current)
+    /// <param name="requested">
+    /// The granularity the user asked for, when a keystroke implies one.
+    /// <c>null</c> when nothing was asked and the unit has to be inferred.
+    /// </param>
+    public static CaretMotion Resolve(ITextRange? previous, ITextRange? current, TextUnit? requested = null)
     {
         if (current is null)
         {
@@ -77,7 +96,7 @@ public static class CaretMotionResolver
             return new CaretMotion(CaretMotionKind.SelectionCleared, previous.GetText(SelectionReadCap));
         }
 
-        return ResolveCaret(previous, current);
+        return ResolveCaret(previous, current, requested);
     }
 
     /// <summary>
@@ -146,12 +165,24 @@ public static class CaretMotionResolver
     private const int UnitReadCap = 8192;
     private const int SelectionReadCap = 65536;
 
-    private static CaretMotion ResolveCaret(ITextRange previous, ITextRange current)
+    private static CaretMotion ResolveCaret(ITextRange previous, ITextRange current, TextUnit? requested)
     {
         var order = current.CompareEndpoints(RangeEndpoint.Start, previous, RangeEndpoint.Start);
         if (order == 0)
         {
             return CaretMotion.None;
+        }
+
+        // The user asked for a granularity. Report that, whatever ground the
+        // caret happened to cover getting there.
+        if (requested is { } unit)
+        {
+            return unit switch
+            {
+                TextUnit.Character => new CaretMotion(CaretMotionKind.Character, ReadUnit(current, TextUnit.Character)),
+                TextUnit.Word => new CaretMotion(CaretMotionKind.Word, ReadUnit(current, TextUnit.Word)),
+                _ => new CaretMotion(CaretMotionKind.Line, ReadLineAt(current, previous)),
+            };
         }
 
         // Span the ground covered, lower position to higher, and let its

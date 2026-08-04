@@ -48,6 +48,7 @@ public sealed class CaretTracker
 
     private ITextRange? _last;
     private NodeId _lastNodeId;
+    private TextUnit? _pendingUnit;
     private bool _hasLast;
 
     public CaretTracker(
@@ -80,6 +81,28 @@ public sealed class CaretTracker
             _last = null;
             _hasLast = false;
             _lastNodeId = default;
+            _pendingUnit = null;
+        }
+    }
+
+    /// <summary>
+    /// Record the granularity the user just asked for, to be applied to the
+    /// next motion actually observed.
+    /// </summary>
+    /// <remarks>
+    /// Held rather than passed because the keystroke and the provider's caret
+    /// event are both triggers to re-sample, and either may be the one that
+    /// sees the movement. Without this the two would resolve the same motion
+    /// differently depending on which won the race — the keystroke path
+    /// reporting a character and the event path reporting the whole line.
+    /// It is consumed by the first non-empty motion and cleared, so it is a
+    /// one-shot intent rather than a mode.
+    /// </remarks>
+    public void RequestUnit(TextUnit? unit)
+    {
+        lock (_gate)
+        {
+            _pendingUnit = unit;
         }
     }
 
@@ -131,8 +154,12 @@ public sealed class CaretTracker
                 return CaretMotion.None;
             }
 
-            motion = CaretMotionResolver.Resolve(_last, current);
+            motion = CaretMotionResolver.Resolve(_last, current, _pendingUnit);
             _last = current.Clone();
+            if (motion.Kind != CaretMotionKind.None)
+            {
+                _pendingUnit = null;
+            }
         }
 
         if (motion.Kind != CaretMotionKind.None)

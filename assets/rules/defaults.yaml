@@ -339,6 +339,13 @@ rules:
     scope: { reason: AlertRaised }
     action: { type: emit, template: "{name}" }
 
+  # A tooltip. Background priority (set by reason), so it waits for the
+  # control's own announcement to finish rather than cutting it off.
+  - id: core.tooltip.opened
+    priority: 30
+    scope: { reason: ToolTipOpened }
+    action: { type: emit, template: "{name}" }
+
   - id: core.liveregion.changed
     priority: 30
     scope: { reason: LiveRegionUpdate }

@@ -139,7 +139,11 @@ public sealed class SpeechRuleEngine
     private static SpeechPriority PriorityFor(SpeechReason reason) => reason switch
     {
         SpeechReason.AlertRaised or SpeechReason.UserAnnouncement => SpeechPriority.Now,
-        SpeechReason.LiveRegionUpdate => SpeechPriority.Background,
+        // A tooltip must never interrupt. It arrives while the control it
+        // describes is still being announced, and at Now priority it cut the
+        // name off — leaving the user with a description of something they had
+        // not been told the name of.
+        SpeechReason.LiveRegionUpdate or SpeechReason.ToolTipOpened => SpeechPriority.Background,
         _ => SpeechPriority.Next,
     };
 

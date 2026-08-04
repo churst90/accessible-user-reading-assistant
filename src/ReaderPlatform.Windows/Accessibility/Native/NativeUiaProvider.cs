@@ -37,7 +37,7 @@ namespace Aura.Platform.Windows.Accessibility.Native;
 [SupportedOSPlatform("windows6.1")]
 public sealed class NativeUiaProvider : IAccessibilityProvider
 {
-    private enum RawKind { Focus, Value, Text, CaretMoved, Selection, Alert, LiveRegion, Notification }
+    private enum RawKind { Focus, Value, Text, CaretMoved, Selection, Alert, ToolTip, LiveRegion, Notification }
 
     private readonly record struct RawEvent(
         RawKind Kind,
@@ -385,6 +385,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 UIA_EVENT_ID.UIA_Text_TextChangedEventId => RawKind.Text,
                 UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId => RawKind.Selection,
                 UIA_EVENT_ID.UIA_LiveRegionChangedEventId => RawKind.LiveRegion,
+                UIA_EVENT_ID.UIA_ToolTipOpenedEventId => RawKind.ToolTip,
                 _ => RawKind.Alert,
             };
             owner.Queue(kind, sender);
@@ -466,6 +467,10 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 Emit(raw.Element, AccessibilityEventKind.AlertRaised, focusedOnly: false);
                 break;
 
+            case RawKind.ToolTip:
+                Emit(raw.Element, AccessibilityEventKind.ToolTipOpened, focusedOnly: false);
+                break;
+
             case RawKind.Notification:
                 HandleNotification(raw.Element, raw.Text);
                 break;
@@ -520,8 +525,15 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             return;
         }
+        // Put it on the node rather than only in CaretLine: every rule that
+        // announces a non-focus event reads {name}, so text carried anywhere
+        // else was silently unreachable and toasts said nothing at all.
         DispatchLocal(new AccessibilityEvent(
-            AccessibilityEventKind.LiveRegionChanged, node, DateTimeOffset.UtcNow, CaretLine: spoken));
+            AccessibilityEventKind.LiveRegionChanged,
+            new AccessibleNode(node.Id, node.Role, spoken, node.Value, node.Description,
+                node.States, node.ParentId, node.ChildrenFactory, node.Extras),
+            DateTimeOffset.UtcNow,
+            CaretLine: spoken));
     }
 
     private void Emit(IUIAutomationElement element, AccessibilityEventKind kind, bool focusedOnly)

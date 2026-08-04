@@ -1,5 +1,7 @@
 using Aura.Abstractions.Accessibility;
 using Aura.Abstractions.Input;
+using Aura.Abstractions.Output;
+using Aura.Abstractions.Text;
 using Aura.Abstractions.Speech;
 using Aura.Diagnostics;
 using Serilog;
@@ -20,10 +22,14 @@ namespace Aura.Core.Text;
 /// triggers to re-sample and neither has to suppress the other.
 /// </para>
 /// <para>
-/// The keystroke set carries no meaning. It is not "Left means character" —
-/// the application decides that, and <see cref="CaretMotionResolver"/> reads
-/// the decision off the resulting position. It is only "this key might have
-/// moved the caret, so go and look."
+/// The keystroke does two things, and an earlier version of this class was
+/// wrong to think it did neither. It says <em>go and look</em>, and it says
+/// <em>at what granularity</em>. The application still decides where the caret
+/// ends up — that is what the position comparison is for — but only the
+/// keystroke knows that the user asked for one character rather than a line.
+/// Inferring the unit from the distance covered reports a whole line when Left
+/// wraps to the previous one, which is a paragraph of speech in answer to a
+/// request for one character.
 /// </para>
 /// <para>
 /// Depends on nothing platform-specific: <see cref="IAccessibilityProvider"/>,
@@ -35,7 +41,16 @@ namespace Aura.Core.Text;
 public sealed class CaretFollowService : IDisposable
 {
     private const string BlankLineToken = "blank";
-    private const string EndOfLineToken = "end of line";
+
+    /// <summary>
+    /// What is said when the caret lands past the last character of a line.
+    /// </summary>
+    /// <remarks>
+    /// "line feed" rather than "end of line": it names the thing that is
+    /// actually there, it is shorter to hear at reading speed, and it is what
+    /// Cody asked for after listening to the alternative.
+    /// </remarks>
+    private const string LineEndToken = "line feed";
 
     private readonly IInputSource _keyboard;
     private readonly IAccessibilityProvider _provider;
@@ -111,10 +126,12 @@ public sealed class CaretFollowService : IDisposable
         {
             return;
         }
-        if (!MightMoveCaret(input.KeyCode))
+        var requested = RequestedUnit(input);
+        if (requested is null)
         {
             return;
         }
+        _tracker.RequestUnit(requested);
 
         // The hook runs before the application has seen the key, so poll for
         // the change rather than guessing how long it will take. A sample that
@@ -145,30 +162,42 @@ public sealed class CaretFollowService : IDisposable
     }
 
     /// <summary>
-    /// Keys that could plausibly move the caret. Membership only — nothing
-    /// here implies anything about <em>what</em> to announce.
+    /// The granularity a caret key asks for, or <c>null</c> for a key that
+    /// cannot move the caret.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Backspace and Delete are deliberately absent. They change the document,
     /// and two positions taken either side of an edit describe different
-    /// documents, so diffing them would announce nonsense. Saying what was
-    /// just deleted needs the text captured <em>before</em> the deletion,
-    /// which is a job for key echo, not for position comparison.
+    /// documents, so diffing them would announce nonsense. Saying what was just
+    /// deleted needs the text captured <em>before</em> the deletion, which is a
+    /// job for key echo.
+    /// </para>
+    /// <para>
+    /// Home and End report a character, matching NVDA: the useful answer to
+    /// "End" is what is at the end, which past the last character is the line
+    /// ending itself.
+    /// </para>
     /// </remarks>
-    private static bool MightMoveCaret(int vk) => vk switch
+    public static TextUnit? RequestedUnit(RawInput input)
     {
-        0x09 /* VK_TAB    */ => true,
-        0x0D /* VK_RETURN */ => true,
-        0x21 /* VK_PRIOR  */ => true,
-        0x22 /* VK_NEXT   */ => true,
-        0x23 /* VK_END    */ => true,
-        0x24 /* VK_HOME   */ => true,
-        0x25 /* VK_LEFT   */ => true,
-        0x26 /* VK_UP     */ => true,
-        0x27 /* VK_RIGHT  */ => true,
-        0x28 /* VK_DOWN   */ => true,
-        _ => false,
-    };
+        var byWord = (input.Modifiers & InputModifiers.Control) != 0;
+        return input.KeyCode switch
+        {
+            0x25 /* VK_LEFT  */ => byWord ? TextUnit.Word : TextUnit.Character,
+            0x27 /* VK_RIGHT */ => byWord ? TextUnit.Word : TextUnit.Character,
+            0x23 /* VK_END   */ => byWord ? TextUnit.Line : TextUnit.Character,
+            0x24 /* VK_HOME  */ => byWord ? TextUnit.Line : TextUnit.Character,
+
+            0x26 /* VK_UP     */ => TextUnit.Line,
+            0x28 /* VK_DOWN   */ => TextUnit.Line,
+            0x21 /* VK_PRIOR  */ => TextUnit.Line,
+            0x22 /* VK_NEXT   */ => TextUnit.Line,
+            0x09 /* VK_TAB    */ => TextUnit.Line,
+            0x0D /* VK_RETURN */ => TextUnit.Line,
+            _ => null,
+        };
+    }
 
     /// <summary>
     /// Turn a resolved motion into a speech request, or <c>null</c> for
@@ -183,32 +212,39 @@ public sealed class CaretFollowService : IDisposable
     {
         ArgumentNullException.ThrowIfNull(motion);
 
-        string? text = motion.Text;
+        // Blank.Is, not IsNullOrEmpty. A provider asked to expand an empty line
+        // hands back the line terminator itself — "\r\n" — which is not empty
+        // and is not audible either, so the reader fell silent on exactly the
+        // lines it most needed to announce. This was the "blank lines don't
+        // read" symptom, and no amount of work further down the pipeline could
+        // have fixed it: by then the announcement was a string of characters
+        // that happened to make no sound.
+        var text = Trim(motion.Text);
         switch (motion.Kind)
         {
             case CaretMotionKind.None:
                 return null;
 
-            case CaretMotionKind.Character when string.IsNullOrEmpty(text):
-                // The caret sits past the last character of the line.
-                text = EndOfLineToken;
+            case CaretMotionKind.Character when Blank.Is(text):
+                // Past the last character of the line.
+                text = LineEndToken;
                 break;
 
-            case CaretMotionKind.Line when string.IsNullOrEmpty(text):
+            case CaretMotionKind.Line when Blank.Is(text):
                 text = BlankLineToken;
                 break;
 
-            case CaretMotionKind.Word when string.IsNullOrEmpty(text):
+            case CaretMotionKind.Word when Blank.Is(text):
                 // Landed on whitespace between words; nothing worth saying.
                 return null;
 
             case CaretMotionKind.SelectionGrew:
-                text = string.IsNullOrEmpty(text) ? null : text + ", selected";
+                text = Blank.Is(text) ? null : text + ", selected";
                 break;
 
             case CaretMotionKind.SelectionShrank:
             case CaretMotionKind.SelectionCleared:
-                text = string.IsNullOrEmpty(text) ? null : text + ", unselected";
+                text = Blank.Is(text) ? null : text + ", unselected";
                 break;
         }
 
@@ -216,4 +252,12 @@ public sealed class CaretFollowService : IDisposable
             ? null
             : new SpeechRequest(SpeechReason.CaretMoved, node, RawText: text, AppExecutableName: null);
     }
+
+    /// <summary>
+    /// Drop the line terminator a provider includes when it expands to a line.
+    /// Speaking it is silence; leaving it in makes a blank line indistinguishable
+    /// from a failure to read.
+    /// </summary>
+    private static string? Trim(string? text)
+        => text is null ? null : text.TrimEnd('\r', '\n');
 }

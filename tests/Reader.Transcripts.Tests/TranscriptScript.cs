@@ -24,6 +24,7 @@ namespace Aura.Transcripts;
 /// caret  "text"
 /// value  &lt;id&gt; "text"
 /// alert  &lt;id&gt;
+/// tooltip &lt;id&gt;
 /// say    "text"
 /// wait   &lt;milliseconds&gt;
 /// drain             let everything queued finish playing before the next step
@@ -145,6 +146,13 @@ public sealed class TranscriptScript
             // Takes a node, not a string: a real UIA alert names an element,
             // and the announcement comes from that element. Passing bare text
             // here would test a path the provider never produces.
+            case "tooltip":
+            {
+                var node = _nodes[args[1]];
+                _steps.Add(r => r.Event(SpeechReason.ToolTipOpened, node));
+                break;
+            }
+
             case "alert":
             {
                 var node = _nodes[args[1]];

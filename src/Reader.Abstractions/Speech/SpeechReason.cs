@@ -12,6 +12,9 @@ public enum SpeechReason
     ValueChanged,
     SelectionChanged,
     AlertRaised,
+
+    /// <summary>A tooltip appeared. Never interrupts — see AccessibilityEventKind.ToolTipOpened.</summary>
+    ToolTipOpened,
     LiveRegionUpdate,
     ReadCharacter,
     ReadWord,

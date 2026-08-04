@@ -18,6 +18,14 @@ public enum AccessibilityEventKind
     LiveRegionChanged = 1 << 8,
     /// <summary>The text caret moved inside an editable / read-only document.</summary>
     CaretMoved        = 1 << 9,
+    /// <summary>
+    /// A tooltip appeared. Distinct from <see cref="AlertRaised"/> on purpose:
+    /// an alert is important enough to interrupt, and a tooltip is not. Sharing
+    /// one kind meant a desktop icon's tooltip cut off the icon's own name
+    /// half-announced, so the user heard the description of a thing they had
+    /// not yet been told the name of.
+    /// </summary>
+    ToolTipOpened     = 1 << 10,
     All              = ~0,
 }
 

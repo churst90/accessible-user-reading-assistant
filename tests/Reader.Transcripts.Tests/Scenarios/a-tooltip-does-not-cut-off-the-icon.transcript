@@ -1,0 +1,20 @@
+# Arrowing across the desktop. Each icon raises focus, and a moment later its
+# tooltip opens with the file description.
+#
+# Reported on hardware: "sometimes I'll hear the name of the icon and other
+# times it will be replaced with the tooltip and not the icon." The provider
+# mapped ToolTipOpened onto AlertRaised, alerts are Now priority, and Now drops
+# everything pending and cuts off whatever is playing. So the tooltip killed the
+# name of the very thing it was describing — and whether you heard the name
+# depended on how fast the tooltip appeared, which is why it was intermittent.
+#
+# A tooltip is now its own reason at Background priority. It waits.
+
+node icon ListItem "Recycle Bin" pos=1 size=12
+node tip  ToolTip  "Contains the files you have deleted"
+focus icon
+tooltip tip
+
+expect
+  Recycle Bin, list item, 1 of 12
+  Contains the files you have deleted
