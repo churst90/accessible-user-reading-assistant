@@ -23,6 +23,7 @@ namespace Aura.Transcripts;
 /// select &lt;id&gt;
 /// caret  "text"
 /// value  &lt;id&gt; "text"
+/// changed &lt;id&gt;
 /// alert  &lt;id&gt;
 /// tooltip &lt;id&gt;
 /// say    "text"
@@ -125,6 +126,15 @@ public sealed class TranscriptScript
             {
                 var node = _nodes[args[1]];
                 _steps.Add(r => r.Event(SpeechReason.SelectionChanged, node));
+                break;
+            }
+
+            // A state change with no text of its own — a checkbox toggling, a
+            // tree node expanding. The node's states carry what changed.
+            case "changed":
+            {
+                var node = _nodes[args[1]];
+                _steps.Add(r => r.Event(SpeechReason.ValueChanged, node));
                 break;
             }
 

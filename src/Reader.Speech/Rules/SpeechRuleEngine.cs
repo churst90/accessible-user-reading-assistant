@@ -160,6 +160,9 @@ public sealed class SpeechRuleEngine
         // user hears a stale backlog instead of the current value.
         SpeechReason.ValueChanged => "value",
         SpeechReason.SelectionChanged => "selection",
+        // Arrowing across a desktop raises one of these per icon. Only the
+        // description of where the user actually stopped is worth hearing.
+        SpeechReason.ToolTipOpened => "tooltip",
         _ => null,
     };
 

@@ -1,0 +1,27 @@
+# Pressing Space on a checkbox must say what it became.
+#
+# Reported on hardware: "checkboxes are not announced when they are checked or
+# unchecked." Two causes, both real.
+#
+# First, Space is a typing keystroke, so TypingState suppressed the toggle's
+# ValueChanged as though it were an edit re-reading its own growing value. That
+# gate now applies only to controls the user types INTO — a checkbox's value
+# does not grow as you type, it changes because you asked it to, which is
+# exactly what has to be heard.
+#
+# Second, there was no rule for it. The role rules match a ValueChanged too and
+# would have re-announced the whole control, so these win on priority and say
+# only what changed.
+
+node off Checkbox "Speak typed characters"
+node on  Checkbox "Speak typed characters" states=Checked
+focus off
+drain
+changed on
+drain
+changed off
+
+expect
+  Speak typed characters, check box, not checked
+  checked
+  not checked

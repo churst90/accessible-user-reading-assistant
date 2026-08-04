@@ -219,4 +219,36 @@ public class SpeechQueueTests
         q.Enqueue(Make("Documents", cancelGroup: "focus")).Should().BeTrue();
         q.Count.Should().Be(1);
     }
+
+    [Fact]
+    public void Something_more_important_preempts_what_is_playing()
+    {
+        // A desktop icon's tooltip is Background and starts speaking the moment
+        // it appears. The icon's own name is Navigation — the thing the user
+        // asked for by arrowing — and queueing it behind a sentence of
+        // description about a control they have not been told the name of yet
+        // is what "the tooltip steps on the icon label" sounded like.
+        using var q = new SpeechQueue();
+        Utterance? preempted = null;
+        q.PreemptiveEnqueued += u => preempted = u;
+        q.SetCurrentSpeaking("tooltip", SpeechPriority.Background);
+
+        q.Enqueue(Make("Recycle Bin, list item", SpeechPriority.Next, cancelGroup: "focus"));
+
+        preempted.Should().NotBeNull();
+        preempted.Spoken().Should().Be("Recycle Bin, list item");
+    }
+
+    [Fact]
+    public void Something_less_important_waits_its_turn()
+    {
+        using var q = new SpeechQueue();
+        var preempted = false;
+        q.PreemptiveEnqueued += _ => preempted = true;
+        q.SetCurrentSpeaking("focus", SpeechPriority.Next);
+
+        q.Enqueue(Make("Contains the files you have deleted", SpeechPriority.Background, cancelGroup: "tooltip"));
+
+        preempted.Should().BeFalse();
+    }
 }

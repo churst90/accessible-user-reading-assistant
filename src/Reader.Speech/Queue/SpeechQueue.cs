@@ -56,6 +56,7 @@ public sealed class SpeechQueue : IDisposable
     private readonly SemaphoreSlim _signal = new(0);
     private readonly TimeProvider _time;
     private string? _currentSpeakingGroup;
+    private SpeechPriority _currentSpeakingPriority = SpeechPriority.Background;
     private bool _disposed;
 
     public SpeechQueue(TimeProvider? timeProvider = null)
@@ -113,6 +114,17 @@ public sealed class SpeechQueue : IDisposable
                 dropped += DropMatching(node => node.Value.Priority < SpeechPriority.Now);
                 preempt = true;
             }
+            else if (_currentSpeakingGroup is not null && utterance.Priority > _currentSpeakingPriority)
+            {
+                // Something more important than what is playing. Queueing
+                // behind it is not good enough: a desktop icon's tooltip is
+                // Background and starts speaking the moment it appears, so the
+                // icon's own name — Navigation, and the thing the user actually
+                // asked for by arrowing — would wait for a sentence of
+                // description about a control they have not been told the name
+                // of yet.
+                preempt = true;
+            }
 
             DrainSignal(dropped);
 
@@ -134,10 +146,17 @@ public sealed class SpeechQueue : IDisposable
     /// so cancel-group enqueues can preempt mid-utterance, not just drop pending items.
     /// </summary>
     public void SetCurrentSpeakingGroup(string? group)
+        => SetCurrentSpeaking(group, SpeechPriority.Next);
+
+    /// <summary>
+    /// Tell the queue what the engine is speaking, or <c>null</c> when idle.
+    /// </summary>
+    public void SetCurrentSpeaking(string? group, SpeechPriority priority)
     {
         lock (_gate)
         {
             _currentSpeakingGroup = group;
+            _currentSpeakingPriority = priority;
         }
     }
 

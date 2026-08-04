@@ -126,20 +126,27 @@ public sealed class SpeechPipeline : IDisposable
     {
         try
         {
-            // Suppress automatic value/text re-reads during active typing — the
-            // user gets char/word echo for typing feedback, and re-reading the
-            // growing value (Run dialog "n", "no", "not", "note"...) is exactly
-            // the wrong behavior. The typing flag is set synchronously in the
-            // keyboard hook (see Win32KeyboardHook.SetTextInputObserver), so it
-            // is reliably true before the UIA value-changed event arrives.
+            // Suppress automatic value re-reads while the user is typing —
+            // re-reading the growing value of an edit (Run dialog: "n", "no",
+            // "not", "note") is exactly wrong, and char/word echo is the right
+            // feedback for typing.
             //
-            // We do NOT gate FocusChanged here. Same-control focus re-fires
-            // (the other way legacy edits/combos spam events while typing) are
-            // already deduped in UiaAccessibilityProvider; gating focus here as
-            // well would swallow the first announcement of a control in a dialog
-            // opened by a shortcut key (e.g. the Run box after Win+R), because
-            // that keystroke sets the typing flag a moment before focus lands.
-            if (_typingState?.IsTyping == true && ev.Kind == AccessibilityEventKind.ValueChanged)
+            // Only for controls whose value the user is typing INTO. Space on a
+            // checkbox counts as a typing keystroke, so this gate silenced every
+            // checkbox toggle in the settings dialog: the toggle-state change
+            // arrived a few milliseconds after the space and was dropped as if
+            // it were an edit re-reading itself. A checkbox's value does not
+            // grow as you type; it changes because you asked it to, and that is
+            // precisely what has to be heard.
+            //
+            // We do NOT gate FocusChanged. Same-control focus re-fires are
+            // already deduped in the provider; gating focus here would swallow
+            // the first announcement of a control in a dialog opened by a
+            // shortcut key (the Run box after Win+R), because that keystroke
+            // sets the typing flag a moment before focus lands.
+            if (_typingState?.IsTyping == true
+                && ev.Kind == AccessibilityEventKind.ValueChanged
+                && IsTextEntry(ev.Node?.Role))
             {
                 return;
             }
@@ -172,19 +179,19 @@ public sealed class SpeechPipeline : IDisposable
 
             if (_arbiter.Evaluate(presentation) == OutputDecision.Drop)
             {
+                Trace(presentation, "dropped by arbiter");
                 return;
             }
 
             var utterance = _renderer.Render(presentation);
             if (utterance.IsEmpty)
             {
+                Trace(presentation, "rendered to nothing");
                 return;
             }
 
-            if (!_queue.Enqueue(utterance))
-            {
-                _log.Verbose("Coalesced utterance: {Text}", Redaction.Text(utterance.PlainText()));
-            }
+            Trace(presentation, "queued");
+            _queue.Enqueue(utterance);
         }
         catch (Exception ex) when (!IsCriticalException(ex))
         {
@@ -212,6 +219,42 @@ public sealed class SpeechPipeline : IDisposable
         var utterance = _renderer.Render(presentation);
         return !utterance.IsEmpty && _queue.Enqueue(utterance);
     }
+
+    /// <summary>
+    /// One line per announcement decision: what it was about, why it exists,
+    /// which rules produced it, and what happened to it.
+    /// </summary>
+    /// <remarks>
+    /// The subject is a node id and the rule trace is a list of rule names —
+    /// neither is content, so both are logged in full even with redaction on.
+    /// That is deliberate: when an announcement describes the wrong thing, the
+    /// question is <em>which element did it describe</em>, and the id answers
+    /// that without putting a word the user was reading on disk.
+    /// </remarks>
+    private void Trace(Presentation p, string outcome)
+    {
+        if (!_log.IsEnabled(Serilog.Events.LogEventLevel.Debug))
+        {
+            return;
+        }
+        _log.Debug(
+            "announce {Outcome}: reason={Reason} subject={Subject} priority={Priority} group={Group} rules=[{Rules}] text={Text}",
+            outcome,
+            p.Reason,
+            p.Subject ?? "(none)",
+            p.Priority,
+            p.CancelGroup ?? "(none)",
+            string.Join(" > ", p.RuleTrace),
+            Redaction.Text(TranscriptRenderer.Instance.Render(p)));
+    }
+
+    /// <summary>
+    /// Controls whose value the user builds by typing, and which therefore
+    /// re-announce themselves noisily mid-word if left ungated.
+    /// </summary>
+    private static bool IsTextEntry(AccessibleRole? role) => role is
+        AccessibleRole.Edit or AccessibleRole.PasswordEdit
+        or AccessibleRole.ComboBox or AccessibleRole.Document;
 
     /// <summary>
     /// When the request's text is a single punctuation / symbol / whitespace

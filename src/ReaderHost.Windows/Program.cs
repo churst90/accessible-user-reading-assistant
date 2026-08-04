@@ -808,7 +808,7 @@ internal static class Program
 
             try
             {
-                queue.SetCurrentSpeakingGroup(utterance.CancelGroup);
+                queue.SetCurrentSpeaking(utterance.CancelGroup, utterance.Priority);
                 onSpoke?.Invoke();
                 await engine.SpeakAsync(utterance, cancellationToken).ConfigureAwait(false);
             }
@@ -826,7 +826,7 @@ internal static class Program
             }
             finally
             {
-                queue.SetCurrentSpeakingGroup(null);
+                queue.SetCurrentSpeaking(null, SpeechPriority.Background);
             }
         }
     }

@@ -508,6 +508,8 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             return;
         }
 
+        _log.Debug("event FocusChanged on {Id} name={Name} role={Role}",
+            node.Id.Value, Aura.Diagnostics.Redaction.Text(node.Name), node.Role);
         DispatchLocal(new AccessibilityEvent(AccessibilityEventKind.FocusChanged, node, DateTimeOffset.UtcNow));
     }
 
@@ -553,6 +555,8 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             return;
         }
 
+        _log.Debug("event {Kind} on {Id} name={Name} role={Role}",
+            kind, node.Id.Value, Aura.Diagnostics.Redaction.Text(node.Name), node.Role);
         DispatchLocal(new AccessibilityEvent(kind, node, DateTimeOffset.UtcNow));
     }
 

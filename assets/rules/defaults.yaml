@@ -325,6 +325,40 @@ rules:
   # per-focus event subscriptions could never deliver them. The provider now
   # registers them desktop-wide.
 
+  # A toggle changed. The role rules above also match a ValueChanged event and
+  # would announce the whole control again ("Enable sounds, check box,
+  # checked"); these win on priority and say only what changed, which is what
+  # the user pressed the key to find out.
+  - id: core.checkbox.value_changed
+    priority: 40
+    scope: { role: CheckBox, reason: ValueChanged, forbiddenStates: [Checked] }
+    action: { type: emit, template: "{state:not checked}" }
+
+  - id: core.checkbox.value_changed.checked
+    priority: 41
+    scope: { role: CheckBox, reason: ValueChanged, requiredStates: [Checked] }
+    action: { type: emit, template: "{state:checked}" }
+
+  - id: core.togglebutton.value_changed
+    priority: 40
+    scope: { role: ToggleButton, reason: ValueChanged, forbiddenStates: [Pressed] }
+    action: { type: emit, template: "{state:not pressed}" }
+
+  - id: core.togglebutton.value_changed.pressed
+    priority: 41
+    scope: { role: ToggleButton, reason: ValueChanged, requiredStates: [Pressed] }
+    action: { type: emit, template: "{state:pressed}" }
+
+  - id: core.expandcollapse.value_changed
+    priority: 40
+    scope: { reason: ValueChanged, requiredStates: [Expanded] }
+    action: { type: emit, template: "{state:expanded}" }
+
+  - id: core.expandcollapse.value_changed.collapsed
+    priority: 40
+    scope: { reason: ValueChanged, requiredStates: [Collapsed] }
+    action: { type: emit, template: "{state:collapsed}" }
+
   # List / grid / tree selection. Distinct from ValueChanged: a listbox raises
   # SelectionItem.ElementSelected, not a value change, so without this rule
   # arrowing through a list announced nothing at all.

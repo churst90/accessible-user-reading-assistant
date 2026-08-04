@@ -74,13 +74,29 @@ internal static class SettingsPanels
     {
         var panel = NewPanel("Speech");
 
+        // Labels follow NVDA's wording wherever NVDA has a name for the same
+        // thing. A switching user should not have to work out that "Pitch
+        // delta (semitones)" is the slider they know as "Pitch", and a unit
+        // in the label is an implementation detail leaking into the interface.
         AddRow(panel, "Voice:", BuildVoiceSelector(vm));
         AddRow(panel, "Rate:", BuildSlider(nameof(SettingsViewModel.RatePercent), 25, 400, 5));
-        AddRow(panel, "Volume delta:", BuildSlider(nameof(SettingsViewModel.VolumeDelta), -100, 100, 5));
-        AddRow(panel, "Pitch delta (semitones):", BuildSlider(nameof(SettingsViewModel.PitchDelta), -12, 12, 1));
+        AddRow(panel, "Pitch:", BuildSlider(nameof(SettingsViewModel.PitchDelta), -12, 12, 1));
+        AddRow(panel, "Volume:", BuildSlider(nameof(SettingsViewModel.VolumeDelta), -100, 100, 5));
 
         return Wrap(panel);
     }
+
+    /// <summary>
+    /// A section heading. Its own method so every panel groups identically —
+    /// the alternative is a hand-built TextBlock per section, which is how
+    /// three of them ended up with different margins and one with no heading.
+    /// </summary>
+    private static TextBlock Group(string text) => new()
+    {
+        Text = text,
+        Margin = new Thickness(0, 16, 0, 4),
+        FontWeight = FontWeights.SemiBold,
+    };
 
     public static FrameworkElement BuildKeyboardPanel(SettingsViewModel vm)
     {
@@ -88,36 +104,38 @@ internal static class SettingsPanels
 
         AddRow(panel, "Layout:", BuildLayoutSelector(vm));
 
-        panel.Children.Add(new TextBlock
-        {
-            Text = "Speak the following while typing:",
-            Margin = new Thickness(0, 16, 0, 4),
-            FontWeight = FontWeights.SemiBold,
-        });
+        panel.Children.Add(Group("Speak typed keys"));
 
+        // Order is deliberate and was asked for by ear: modifiers, then
+        // characters, then words, then the Read-mode question — because that is
+        // increasing scope, and the last one is a qualifier on the two above it
+        // rather than a fourth thing to turn on.
         panel.Children.Add(BuildCheck(
-            "Command keys (Control, Alt, Windows, Shift, CapsLock, Tab, Escape, Backspace, arrows, function keys)",
+            "Speak command keys (Control, Alt, Shift, Windows, Tab, Escape, function keys)",
             nameof(SettingsViewModel.SpeakCommandKeys)));
-        panel.Children.Add(BuildCheck("Each typed character", nameof(SettingsViewModel.SpeakCharacters)));
-        panel.Children.Add(BuildCheck("Each completed word", nameof(SettingsViewModel.SpeakWords)));
+        panel.Children.Add(BuildCheck(
+            "Speak typed characters",
+            nameof(SettingsViewModel.SpeakCharacters)));
+        panel.Children.Add(BuildCheck(
+            "Speak typed words",
+            nameof(SettingsViewModel.SpeakWords)));
 
         // Independent checkboxes rather than NVDA's off/characters/words/both
         // dropdown: "both" and "off" are just the two combinations of two
-        // booleans, and spelling them out as a four-way list makes the user
-        // translate their intent into someone else's enumeration.
+        // booleans, and a four-way list makes the user translate their intent
+        // into someone else's enumeration.
+        //
+        // Command keys are deliberately NOT covered by this: a modifier is a
+        // modifier in every mode, and a user who wants to hear Control wants to
+        // hear it while reading too.
         panel.Children.Add(BuildCheck(
-            "Apply character and word echo in Read mode as well",
+            "Also speak characters and words in Read mode",
             nameof(SettingsViewModel.ApplyEchoInReadMode)));
 
         // Its own group: deleting is not typing. Grouping it with the echo
         // checkboxes implies turning character echo off also silences
         // deletions, which is the opposite of what a user wants.
-        panel.Children.Add(new TextBlock
-        {
-            Text = "When deleting:",
-            Margin = new Thickness(0, 16, 0, 4),
-            FontWeight = FontWeights.SemiBold,
-        });
+        panel.Children.Add(Group("Speak deleted text"));
         panel.Children.Add(BuildCheck(
             "Speak the character removed by Backspace or Delete",
             nameof(SettingsViewModel.SpeakDeletedCharacters)));
