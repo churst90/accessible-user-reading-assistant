@@ -51,6 +51,7 @@ public sealed class CaretTracker
     private TextUnit? _pendingUnit;
     private string? _charBefore;
     private string? _charAfter;
+    private string? _charAfterNext;
     private bool _hasLast;
 
     public CaretTracker(
@@ -86,6 +87,23 @@ public sealed class CaretTracker
     public string? CharAfter
     {
         get { lock (_gate) { return _charAfter; } }
+    }
+
+    /// <summary>
+    /// The character two positions ahead — the one that becomes current when
+    /// Delete removes the one under the caret.
+    /// </summary>
+    /// <remarks>
+    /// Backspace and Delete want different answers, and the difference is not
+    /// arbitrary. Backspace moves the caret left, so what vanished is behind
+    /// you and naming it is the only way to know what you lost. Delete leaves
+    /// the caret where it is and pulls the rest of the line back under it, so
+    /// what you need is what is there <em>now</em> — naming the character that
+    /// has already gone tells you nothing about where you are.
+    /// </remarks>
+    public string? CharAfterNext
+    {
+        get { lock (_gate) { return _charAfterNext; } }
     }
 
     /// <summary>How long to keep re-sampling for a change before giving up.</summary>
@@ -278,11 +296,19 @@ public sealed class CaretTracker
             _charAfter = after.MoveEndpoint(RangeEndpoint.End, TextUnit.Character, 1) != 0
                 ? after.GetText(8)
                 : null;
+
+            var next = current.Clone();
+            next.Collapse(toStart: true);
+            _charAfterNext = next.MoveEndpoint(RangeEndpoint.Start, TextUnit.Character, 1) != 0
+                && next.MoveEndpoint(RangeEndpoint.End, TextUnit.Character, 2) != 0
+                ? next.GetText(8)
+                : null;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
             _charBefore = null;
             _charAfter = null;
+            _charAfterNext = null;
         }
     }
 }

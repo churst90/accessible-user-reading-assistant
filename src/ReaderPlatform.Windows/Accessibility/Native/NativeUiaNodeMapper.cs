@@ -189,6 +189,18 @@ internal static class NativeUiaNodeMapper
         // is a separate element whose name is the text the user needs. Without
         // this, tabbing onto a combo announced its label and the word "combo
         // box" and left the user to open the list to find out what was in it.
+        //
+        // Gated on the cached pattern flag, and that gate matters more than it
+        // looks. Every control without a value reaches this line — every
+        // button, every label, every menu item — so an ungated live pattern
+        // call here is a cross-process round trip on almost every focus change
+        // in the system, to ask a question whose answer is nearly always "no
+        // selection pattern". The flag is already in the cache request and
+        // costs nothing.
+        if (!GetBool(element, UIA_PROPERTY_ID.UIA_IsSelectionPatternAvailablePropertyId, cached))
+        {
+            return null;
+        }
         return ReadSelectedItemName(element);
     }
 

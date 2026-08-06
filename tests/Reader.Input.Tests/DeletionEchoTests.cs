@@ -80,15 +80,20 @@ public class DeletionEchoTests
     }
 
     [Fact]
-    public void Delete_announces_the_character_ahead_of_the_caret()
+    public void Delete_announces_the_character_that_becomes_current()
     {
-        // Delete removes what is AHEAD, so the word buffer never had anything
-        // to say about it. It said nothing at all.
-        var (input, spoken) = Harness(charAfter: "q");
+        // Not the one it removed. Delete leaves the caret where it is and pulls
+        // the rest of the line back under it, so naming the character that has
+        // already gone tells the user nothing about where they now are.
+        // Backspace is the opposite for the opposite reason: it moves the caret
+        // away from what it removed, so what it removed is the only thing worth
+        // saying. The harness supplies whatever the host wires in, which is the
+        // character two ahead.
+        var (input, spoken) = Harness(charAfter: "becomes current");
 
         input.Press(VkDelete);
 
-        spoken.Should().ContainSingle().Which.Should().Be("q");
+        spoken.Should().ContainSingle().Which.Should().Be("becomes current");
     }
 
     [Fact]

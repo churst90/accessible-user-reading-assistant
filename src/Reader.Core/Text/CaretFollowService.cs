@@ -58,6 +58,7 @@ public sealed class CaretFollowService : IDisposable
     private readonly ILogger _log;
     private IDisposable? _caretSubscription;
     private IDisposable? _focusSubscription;
+    private IDisposable? _valueSubscription;
     private bool _started;
     private bool _disposed;
 
@@ -89,6 +90,16 @@ public sealed class CaretFollowService : IDisposable
             AccessibilityEventKind.CaretMoved,
             _ => SafeSample());
 
+        // The text changed under a caret that did not move — repeated Delete,
+        // or an edit from elsewhere. Nothing else would re-sample, so the
+        // characters either side of the caret would stay as they were before
+        // the first press and the second press would announce them again.
+        // Sampling here announces nothing: the tracker re-baselines while the
+        // typing flag is set, which deleting sets.
+        _valueSubscription = _provider.Subscribe(
+            AccessibilityEventKind.ValueChanged,
+            _ => SafeSample());
+
         // Offsets in the previous control mean nothing in the next one.
         _focusSubscription = _provider.Subscribe(
             AccessibilityEventKind.FocusChanged,
@@ -104,8 +115,10 @@ public sealed class CaretFollowService : IDisposable
         _disposed = true;
         _keyboard.RawInputReceived -= OnRawInput;
         _caretSubscription?.Dispose();
+        _valueSubscription?.Dispose();
         _focusSubscription?.Dispose();
         _caretSubscription = null;
+        _valueSubscription = null;
         _focusSubscription = null;
     }
 

@@ -106,6 +106,7 @@ internal static class NativeUia
 
         UIA_PROPERTY_ID.UIA_IsTogglePatternAvailablePropertyId,
         UIA_PROPERTY_ID.UIA_IsSelectionItemPatternAvailablePropertyId,
+        UIA_PROPERTY_ID.UIA_IsSelectionPatternAvailablePropertyId,
         UIA_PROPERTY_ID.UIA_IsExpandCollapsePatternAvailablePropertyId,
         UIA_PROPERTY_ID.UIA_IsValuePatternAvailablePropertyId,
         UIA_PROPERTY_ID.UIA_IsRangeValuePatternAvailablePropertyId,

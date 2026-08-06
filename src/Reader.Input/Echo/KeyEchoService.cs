@@ -172,9 +172,12 @@ public sealed class KeyEchoService : IDisposable
                 }
                 else
                 {
-                    // Delete removes what is AHEAD of the caret, so the word
-                    // buffer knows nothing about it — it never did, which is why
-                    // Delete said nothing at all.
+                    // Delete leaves the caret where it is and pulls the rest of
+                    // the line back under it, so the useful answer is what is
+                    // there NOW — not the character that has already gone, which
+                    // says nothing about where you are. Same reasoning as NVDA,
+                    // and the opposite of Backspace for a reason: Backspace
+                    // moves the caret away from what it removed.
                     removed = _charAfterCaret?.Invoke();
                 }
 

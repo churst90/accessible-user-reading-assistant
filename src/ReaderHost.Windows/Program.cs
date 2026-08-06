@@ -331,7 +331,7 @@ internal static class Program
             ToEchoSettings(configStore.Current),
             onTypingActivity: typingState.NotifyTyping,
             charBeforeCaret: () => caretTracker.CharBefore,
-            charAfterCaret: () => caretTracker.CharAfter,
+            charAfterCaret: () => caretTracker.CharAfterNext,
             currentMode: () => modeManager.Mode);
         using var lockKeyAnnouncer = new LockKeyAnnouncer(
             keyboard,
