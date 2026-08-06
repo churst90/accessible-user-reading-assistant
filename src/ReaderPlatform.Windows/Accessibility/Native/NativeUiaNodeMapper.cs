@@ -241,14 +241,14 @@ internal static class NativeUiaNodeMapper
     {
         var dict = new Dictionary<string, object?>(StringComparer.Ordinal);
 
-        Add(dict, "uia.AutomationId", GetString(element, UIA_PROPERTY_ID.UIA_AutomationIdPropertyId, cached));
-        Add(dict, "uia.ClassName", GetString(element, UIA_PROPERTY_ID.UIA_ClassNamePropertyId, cached));
-        Add(dict, "uia.FrameworkId", GetString(element, UIA_PROPERTY_ID.UIA_FrameworkIdPropertyId, cached));
+        Add(dict, NodeExtras.AutomationId, GetString(element, UIA_PROPERTY_ID.UIA_AutomationIdPropertyId, cached));
+        Add(dict, NodeExtras.ClassName, GetString(element, UIA_PROPERTY_ID.UIA_ClassNamePropertyId, cached));
+        Add(dict, NodeExtras.FrameworkId, GetString(element, UIA_PROPERTY_ID.UIA_FrameworkIdPropertyId, cached));
 
         var pid = GetInt(element, UIA_PROPERTY_ID.UIA_ProcessIdPropertyId, cached);
         if (pid > 0)
         {
-            dict["uia.ProcessId"] = pid;
+            dict[NodeExtras.ProcessId] = pid;
         }
 
         // Carried so the Win32 text fallback needs no live call back to the
@@ -269,13 +269,13 @@ internal static class NativeUiaNodeMapper
         if (Get(element, UIA_PROPERTY_ID.UIA_BoundingRectanglePropertyId, cached) is double[] { Length: 4 } r
             && r[2] > 0 && r[3] > 0)
         {
-            dict["uia.Bounds"] = string.Create(CultureInfo.InvariantCulture,
+            dict[NodeExtras.Bounds] = string.Create(CultureInfo.InvariantCulture,
                 $"{(int)r[0]},{(int)r[1]},{(int)r[2]},{(int)r[3]}");
         }
 
-        AddPositive(dict, "uia.PositionInSet", GetInt(element, UIA_PROPERTY_ID.UIA_PositionInSetPropertyId, cached));
-        AddPositive(dict, "uia.SizeOfSet", GetInt(element, UIA_PROPERTY_ID.UIA_SizeOfSetPropertyId, cached));
-        AddPositive(dict, "uia.Level", GetInt(element, UIA_PROPERTY_ID.UIA_LevelPropertyId, cached));
+        AddPositive(dict, NodeExtras.PositionInSet, GetInt(element, UIA_PROPERTY_ID.UIA_PositionInSetPropertyId, cached));
+        AddPositive(dict, NodeExtras.SizeOfSet, GetInt(element, UIA_PROPERTY_ID.UIA_SizeOfSetPropertyId, cached));
+        AddPositive(dict, NodeExtras.Level, GetInt(element, UIA_PROPERTY_ID.UIA_LevelPropertyId, cached));
 
         return dict.Count == 0 ? null : dict;
     }

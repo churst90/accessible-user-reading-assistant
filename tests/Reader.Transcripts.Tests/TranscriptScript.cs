@@ -220,9 +220,9 @@ public sealed class TranscriptScript
             switch (key.ToLowerInvariant())
             {
                 case "value": value = val; break;
-                case "level": extras["uia.Level"] = int.Parse(val, CultureInfo.InvariantCulture); break;
-                case "pos": extras["uia.PositionInSet"] = int.Parse(val, CultureInfo.InvariantCulture); break;
-                case "size": extras["uia.SizeOfSet"] = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "level": extras[NodeExtras.Level] = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "pos": extras[NodeExtras.PositionInSet] = int.Parse(val, CultureInfo.InvariantCulture); break;
+                case "size": extras[NodeExtras.SizeOfSet] = int.Parse(val, CultureInfo.InvariantCulture); break;
                 case "states":
                     foreach (var s in val.Split('|', StringSplitOptions.RemoveEmptyEntries))
                     {

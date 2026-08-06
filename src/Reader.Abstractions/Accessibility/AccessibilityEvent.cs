@@ -31,18 +31,26 @@ public enum AccessibilityEventKind
 
 /// <summary>
 /// A single accessibility event. The node may be null for events whose source
-/// has already gone away by the time the event was dispatched. For
-/// <see cref="AccessibilityEventKind.CaretMoved"/>, <c>CaretLine</c> carries
-/// the line under the caret at the moment of the event, <c>CharBeforeCaret</c>
-/// the single character immediately to the left (used so Backspace can announce
-/// the character it deletes — by the time we observe the key event the OS has
-/// already dispatched the deletion, so we read this on the cleaner side and
-/// cache it), and <c>SelectionText</c> the current selection if any.
+/// has already gone away by the time the event was dispatched.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <c>CaretLine</c> carries text the provider captured at event time, when the
+/// only safe moment to read it was inside the handler.
+/// </para>
+/// <para>
+/// There were two more fields here — <c>CharBeforeCaret</c> and
+/// <c>SelectionText</c> — with a long comment explaining that the first existed
+/// so Backspace could announce the character it deletes. Nothing ever populated
+/// or read either of them. The comment described a mechanism that did not
+/// exist, which is worse than no comment: it answered the question "how does
+/// deletion know what vanished?" wrongly, for anyone who looked. Deletion is
+/// answered by <c>CaretTracker.CharBefore</c>, which captures the neighbours on
+/// samples that were happening anyway.
+/// </para>
+/// </remarks>
 public sealed record AccessibilityEvent(
     AccessibilityEventKind Kind,
     AccessibleNode? Node,
     DateTimeOffset At,
-    string? CaretLine = null,
-    string? CharBeforeCaret = null,
-    string? SelectionText = null);
+    string? CaretLine = null);

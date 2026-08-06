@@ -271,7 +271,7 @@ internal static class CommandBindings
     /// </summary>
     private static string? DescribeFocusedApp(AccessibleNode? node)
     {
-        if (node is null || !node.Extras.TryGetValue("uia.ProcessId", out var raw) || raw is not int pid)
+        if (node is null || !node.Extras.TryGetValue(NodeExtras.ProcessId, out var raw) || raw is not int pid)
         {
             return null;
         }

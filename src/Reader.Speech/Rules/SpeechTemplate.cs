@@ -184,17 +184,17 @@ internal static class SpeechTemplate
         if (token.SequenceEqual("position"))
         {
             kind = SegmentKind.Position;
-            return GetExtraInt(node, "uia.PositionInSet") ?? string.Empty;
+            return GetExtraInt(node, NodeExtras.PositionInSet) ?? string.Empty;
         }
         if (token.SequenceEqual("setSize"))
         {
             kind = SegmentKind.Position;
-            return GetExtraInt(node, "uia.SizeOfSet") ?? string.Empty;
+            return GetExtraInt(node, NodeExtras.SizeOfSet) ?? string.Empty;
         }
         if (token.SequenceEqual("level"))
         {
             kind = SegmentKind.Position;
-            return GetExtraInt(node, "uia.Level") ?? string.Empty;
+            return GetExtraInt(node, NodeExtras.Level) ?? string.Empty;
         }
         if (token.SequenceEqual("posInSet"))
         {
@@ -230,8 +230,8 @@ internal static class SpeechTemplate
     private static string? FormatPosInSet(AccessibleNode? node)
     {
         if (node is null
-            || !node.Extras.TryGetValue("uia.PositionInSet", out var p) || p is not int pos
-            || !node.Extras.TryGetValue("uia.SizeOfSet", out var s) || s is not int size)
+            || !node.Extras.TryGetValue(NodeExtras.PositionInSet, out var p) || p is not int pos
+            || !node.Extras.TryGetValue(NodeExtras.SizeOfSet, out var s) || s is not int size)
         {
             return null;
         }

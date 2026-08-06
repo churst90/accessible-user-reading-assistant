@@ -73,7 +73,7 @@ internal sealed class FocusContextResolver
     private static bool TryGetPid(AccessibleNode node, out int pid)
     {
         pid = 0;
-        if (!node.Extras.TryGetValue("uia.ProcessId", out var raw) || raw is not int p || p == 0)
+        if (!node.Extras.TryGetValue(NodeExtras.ProcessId, out var raw) || raw is not int p || p == 0)
         {
             return false;
         }

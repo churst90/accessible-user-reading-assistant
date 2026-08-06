@@ -582,7 +582,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
     {
         if (_automation is null
             || node.Role is not (AccessibleRole.ListItem or AccessibleRole.TreeItem)
-            || node.Extras.ContainsKey("uia.SizeOfSet"))
+            || node.Extras.ContainsKey(NodeExtras.SizeOfSet))
         {
             return node;
         }
@@ -632,8 +632,8 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             _log.Debug("set position: {Id} is {Position} of {Count}", node.Id.Value, position, count);
             var extras = new Dictionary<string, object?>(node.Extras, StringComparer.Ordinal)
             {
-                ["uia.PositionInSet"] = position,
-                ["uia.SizeOfSet"] = count,
+                [NodeExtras.PositionInSet] = position,
+                [NodeExtras.SizeOfSet] = count,
             };
             return new AccessibleNode(node.Id, node.Role, node.Name, node.Value, node.Description,
                 node.States, node.ParentId, node.ChildrenFactory, extras);
@@ -701,8 +701,8 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         return string.Concat(
             ((int)node.Role).ToString(CultureInfo.InvariantCulture), Sep,
             node.Name ?? string.Empty, Sep,
-            Extra(node, "uia.AutomationId") ?? string.Empty, Sep,
-            Extra(node, "uia.Bounds") ?? node.Id.Value);
+            Extra(node, NodeExtras.AutomationId) ?? string.Empty, Sep,
+            Extra(node, NodeExtras.Bounds) ?? node.Id.Value);
 
         static string? Extra(AccessibleNode n, string key)
             => n.Extras.TryGetValue(key, out var raw) ? raw as string : null;

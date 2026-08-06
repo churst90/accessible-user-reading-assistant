@@ -48,7 +48,7 @@ public class PresentationRenderingTests
         // "level {level}" must not become "level" and "2" — joining those with
         // the separator would say "level, 2".
         var p = Compose("level {level}", Focus(Node(AccessibleRole.TreeItem,
-            extras: new Dictionary<string, object?> { ["uia.Level"] = 2 })));
+            extras: new Dictionary<string, object?> { [NodeExtras.Level] = 2 })));
 
         TranscriptRenderer.RenderTyped(p).Should().Be("Position(level 2)");
         p.Spoken().Should().Be("level 2");

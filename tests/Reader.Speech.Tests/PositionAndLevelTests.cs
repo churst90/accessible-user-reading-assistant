@@ -28,12 +28,12 @@ public class PositionAndLevelTests
     {
         var d = new Dictionary<string, object?>
         {
-            ["uia.PositionInSet"] = position,
-            ["uia.SizeOfSet"] = size,
+            [NodeExtras.PositionInSet] = position,
+            [NodeExtras.SizeOfSet] = size,
         };
         if (level.HasValue)
         {
-            d["uia.Level"] = level.Value;
+            d[NodeExtras.Level] = level.Value;
         }
         return d;
     }

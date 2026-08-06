@@ -31,22 +31,17 @@ public sealed class SpeechRenderer : IPresentationRenderer<Utterance>
     /// <summary>Pitch bump, in semitones, for a single capital letter.</summary>
     public float CapitalPitchDelta { get; set; } = 6f;
 
-    /// <summary>
-    /// What is said when an announcement turns out to carry nothing audible.
-    /// </summary>
-    public string BlankWord { get; set; } = "blank";
-
-    /// <summary>
-    /// Whether to say <see cref="BlankWord"/> for a blank presentation.
-    /// </summary>
-    /// <remarks>
-    /// Off by default because <c>CaretFollowService</c> still injects the word
-    /// upstream; two producers of "blank" would say it twice. Turning this on
-    /// and removing the upstream injection is the correct end state — blankness
-    /// is a property of the composed presentation, not of one string — and it
-    /// wants a listening session before it flips.
-    /// </remarks>
-    public bool AnnounceBlank { get; set; }
+    // There was an AnnounceBlank switch here, defaulting to off, guarding a
+    // whole-presentation blank rule that duplicated what CaretFollowService
+    // already does. Two producers of the same word, one of them disabled, is
+    // the shape of thing this project keeps getting caught by — it reads as a
+    // feature and behaves as nothing.
+    //
+    // CaretFollowService owns "blank" today and it is verified by ear. Moving
+    // it here is still the right end state, because blankness is a property of
+    // the whole composed announcement rather than of one motion — an empty line
+    // inside a list item is not blank. That move needs a listening session, not
+    // a flag nobody sets.
 
     /// <inheritdoc />
     public Utterance Render(Presentation presentation)
@@ -107,15 +102,6 @@ public sealed class SpeechRenderer : IPresentationRenderer<Utterance>
         if (currentLanguage is not null)
         {
             parts.Add(new LanguagePart(null));
-        }
-
-        // The blank rule, applied last and over the whole thing. An empty line
-        // inside a list item is not blank — the list item is audible — which is
-        // the distinction a comparison against the previous announcement's text
-        // can never make.
-        if (AnnounceBlank && !wroteAnything && presentation.IsBlank && presentation.Reason != SpeechReason.ReadAll)
-        {
-            parts.Add(new TextPart(BlankWord));
         }
 
         return new Utterance(
