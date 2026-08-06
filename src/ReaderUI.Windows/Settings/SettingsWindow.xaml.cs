@@ -20,6 +20,11 @@ public partial class SettingsWindow : Window
         // XAML load — and the handler needs _viewModel to populate the panel.
         _viewModel = new SettingsViewModel(current, availableVoices);
         _save = save;
+        // Speech settings apply as they change, like NVDA's. Choosing a voice
+        // you cannot hear until you press OK is not a choice — you have to
+        // commit to it to find out what it sounds like, then reopen the dialog
+        // to change your mind. Rate, pitch and volume are the same argument.
+        _viewModel.SpeechSettingChanged += () => _save(_viewModel.ToConfig());
         InitializeComponent();
         DataContext = _viewModel;
         ShowCategory(SettingsCategory.General);

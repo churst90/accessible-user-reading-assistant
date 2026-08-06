@@ -285,24 +285,15 @@ public sealed class CaretTracker
     {
         try
         {
-            var before = current.Clone();
-            before.Collapse(toStart: true);
-            _charBefore = before.MoveEndpoint(RangeEndpoint.Start, TextUnit.Character, -1) != 0
-                ? before.GetText(8)
-                : null;
-
-            var after = current.Clone();
-            after.Collapse(toStart: true);
-            _charAfter = after.MoveEndpoint(RangeEndpoint.End, TextUnit.Character, 1) != 0
-                ? after.GetText(8)
-                : null;
-
-            var next = current.Clone();
-            next.Collapse(toStart: true);
-            _charAfterNext = next.MoveEndpoint(RangeEndpoint.Start, TextUnit.Character, 1) != 0
-                && next.MoveEndpoint(RangeEndpoint.End, TextUnit.Character, 2) != 0
-                ? next.GetText(8)
-                : null;
+            // Move-then-expand, never move-one-endpoint-past-the-other. The
+            // first version of this moved Start forward and End forward by a
+            // different amount from a collapsed range, so Start briefly sat
+            // after End; implementations normalise that by collapsing, and the
+            // range that came back was two or three characters wide. Delete
+            // then read several characters at once, which is what Cody heard.
+            _charBefore = ReadCharacterAt(current, -1);
+            _charAfter = ReadCharacterAt(current, 0);
+            _charAfterNext = ReadCharacterAt(current, 1);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
@@ -310,5 +301,22 @@ public sealed class CaretTracker
             _charAfter = null;
             _charAfterNext = null;
         }
+    }
+
+    /// <summary>
+    /// One character, <paramref name="offset"/> characters from the caret.
+    /// <c>0</c> is the character the caret sits on, <c>-1</c> the one behind it.
+    /// </summary>
+    private static string? ReadCharacterAt(ITextRange caret, int offset)
+    {
+        var probe = caret.Clone();
+        probe.Collapse(toStart: true);
+        if (offset != 0 && probe.Move(TextUnit.Character, offset) == 0)
+        {
+            return null;
+        }
+        probe.ExpandToUnit(TextUnit.Character);
+        var text = probe.GetText(8);
+        return text.Length == 0 ? null : text;
     }
 }

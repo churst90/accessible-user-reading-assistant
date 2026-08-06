@@ -16,6 +16,14 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>
+    /// Raised when a setting the user is listening to changes — voice, rate,
+    /// pitch, volume. The window applies these live rather than on OK.
+    /// </summary>
+    public event Action? SpeechSettingChanged;
+
+    private void RaiseSpeechChanged() => SpeechSettingChanged?.Invoke();
+
     // General
     private string _profile = "default";
     private bool _startWithWindows;
@@ -182,7 +190,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     public string VoiceId
     {
         get => _voiceId;
-        set => Set(ref _voiceId, value);
+        set { if (Set(ref _voiceId, value)) { RaiseSpeechChanged(); } }
     }
 
     public float RatePercent

@@ -202,7 +202,7 @@ rules:
   # ValueChanged when the user picks a new entry. Announce just the new
   # value (the combo's name was already spoken on focus).
   - id: core.combobox.value_changed
-    priority: 20
+    priority: 45
     scope: { role: ComboBox, reason: ValueChanged }
     action: { type: emit, template: "{value}" }
 
@@ -392,14 +392,18 @@ rules:
     scope: { role: ToggleButton, reason: ValueChanged, requiredStates: [Pressed] }
     action: { type: emit, template: "{state:pressed}" }
 
-  - id: core.expandcollapse.value_changed
+  # Expanding and collapsing, for controls where that IS the change. Scoped by
+  # role on purpose: a combo box is always either expanded or collapsed, so an
+  # unscoped rule matched every value change it ever raised and announced
+  # "collapsed" instead of the option the user had just arrowed onto.
+  - id: core.treeitem.expanded
     priority: 40
-    scope: { reason: ValueChanged, requiredStates: [Expanded] }
+    scope: { role: TreeItem, reason: ValueChanged, requiredStates: [Expanded] }
     action: { type: emit, template: "{state:expanded}" }
 
-  - id: core.expandcollapse.value_changed.collapsed
+  - id: core.treeitem.collapsed
     priority: 40
-    scope: { reason: ValueChanged, requiredStates: [Collapsed] }
+    scope: { role: TreeItem, reason: ValueChanged, requiredStates: [Collapsed] }
     action: { type: emit, template: "{state:collapsed}" }
 
   # List / grid / tree selection. Distinct from ValueChanged: a listbox raises

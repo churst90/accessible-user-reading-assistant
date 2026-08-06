@@ -219,37 +219,20 @@ internal static class Program
         var focusContext = new FocusContextResolver();
 
         // Which announcements are still worth speaking by the time they reach
-        // the engine. Only focus-driven announcements get a predicate: anything
-        // the user pressed a key to hear stays unconditionally valid, because
-        // silence in answer to a keystroke is never right.
-        var focusTracker = new FocusTracker();
-        pipeline.ValidityFor = request => request.Reason switch
-        {
-            // Focus only. A selection announcement was given this predicate too,
-            // and that was wrong in a way that produced total silence: in a WPF
-            // list box the focus stays on the LIST while the arrow keys move the
-            // SELECTION, so the item being announced is never the focused
-            // element and every announcement was swept as stale.
-            //
-            // Staleness for a selection is a question about the selection, not
-            // about focus, and the "selection" cancel group already answers it —
-            // a newer selection supersedes a pending older one. Asking a second,
-            // unrelated question on top of that could only ever subtract.
-            SpeechReason.FocusChanged => focusTracker.For(request.Node?.Id.Value),
-            _ => null,
-        };
+        // the engine, and in what order the reader must learn things for that
+        // question to have a correct answer. Lives in Core so the transcript
+        // harness runs the same policy rather than a copy of it — the copy is
+        // what let a bug that silenced every list survive the suite built to
+        // catch it.
+        var announcements = new AnnouncementPolicy();
+        pipeline.ValidityFor = announcements.ValidityFor;
 
         nint lastTopLevelWindow = 0;
         using var focusBinding = provider.Subscribe(AccessibilityEventKind.FocusChanged, ev =>
         {
             if (ev.Node is { } n)
             {
-                // Order matters and is the whole trick. Record the new focus
-                // first, then ask the queue what has gone stale — a predicate
-                // evaluated before this line answers about the world as it was,
-                // and nothing would be swept.
-                focusTracker.OnFocusChanged(n);
-                var swept = queue.SweepInvalid();
+                var swept = announcements.OnFocusChanged(n, queue.SweepInvalid);
                 if (swept > 0)
                 {
                     log.Verbose("swept {Count} stale announcements on focus change", swept);

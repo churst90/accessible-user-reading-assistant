@@ -29,10 +29,17 @@ namespace Aura.Transcripts;
 /// rather than by how busy the CI machine is.
 /// </para>
 /// <para>
-/// <b>What this does not yet cover:</b> the host's own wiring in
-/// <c>Program.cs</c> — key echo, caret following, the review cursor, the
-/// watchdog. Those need the host's composition to be reachable without a
-/// message loop, which it is not. Recorded as F5 open question 1.
+/// The announcement policy — what makes an announcement stale, and the order
+/// the reader must learn things in — is <see cref="AnnouncementPolicy"/>, the
+/// same object the host uses. It used to be a copy here, and the copy is why
+/// this suite agreed with a host that was sweeping every list announcement into
+/// silence. Two implementations of one policy cannot disagree if there is only
+/// one.
+/// </para>
+/// <para>
+/// <b>Still not covered:</b> key echo, caret following, the review cursor and
+/// the watchdog. Those remain inside the host's composition, reachable only
+/// through a message loop. Each is a candidate to follow the policy out.
 /// </para>
 /// </remarks>
 public sealed class HeadlessReader : IDisposable
@@ -41,7 +48,7 @@ public sealed class HeadlessReader : IDisposable
     private readonly SpeechRenderer _renderer = new();
     private readonly OutputArbiter _arbiter;
     private readonly SpeechQueue _queue;
-    private readonly FocusTracker _focus = new();
+    private readonly AnnouncementPolicy _policy = new();
     private readonly List<string> _spoken = [];
 
     public HeadlessReader()
@@ -59,15 +66,9 @@ public sealed class HeadlessReader : IDisposable
     public IReadOnlyList<string> Spoken => _spoken;
 
     /// <summary>Focus moves to <paramref name="node"/>.</summary>
-    /// <remarks>
-    /// Order copied from the host deliberately: record the new focus, then
-    /// sweep, then announce. Sweeping first would evaluate every predicate
-    /// against the previous focus and drop nothing.
-    /// </remarks>
     public void Focus(AccessibleNode node)
     {
-        _focus.OnFocusChanged(node);
-        _queue.SweepInvalid();
+        _policy.OnFocusChanged(node, _queue.SweepInvalid);
         Submit(new SpeechRequest(SpeechReason.FocusChanged, node, null, null));
     }
 
@@ -96,17 +97,7 @@ public sealed class HeadlessReader : IDisposable
 
     private void Submit(SpeechRequest request)
     {
-        // Must mirror Program.cs's ValidityFor exactly. It does not today —
-        // this is a copy — and that copy is why the harness agreed with a host
-        // that was silently sweeping every selection announcement. Making the
-        // host hand its policy to the harness is part of extracting a testable
-        // host core (F5 open question 1); until then, changing one means
-        // changing the other, and a transcript is the thing that notices.
-        var validity = request.Reason is SpeechReason.FocusChanged
-            ? _focus.For(request.Node?.Id.Value)
-            : null;
-
-        var presentation = _rules.Compose(request, validity);
+        var presentation = _rules.Compose(request, _policy.ValidityFor(request));
         if (presentation is null)
         {
             return;

@@ -79,9 +79,9 @@ internal static class SettingsPanels
         // delta (semitones)" is the slider they know as "Pitch", and a unit
         // in the label is an implementation detail leaking into the interface.
         AddRow(panel, "Voice:", BuildVoiceSelector(vm));
-        AddRow(panel, "Rate:", BuildSlider(nameof(SettingsViewModel.RatePercent), 25, 400, 5));
-        AddRow(panel, "Pitch:", BuildSlider(nameof(SettingsViewModel.PitchDelta), -12, 12, 1));
-        AddRow(panel, "Volume:", BuildSlider(nameof(SettingsViewModel.VolumeDelta), -100, 100, 5));
+        AddRow(panel, "Rate:", BuildSlider("Rate", nameof(SettingsViewModel.RatePercent), 25, 400, 5));
+        AddRow(panel, "Pitch:", BuildSlider("Pitch", nameof(SettingsViewModel.PitchDelta), -12, 12, 1));
+        AddRow(panel, "Volume:", BuildSlider("Volume", nameof(SettingsViewModel.VolumeDelta), -100, 100, 5));
 
         return Wrap(panel);
     }
@@ -306,7 +306,17 @@ internal static class SettingsPanels
         return combo;
     }
 
-    private static Grid BuildSlider(string boundProperty, double min, double max, double tickFrequency)
+    /// <summary>
+    /// A labelled slider.
+    /// </summary>
+    /// <remarks>
+    /// The name goes on the <see cref="Slider"/>, not on the grid that wraps it
+    /// with its readout. <c>AddRow</c> points its label at whatever element it
+    /// is handed, and it was handed the grid — so the label named a container
+    /// the user never lands on and the slider they do land on had no name at
+    /// all.
+    /// </remarks>
+    private static Grid BuildSlider(string name, string boundProperty, double min, double max, double tickFrequency)
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -320,7 +330,13 @@ internal static class SettingsPanels
             IsSnapToTickEnabled = true,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        AutomationProperties.SetName(slider, boundProperty);
+        // The human name, not the property name. This was
+        // AutomationProperties.SetName(slider, boundProperty), so the sliders
+        // announced themselves as "RatePercent", "PitchDelta" and
+        // "VolumeDelta" — an implementation detail read aloud, and the reason
+        // "delta" was being heard at all. The visible label already says
+        // "Pitch:"; the spoken one has to agree with it.
+        AutomationProperties.SetName(slider, name);
         slider.SetBinding(Slider.ValueProperty, new Binding(boundProperty)
         {
             Mode = BindingMode.TwoWay,
