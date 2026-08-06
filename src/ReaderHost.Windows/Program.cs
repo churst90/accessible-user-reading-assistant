@@ -225,8 +225,17 @@ internal static class Program
         var focusTracker = new FocusTracker();
         pipeline.ValidityFor = request => request.Reason switch
         {
-            SpeechReason.FocusChanged or SpeechReason.SelectionChanged
-                => focusTracker.For(request.Node?.Id.Value),
+            // Focus only. A selection announcement was given this predicate too,
+            // and that was wrong in a way that produced total silence: in a WPF
+            // list box the focus stays on the LIST while the arrow keys move the
+            // SELECTION, so the item being announced is never the focused
+            // element and every announcement was swept as stale.
+            //
+            // Staleness for a selection is a question about the selection, not
+            // about focus, and the "selection" cancel group already answers it —
+            // a newer selection supersedes a pending older one. Asking a second,
+            // unrelated question on top of that could only ever subtract.
+            SpeechReason.FocusChanged => focusTracker.For(request.Node?.Id.Value),
             _ => null,
         };
 

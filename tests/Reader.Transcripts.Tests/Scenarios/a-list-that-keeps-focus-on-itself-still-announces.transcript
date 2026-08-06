@@ -1,0 +1,31 @@
+# A WPF list box keeps keyboard focus on the LIST. The arrow keys move the
+# SELECTION, and the item is announced through a selection event — there is no
+# focus event per item at all.
+#
+# This produced total silence. Selection announcements had been given the focus
+# validity predicate, so every one of them asked "is this item the focused
+# element?", the answer was always no (the list is), and every announcement was
+# swept as stale before it could be spoken.
+#
+# Staleness for a selection is a question about the selection. The "selection"
+# cancel group already answers it: a newer one supersedes a pending older one.
+# Asking an unrelated question on top of that could only ever subtract.
+
+node list List "Settings categories" value=General
+node c1   ListItem "General"  pos=1 size=7
+node c2   ListItem "Speech"   pos=2 size=7
+node c3   ListItem "Keyboard" pos=3 size=7
+
+focus list
+drain
+select c1
+drain
+select c2
+drain
+select c3
+
+expect
+  Settings categories, list, General
+  General, 1 of 7
+  Speech, 2 of 7
+  Keyboard, 3 of 7

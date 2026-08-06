@@ -96,7 +96,13 @@ public sealed class HeadlessReader : IDisposable
 
     private void Submit(SpeechRequest request)
     {
-        var validity = request.Reason is SpeechReason.FocusChanged or SpeechReason.SelectionChanged
+        // Must mirror Program.cs's ValidityFor exactly. It does not today —
+        // this is a copy — and that copy is why the harness agreed with a host
+        // that was silently sweeping every selection announcement. Making the
+        // host hand its policy to the harness is part of extracting a testable
+        // host core (F5 open question 1); until then, changing one means
+        // changing the other, and a transcript is the thing that notices.
+        var validity = request.Reason is SpeechReason.FocusChanged
             ? _focus.For(request.Node?.Id.Value)
             : null;
 

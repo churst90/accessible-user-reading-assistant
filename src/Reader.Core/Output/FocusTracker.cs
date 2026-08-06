@@ -18,8 +18,6 @@ public sealed class FocusTracker
 {
     private readonly object _gate = new();
     private string? _currentId;
-    private string? _currentWindowId;
-    private List<string> _ancestorIds = [];
 
     /// <summary>The node id that currently has focus, if any.</summary>
     public string? CurrentId
@@ -33,19 +31,11 @@ public sealed class FocusTracker
     /// no longer exists, and nothing gets swept.
     /// </summary>
     /// <param name="focused">The newly focused node.</param>
-    /// <param name="ancestorIds">
-    /// Its ancestors, outermost first, when known. Used so an announcement
-    /// about a container that the focus has just moved *into* still counts as
-    /// current — the user is being told where they are, and that is not stale.
-    /// </param>
-    /// <param name="windowId">The id of the owning top-level window, when known.</param>
-    public void OnFocusChanged(AccessibleNode? focused, IReadOnlyList<string>? ancestorIds = null, string? windowId = null)
+    public void OnFocusChanged(AccessibleNode? focused)
     {
         lock (_gate)
         {
             _currentId = focused?.Id.Value;
-            _currentWindowId = windowId;
-            _ancestorIds = ancestorIds is null ? [] : [.. ancestorIds];
         }
     }
 
@@ -77,21 +67,14 @@ public sealed class FocusTracker
             // was spoken: press Down in a list and hear the item you just left,
             // then the one you are on.
             //
-            // A focus or selection announcement about something that is not the
-            // focus is stale. There is no case where it is not.
-
-            // An ancestor of what now has focus: the user moved inward, and
-            // "dialog, Save" wants both halves.
-            if (_ancestorIds.Contains(subject, StringComparer.Ordinal))
-            {
-                return true;
-            }
-            // The owning window. A dialog's title has to be heard even though
-            // focus lands on a control inside it.
-            if (string.Equals(_currentWindowId, subject, StringComparison.Ordinal))
-            {
-                return true;
-            }
+            // Nothing else. There were clauses here for ancestors of the new
+            // focus and for the owning window, and both were dead — the host
+            // never passed either, so they read as live protection while
+            // protecting nothing. Inert code that looks load-bearing is how the
+            // last two rounds of this bug survived being looked at.
+            //
+            // If a real case appears — F3's tree walk will make ancestors
+            // cheap to know — add it back with a test that fails without it.
             return false;
         }
     }

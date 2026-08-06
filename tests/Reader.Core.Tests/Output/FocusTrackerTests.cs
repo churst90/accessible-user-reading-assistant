@@ -67,32 +67,15 @@ public class FocusTrackerTests
     // because it depends on alerts never being given a predicate at all, which
     // is a fact about the pipeline rather than about this class.
 
-    [Fact]
-    public void An_ancestor_of_the_new_focus_is_still_valid()
-    {
-        // "Dialog, Save" — focus moves from the dialog into a control inside
-        // it, and the user wants both halves. The container announcement is
-        // telling them where they are, which is not stale.
-        var t = new FocusTracker();
-        t.OnFocusChanged(Node("dialog"));
-        var container = t.For("dialog");
-        t.OnFocusChanged(Node("save-button"), ancestorIds: ["dialog"]);
-
-        container.IsStillValid().Should().BeTrue();
-    }
-
-    [Fact]
-    public void The_owning_window_is_still_valid()
-    {
-        // Win+R: the Run dialog's title must be heard even though focus lands
-        // on the edit inside it.
-        var t = new FocusTracker();
-        t.OnFocusChanged(Node("run-window"));
-        var title = t.For("run-window");
-        t.OnFocusChanged(Node("edit"), windowId: "run-window");
-
-        title.IsStillValid().Should().BeTrue();
-    }
+    // There were tests here for an ancestor of the new focus and for the owning
+    // window staying valid. Both asserted behaviour the host never exercised —
+    // it passed neither ancestors nor a window id — so they were testing dead
+    // clauses and made them look load-bearing. Removed with the clauses.
+    //
+    // The case they were reaching for, a container announcement surviving the
+    // move into it, is now covered where it actually lives: a container
+    // announces its own selection, and a selection announcement carries no
+    // focus predicate at all.
 
     [Fact]
     public void Returning_to_a_control_makes_its_announcement_valid_again()
