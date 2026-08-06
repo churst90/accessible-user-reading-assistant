@@ -103,6 +103,25 @@ rules:
     scope: { role: ListItem }
     action: { type: emit, template: "{name}, list item, {posInSet}" }
 
+  # Landing on an item that is NOT selected has to say so, or the user cannot
+  # tell "here is where you are" from "here is what is chosen". A WPF list box
+  # opens with focus on the list and no item focused, so the first arrow press
+  # moves onto the first item without selecting it — silence about that is what
+  # made it sound like the list had skipped a step.
+  #
+  # Gated on Selectable, which is set only when the element actually exposes the
+  # selection-item pattern. Without that gate a provider that never reports
+  # selection would have every one of its items announced as "not selected".
+  - id: core.role.listitem.unselected
+    priority: 15
+    scope: { role: ListItem, requiredStates: [Selectable], forbiddenStates: [Selected] }
+    action: { type: emit, template: "{name}, list item, {state:not selected}, {posInSet}" }
+
+  - id: core.role.treeitem.unselected
+    priority: 25
+    scope: { role: TreeItem, requiredStates: [Selectable], forbiddenStates: [Selected] }
+    action: { type: emit, template: "{name}, tree item, {state:not selected}, level {level}, {posInSet}" }
+
   - id: core.role.table
     priority: 10
     scope: { role: Table }

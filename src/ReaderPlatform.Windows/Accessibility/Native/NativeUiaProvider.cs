@@ -488,6 +488,11 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             return;
         }
+        node = EnrichSetPosition(node, element);
+        if (node is null)
+        {
+            return;
+        }
 
         var key = FocusKey(node);
         bool sameNode, sameControl;
@@ -542,6 +547,100 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             CaretLine: spoken));
     }
 
+
+    // Set position, when the provider does not publish it.
+    private string? _setParentKey;
+    private int _setParentCount;
+
+    /// <summary>
+    /// Fill in "n of m" for a list or tree item whose provider does not publish
+    /// <c>PositionInSet</c> and <c>SizeOfSet</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The desktop and Explorer's list view are the cases that matter: they are
+    /// MSAA-backed, so UIA synthesises what it can and those two properties are
+    /// simply absent. Every WPF and WinUI list publishes them, which is why
+    /// counts were heard in the settings dialog and not on the desktop — an
+    /// inconsistency the user has no way to attribute and no reason to accept.
+    /// </para>
+    /// <para>
+    /// Position comes from the legacy child id, which is free — it is already in
+    /// the cache request. The count is one <c>FindAll</c> against the parent,
+    /// which is one round trip but marshals every sibling, so it is remembered
+    /// against the parent's identity and reused for as long as the user stays in
+    /// the same container. Arrowing a folder therefore costs one extra call on
+    /// entry and none afterwards.
+    /// </para>
+    /// <para>
+    /// Keyed on identity rather than elapsed time deliberately. A cache that
+    /// expires on a clock goes stale exactly when the machine is busy, which is
+    /// when a screen reader can least afford to be wrong.
+    /// </para>
+    /// </remarks>
+    private AccessibleNode EnrichSetPosition(AccessibleNode node, IUIAutomationElement element)
+    {
+        if (_automation is null
+            || node.Role is not (AccessibleRole.ListItem or AccessibleRole.TreeItem)
+            || node.Extras.ContainsKey("uia.SizeOfSet"))
+        {
+            return node;
+        }
+
+        try
+        {
+            if (element.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_LegacyIAccessibleChildIdPropertyId)
+                is not int childId || childId <= 0)
+            {
+                return node;
+            }
+
+            var parent = _automation.ControlViewWalker.GetParentElement(element);
+            if (parent is null)
+            {
+                return node;
+            }
+
+            var parentKey = string.Join('.',
+                parent.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_RuntimeIdPropertyId) as int[] ?? []);
+            int count;
+            if (parentKey.Length > 0 && string.Equals(_setParentKey, parentKey, StringComparison.Ordinal))
+            {
+                count = _setParentCount;
+            }
+            else
+            {
+                var children = parent.FindAll(TreeScope.TreeScope_Children, _automation.CreateTrueCondition());
+                count = children?.Length ?? 0;
+                if (count <= 0)
+                {
+                    return node;
+                }
+                _setParentKey = parentKey;
+                _setParentCount = count;
+            }
+
+            if (childId > count)
+            {
+                // The container changed under us. Say nothing rather than
+                // something wrong — "12 of 7" is worse than no count at all.
+                return node;
+            }
+
+            var extras = new Dictionary<string, object?>(node.Extras, StringComparer.Ordinal)
+            {
+                ["uia.PositionInSet"] = childId,
+                ["uia.SizeOfSet"] = count,
+            };
+            return new AccessibleNode(node.Id, node.Role, node.Name, node.Value, node.Description,
+                node.States, node.ParentId, node.ChildrenFactory, extras);
+        }
+        catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
+        {
+            return node;
+        }
+    }
+
     private void Emit(IUIAutomationElement element, AccessibilityEventKind kind, bool focusedOnly)
     {
         if (focusedOnly && !IsFocused(element))
@@ -553,6 +652,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             return;
         }
+        node = EnrichSetPosition(node, element);
         if (!focusedOnly && string.IsNullOrEmpty(node.Name) && string.IsNullOrEmpty(node.Value))
         {
             // Nothing to say is not worth interrupting for.

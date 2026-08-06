@@ -1,0 +1,24 @@
+# A WPF list box opens with focus on the LIST and no item focused, so the first
+# arrow press moves onto the first item without selecting it. Announcing that
+# item exactly as if it were selected gives the user no way to tell "here is
+# where you are" from "here is what is chosen" — and it sounded like the list
+# had skipped a step, because the same item was read twice.
+#
+# Gated on Selectable, which is only set when the element actually exposes the
+# selection-item pattern. Without that gate, a provider that never reports
+# selection would have every one of its items announced as "not selected".
+
+node here     ListItem "General" pos=1 size=7 states=Selectable
+node chosen   ListItem "Speech"  pos=2 size=7 states=Selectable|Selected
+node opaque   ListItem "Music"   pos=3 size=7
+
+focus here
+drain
+focus chosen
+drain
+focus opaque
+
+expect
+  General, list item, not selected, 1 of 7
+  Speech, list item, 2 of 7
+  Music, list item, 3 of 7
