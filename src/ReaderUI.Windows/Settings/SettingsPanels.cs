@@ -78,10 +78,34 @@ internal static class SettingsPanels
         // thing. A switching user should not have to work out that "Pitch
         // delta (semitones)" is the slider they know as "Pitch", and a unit
         // in the label is an implementation detail leaking into the interface.
+        // Synthesiser above voice, because a voice only means anything inside a
+        // synthesiser — the same order NVDA puts them in, for the same reason.
+        AddRow(panel, "Synthesiser:", BuildEngineSelector(vm));
         AddRow(panel, "Voice:", BuildVoiceSelector(vm));
         AddRow(panel, "Rate:", BuildSlider("Rate", nameof(SettingsViewModel.RatePercent), 25, 400, 5));
         AddRow(panel, "Pitch:", BuildSlider("Pitch", nameof(SettingsViewModel.PitchDelta), -12, 12, 1));
         AddRow(panel, "Volume:", BuildSlider("Volume", nameof(SettingsViewModel.VolumeDelta), -100, 100, 5));
+
+        // Verbosity. Each of these drops one KIND of segment from every
+        // announcement, which is possible because announcements are composed
+        // from parts that say what they are rather than from concatenated
+        // strings. "Stop telling me it is a list item" is one filter, not a
+        // change to forty rules.
+        //
+        // There is deliberately no switch for the name or the text. A reader
+        // that can be configured to stop saying what it is looking at has no
+        // remaining purpose.
+        panel.Children.Add(Group("Report"));
+        panel.Children.Add(BuildCheck("Object role — \"button\", \"list item\"",
+            nameof(SettingsViewModel.ReportRole)));
+        panel.Children.Add(BuildCheck("Position in list — \"4 of 10\", \"level 2\"",
+            nameof(SettingsViewModel.ReportPosition)));
+        panel.Children.Add(BuildCheck("Object state — \"checked\", \"expanded\", \"read only\"",
+            nameof(SettingsViewModel.ReportState)));
+        panel.Children.Add(BuildCheck("Object description",
+            nameof(SettingsViewModel.ReportDescription)));
+        panel.Children.Add(BuildCheck("Hints — how to operate the control",
+            nameof(SettingsViewModel.ReportHints)));
 
         return Wrap(panel);
     }
@@ -278,6 +302,20 @@ internal static class SettingsPanels
         HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         Content = panel,
     };
+
+    private static ComboBox BuildEngineSelector(SettingsViewModel vm)
+    {
+        var combo = new ComboBox { IsEditable = false };
+        AutomationProperties.SetName(combo, "Synthesiser");
+        combo.ItemsSource = vm.AvailableEngines;
+        combo.SetBinding(ComboBox.SelectedItemProperty, new Binding(nameof(SettingsViewModel.EngineId))
+        {
+            Mode = BindingMode.TwoWay,
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            FallbackValue = string.Empty,
+        });
+        return combo;
+    }
 
     private static ComboBox BuildVoiceSelector(SettingsViewModel vm)
     {

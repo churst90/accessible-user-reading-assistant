@@ -113,6 +113,8 @@ public sealed class SpeechPipeline : IDisposable
             AccessibilityEventKind.FocusChanged
             | AccessibilityEventKind.ValueChanged
             | AccessibilityEventKind.SelectionChanged
+            | AccessibilityEventKind.SelectionAdded
+            | AccessibilityEventKind.SelectionRemoved
             | AccessibilityEventKind.AlertRaised
             | AccessibilityEventKind.ToolTipOpened
             | AccessibilityEventKind.LiveRegionChanged
@@ -156,6 +158,8 @@ public sealed class SpeechPipeline : IDisposable
                 AccessibilityEventKind.FocusChanged => SpeechReason.FocusChanged,
                 AccessibilityEventKind.ValueChanged => SpeechReason.ValueChanged,
                 AccessibilityEventKind.SelectionChanged => SpeechReason.SelectionChanged,
+                AccessibilityEventKind.SelectionAdded => SpeechReason.SelectionAdded,
+                AccessibilityEventKind.SelectionRemoved => SpeechReason.SelectionRemoved,
                 AccessibilityEventKind.AlertRaised => SpeechReason.AlertRaised,
                 AccessibilityEventKind.ToolTipOpened => SpeechReason.ToolTipOpened,
                 AccessibilityEventKind.LiveRegionChanged => SpeechReason.LiveRegionUpdate,

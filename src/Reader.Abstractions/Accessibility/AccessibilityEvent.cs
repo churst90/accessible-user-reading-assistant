@@ -26,6 +26,15 @@ public enum AccessibilityEventKind
     /// not yet been told the name of.
     /// </summary>
     ToolTipOpened     = 1 << 10,
+    /// <summary>
+    /// An item joined a multiple selection — Ctrl+Space, or Ctrl+click. Distinct
+    /// from <see cref="SelectionChanged"/>, which is a single-selection
+    /// container moving its one selection: there the item is the news, here the
+    /// news is that it became selected without focus going anywhere.
+    /// </summary>
+    SelectionAdded    = 1 << 11,
+    /// <summary>An item left a multiple selection.</summary>
+    SelectionRemoved  = 1 << 12,
     All              = ~0,
 }
 

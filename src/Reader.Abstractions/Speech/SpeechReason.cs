@@ -11,6 +11,12 @@ public enum SpeechReason
     FocusChanged,
     ValueChanged,
     SelectionChanged,
+
+    /// <summary>An item joined a multiple selection without focus moving.</summary>
+    SelectionAdded,
+
+    /// <summary>An item left a multiple selection without focus moving.</summary>
+    SelectionRemoved,
     AlertRaised,
 
     /// <summary>A tooltip appeared. Never interrupts — see AccessibilityEventKind.ToolTipOpened.</summary>

@@ -141,19 +141,19 @@ public class GestureMapTests
     }
 
     [Fact]
-    public void OpenSettings_bound_in_both_layouts()
+    public void The_Aura_menu_is_bound_in_both_layouts()
     {
-        var desktop = new GestureMap();
-        GestureBindings.ApplyDefaults(desktop, KeyboardLayout.Desktop);
-        desktop.Resolve(Down(0x4F /* O */, InputModifiers.Reader)).Should().Be(ReaderCommand.OpenSettings);
-        // Reader+N is deliberately NOT bound: it is NVDA's menu key, and we
-        // have no menu. Binding it to settings meant two keys did the same
-        // thing while the one users reach for was ambiguous.
-        desktop.Resolve(Down(0x4E /* N */, InputModifiers.Reader)).Should().Be(ReaderCommand.None);
-
-        var laptop = new GestureMap();
-        GestureBindings.ApplyDefaults(laptop, KeyboardLayout.Laptop);
-        laptop.Resolve(Down(0x4F /* O */, InputModifiers.Reader)).Should().Be(ReaderCommand.OpenSettings);
+        // Reader+A opens the menu, and the menu is where Settings lives — one
+        // key to the reader's own surface, everything else reached from there.
+        // That is NVDA's shape, and it means the binding a user has to remember
+        // does not change when a new panel appears.
+        foreach (var layout in new[] { KeyboardLayout.Desktop, KeyboardLayout.Laptop })
+        {
+            var map = new GestureMap();
+            GestureBindings.ApplyDefaults(map, layout);
+            map.Resolve(Down(0x41 /* A */, InputModifiers.Reader))
+                .Should().Be(ReaderCommand.OpenAuraMenu, $"layout={layout}");
+        }
     }
 
     [Fact]
@@ -172,16 +172,16 @@ public class GestureMapTests
     }
 
     [Fact]
-    public void Reader_A_says_all_from_cursor_in_both_layouts()
+    public void Reader_Shift_A_says_all_from_cursor_in_both_layouts()
     {
-        // NVDA convention shared across desktop and laptop: NVDA+a starts
-        // continuous reading from the caret. Insert+A on desktop, CapsLock+A
-        // on laptop both produce the same chord (Reader modifier).
+        // Say-all moved off Reader+A to make room for the menu. Reader+Shift+A
+        // was already the laptop binding, so it is now simply the binding —
+        // one chord in both layouts rather than two that differ.
         foreach (var layout in new[] { KeyboardLayout.Desktop, KeyboardLayout.Laptop })
         {
             var map = new GestureMap();
             GestureBindings.ApplyDefaults(map, layout);
-            map.Resolve(Down(0x41 /* A */, InputModifiers.Reader))
+            map.Resolve(Down(0x41 /* A */, InputModifiers.Reader | InputModifiers.Shift))
                 .Should().Be(ReaderCommand.SayAllFromCursor, $"layout={layout}");
         }
     }

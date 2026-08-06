@@ -24,7 +24,7 @@ a binding and do not document it, that test fails.
 | `Reader+1` | Toggle keyboard help mode |
 | `Reader+F1` | Open documentation |
 | `Reader+N` | Open settings |
-| `Reader+O` | Open settings (alias) |
+| `Reader+A` | Open the Aura menu (settings, docs, exit) |
 | `Reader+Q` | Exit dialog |
 | `Ctrl+Reader+S` | Choose synthesiser |
 | `Ctrl+Reader+D` | **Copy diagnostics to the clipboard** — use this in bug reports |
@@ -181,7 +181,8 @@ including the two with no default chord.
 | `CyclePunctuationLevel` | Cycle punctuation verbosity | `Reader+P` |
 | `ToggleKeyboardHelp` | Announce keys instead of running them | `Reader+1` |
 | `ToggleEnabled` | Turn the reader on or off | *(none — double-tap CapsLock, or the tray)* |
-| `OpenSettings` | Open the settings window | `Reader+N`, `Reader+O` |
+| `OpenSettings` | Open the settings window | (from the Aura menu) |
+| `OpenAuraMenu` | Open the Aura menu | `Reader+A` |
 | `OpenDocumentation` | Open the documentation | `Reader+F1` |
 | `OpenExitDialog` | Open the exit confirmation | `Reader+Q` |
 | `OpenSynthesizerDialog` | Choose the speech synthesiser | `Ctrl+Reader+S` |

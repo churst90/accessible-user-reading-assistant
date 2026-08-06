@@ -128,6 +128,21 @@ public sealed record SpeechConfig
     /// <summary>Engine identifier (e.g. <c>sapi5</c>). Future engines (espeak-ng, azure) plug in here.</summary>
     public string? Engine { get; init; }
 
+    /// <summary>Say what kind of control it is — "button", "list item".</summary>
+    public bool? ReportRole { get; init; }
+
+    /// <summary>Say where it sits — "4 of 10", "level 2".</summary>
+    public bool? ReportPosition { get; init; }
+
+    /// <summary>Say its state — "checked", "expanded", "read only".</summary>
+    public bool? ReportState { get; init; }
+
+    /// <summary>Say its description or help text.</summary>
+    public bool? ReportDescription { get; init; }
+
+    /// <summary>Say how to operate it. Off by default — it is the noisiest of these.</summary>
+    public bool? ReportHints { get; init; }
+
     /// <summary>Voice id within the chosen engine. Null = engine default.</summary>
     public string? VoiceId { get; init; }
 
@@ -150,6 +165,14 @@ public sealed record SpeechConfig
     public static SpeechConfig Defaults() => new()
     {
         Engine = "sapi5",
+        ReportRole = true,
+        ReportPosition = true,
+        ReportState = true,
+        ReportDescription = true,
+        // Off: the noisiest of these, and the only one most users will never
+        // want. Everything else defaults on because a reader that hides what a
+        // control is by default is answering a question nobody asked.
+        ReportHints = false,
         VoiceId = null,
         RatePercent = 100f,
         VolumeDelta = 0f,

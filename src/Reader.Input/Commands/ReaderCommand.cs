@@ -52,6 +52,11 @@ public enum ReaderCommand
     ReportDiagnostics,
 
     /// <summary>
+    /// Open the Aura menu — the same menu the tray icon shows.
+    /// </summary>
+    OpenAuraMenu,
+
+    /// <summary>
     /// Switch between Read mode and Write mode. Bound to Reader+Space, matching
     /// NVDA's browse/focus toggle so switching users keep the reflex.
     /// </summary>
@@ -91,6 +96,7 @@ public static class ReaderCommandLabels
         ReaderCommand.OpenExitDialog => "exit",
         ReaderCommand.OpenSynthesizerDialog => "open synthesizer",
         ReaderCommand.ReportDiagnostics => "copy diagnostics",
+        ReaderCommand.OpenAuraMenu => "open the Aura menu",
         ReaderCommand.ToggleReaderMode => "toggle read and write mode",
         _ => command.ToString(),
     };

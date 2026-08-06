@@ -110,10 +110,11 @@ public static class GestureBindings
         map.Bind(new KeyChord(VK_1, InputModifiers.Reader), ReaderCommand.ToggleKeyboardHelp);
         map.Bind(new KeyChord(VK_F1, InputModifiers.Reader), ReaderCommand.OpenDocumentation);
 
-        // Settings is Reader+O only. Reader+N is NVDA's *menu* key, and we
-        // have no menu — binding it to settings meant two keys did the same
-        // thing while the one users reach for was ambiguous.
-        map.Bind(new KeyChord(VK_O, InputModifiers.Reader), ReaderCommand.OpenSettings);
+        // Reader+A opens the menu, and the menu is where Settings lives. That
+        // is NVDA's shape — one key to the reader's own surface, everything
+        // else reached from there — and it means the binding a user has to
+        // remember does not change when a new panel appears.
+        map.Bind(new KeyChord(VK_A, InputModifiers.Reader), ReaderCommand.OpenAuraMenu);
         map.Bind(new KeyChord(VK_Q, InputModifiers.Reader), ReaderCommand.OpenExitDialog);
 
         // Synthesizer selection. Ctrl+Reader+S (so plain Ctrl+S still saves
@@ -134,7 +135,11 @@ public static class GestureBindings
         // (NVDA convention). The layout-specific arrow / numpad chords stay
         // in the per-layout Apply methods below.
         map.Bind(new KeyChord(VK_L, InputModifiers.Reader), ReaderCommand.ReadLine);
-        map.Bind(new KeyChord(VK_A, InputModifiers.Reader), ReaderCommand.SayAllFromCursor);
+
+        // Say-all moved off Reader+A to make room for the menu. Reader+Shift+A
+        // was already the laptop binding, so it is now simply the binding —
+        // one key for it in both layouts rather than two that differ.
+        map.Bind(new KeyChord(VK_A, InputModifiers.Reader | InputModifiers.Shift), ReaderCommand.SayAllFromCursor);
     }
 
     /// <summary>

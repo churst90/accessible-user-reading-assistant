@@ -29,6 +29,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _startWithWindows;
 
     // Speech
+    private string _engineId = string.Empty;
+    private bool _reportRole = true;
+    private bool _reportPosition = true;
+    private bool _reportState = true;
+    private bool _reportDescription = true;
+    private bool _reportHints;
     private string _voiceId = string.Empty;
     private float _ratePercent = 100f;
     private float _volumeDelta;
@@ -42,6 +48,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _speakWords = true;
 
     public IReadOnlyList<string> AvailableVoices { get; }
+
+    /// <summary>Synthesisers this build can use, by display name.</summary>
+    public IReadOnlyList<string> AvailableEngines { get; init; } = Array.Empty<string>();
 
     public IReadOnlyList<string> AvailableLayouts { get; } = new[] { "desktop", "laptop" };
 
@@ -64,6 +73,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         if (source.Speech is { } s)
         {
             _voiceId = s.VoiceId ?? string.Empty;
+            _engineId = s.Engine ?? string.Empty;
+            _reportRole = s.ReportRole ?? true;
+            _reportPosition = s.ReportPosition ?? true;
+            _reportState = s.ReportState ?? true;
+            _reportDescription = s.ReportDescription ?? true;
+            _reportHints = s.ReportHints ?? false;
             _ratePercent = s.RatePercent ?? 100f;
             _volumeDelta = s.VolumeDelta ?? 0f;
             _pitchDelta = s.PitchDelta ?? 0f;
@@ -187,6 +202,19 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         _ => command.ToString(),
     };
 
+    /// <summary>The synthesiser. Changing it swaps the engine and its voices.</summary>
+    public string EngineId
+    {
+        get => _engineId;
+        set { if (Set(ref _engineId, value)) { RaiseSpeechChanged(); } }
+    }
+
+    public bool ReportRole { get => _reportRole; set => Set(ref _reportRole, value); }
+    public bool ReportPosition { get => _reportPosition; set => Set(ref _reportPosition, value); }
+    public bool ReportState { get => _reportState; set => Set(ref _reportState, value); }
+    public bool ReportDescription { get => _reportDescription; set => Set(ref _reportDescription, value); }
+    public bool ReportHints { get => _reportHints; set => Set(ref _reportHints, value); }
+
     public string VoiceId
     {
         get => _voiceId;
@@ -284,8 +312,16 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         },
         Speech = new SpeechConfig
         {
-            Engine = "sapi5",
+            // Was hardcoded to "sapi5". Saving anything in this dialog therefore
+            // reset the synthesiser, silently undoing a choice made in the synth
+            // dialog — a settings screen that changes a setting it does not show.
+            Engine = string.IsNullOrEmpty(_engineId) ? null : _engineId,
             VoiceId = string.IsNullOrEmpty(_voiceId) ? null : _voiceId,
+            ReportRole = _reportRole,
+            ReportPosition = _reportPosition,
+            ReportState = _reportState,
+            ReportDescription = _reportDescription,
+            ReportHints = _reportHints,
             RatePercent = _ratePercent,
             VolumeDelta = _volumeDelta,
             PitchDelta = _pitchDelta,

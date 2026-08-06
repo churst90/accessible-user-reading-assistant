@@ -39,7 +39,62 @@ public class PresentationRenderingTests
     {
         var p = Compose("{name}, button", Focus(Node(AccessibleRole.Button, "OK")));
 
-        TranscriptRenderer.RenderTyped(p).Should().Be("Name(OK) Literal(button)");
+        // "button" is tagged Role rather than Literal because it IS this node's
+        // role word. Templates say "{name}, button" instead of "{name}, {role}"
+        // — the role word is often more specific than the enum, and nothing in
+        // the string says which part of it is the role. Matching against the
+        // formatted role recovers that, which is what lets verbosity drop role
+        // words without rewriting forty templates first.
+        TranscriptRenderer.RenderTyped(p).Should().Be("Name(OK) Role(button)");
+    }
+
+    [Fact]
+    public void A_literal_that_is_not_the_role_word_stays_a_literal()
+    {
+        var p = Compose("{name}, not checked", Focus(Node(AccessibleRole.CheckBox, "Enable")));
+
+        TranscriptRenderer.RenderTyped(p).Should().Be("Name(Enable) Literal(not checked)");
+    }
+
+    [Fact]
+    public void Verbosity_drops_a_whole_kind_of_segment()
+    {
+        // The reason SegmentKind exists. "Stop telling me it is a list item" is
+        // one filter over a list, not a change to every rule that mentions one.
+        var p = Compose("{name}, list item, {posInSet}", Focus(Node(
+            AccessibleRole.ListItem, "report.txt",
+            extras: new Dictionary<string, object?>
+            {
+                [NodeExtras.PositionInSet] = 4,
+                [NodeExtras.SizeOfSet] = 10,
+            })));
+
+        new SpeechRenderer().Render(p).PlainText().Should().Be("report.txt, list item, 4 of 10");
+
+        var terse = new SpeechRenderer
+        {
+            Verbosity = new Verbosity { ReportRole = false, ReportPosition = false },
+        };
+        terse.Render(p).PlainText().Should().Be("report.txt");
+    }
+
+    [Fact]
+    public void Verbosity_can_never_silence_the_thing_itself()
+    {
+        // There is no switch for Name or Content, and there must not be: a
+        // reader that can be configured to stop saying what it is looking at
+        // has no remaining purpose.
+        var everythingOff = new Verbosity
+        {
+            ReportRole = false,
+            ReportPosition = false,
+            ReportState = false,
+            ReportDescription = false,
+            ReportHints = false,
+        };
+
+        everythingOff.Allows(SegmentKind.Name).Should().BeTrue();
+        everythingOff.Allows(SegmentKind.Content).Should().BeTrue();
     }
 
     [Fact]

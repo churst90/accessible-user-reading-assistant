@@ -18,14 +18,21 @@ internal sealed class SettingsHost
 {
     private readonly ConfigStore _store;
     private readonly ISpeechEngine _engine;
+    private readonly Func<IReadOnlyList<string>> _engineIds;
     private readonly Dispatcher _dispatcher;
     private readonly ILogger _log;
     private SettingsWindow? _open;
 
-    public SettingsHost(ConfigStore store, ISpeechEngine engine, Dispatcher dispatcher, ILogger log)
+    public SettingsHost(
+        ConfigStore store,
+        ISpeechEngine engine,
+        Dispatcher dispatcher,
+        ILogger log,
+        Func<IReadOnlyList<string>>? engineIds = null)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+        _engineIds = engineIds ?? Array.Empty<string>;
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _log = log;
     }
@@ -47,7 +54,7 @@ internal sealed class SettingsHost
                 // a different synth in the synth dialog auto-refreshes the
                 // voice list next time Settings is opened.
                 var voices = _engine.Voices.Select(v => v.Id).ToArray();
-                var window = new SettingsWindow(_store.Current, voices, OnSave);
+                var window = new SettingsWindow(_store.Current, voices, OnSave, _engineIds());
                 window.Closed += (_, _) => _open = null;
                 _open = window;
                 window.Show();

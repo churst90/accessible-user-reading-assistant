@@ -46,7 +46,8 @@ internal static class CommandBindings
         Action<bool> onEnabledChanged,
         Func<ReaderConfig> currentConfig,
         Action toggleReaderMode,
-        Action<string> copyToClipboard)
+        Action<string> copyToClipboard,
+        Action showAuraMenu)
     {
         bus.Bind(ReaderCommand.StopSpeech, _ =>
         {
@@ -58,6 +59,12 @@ internal static class CommandBindings
         bus.Bind(ReaderCommand.OpenSettings, _ =>
         {
             settingsHost.Show();
+            return ValueTask.CompletedTask;
+        });
+
+        bus.Bind(ReaderCommand.OpenAuraMenu, _ =>
+        {
+            showAuraMenu();
             return ValueTask.CompletedTask;
         });
 

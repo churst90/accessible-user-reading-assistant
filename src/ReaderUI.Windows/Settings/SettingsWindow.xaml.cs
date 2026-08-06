@@ -11,14 +11,21 @@ public partial class SettingsWindow : Window
     private readonly SettingsViewModel _viewModel;
     private readonly Action<ReaderConfig> _save;
 
-    public SettingsWindow(ReaderConfig current, IReadOnlyList<string> availableVoices, Action<ReaderConfig> save)
+    public SettingsWindow(
+        ReaderConfig current,
+        IReadOnlyList<string> availableVoices,
+        Action<ReaderConfig> save,
+        IReadOnlyList<string>? availableEngines = null)
     {
         ArgumentNullException.ThrowIfNull(current);
         ArgumentNullException.ThrowIfNull(save);
         // Build the view-model BEFORE InitializeComponent. The ListBox declares
         // SelectedIndex="0" in XAML, which fires SelectionChanged during the
         // XAML load — and the handler needs _viewModel to populate the panel.
-        _viewModel = new SettingsViewModel(current, availableVoices);
+        _viewModel = new SettingsViewModel(current, availableVoices)
+        {
+            AvailableEngines = availableEngines ?? Array.Empty<string>(),
+        };
         _save = save;
         // Speech settings apply as they change, like NVDA's. Choosing a voice
         // you cannot hear until you press OK is not a choice — you have to

@@ -156,7 +156,8 @@ public sealed class OutputArbiter
 
         SpeechReason.CaretMoved => OutputCategory.Navigation,
         SpeechReason.FocusChanged => OutputCategory.Navigation,
-        SpeechReason.SelectionChanged => OutputCategory.Navigation,
+        SpeechReason.SelectionChanged or SpeechReason.SelectionAdded
+            or SpeechReason.SelectionRemoved => OutputCategory.Navigation,
 
         SpeechReason.ValueChanged => OutputCategory.StateChange,
 

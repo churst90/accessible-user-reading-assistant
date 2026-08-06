@@ -79,6 +79,28 @@ public sealed class TrayIcon : IDisposable
         _notify.DoubleClick += (_, _) => onOpenSettings();
     }
 
+    /// <summary>
+    /// Open the Aura menu at the mouse, as the keyboard command does.
+    /// </summary>
+    /// <remarks>
+    /// The same menu the tray icon shows, deliberately. NVDA's NVDA+N and its
+    /// tray icon open one menu, and a reader with two menus that mostly agree
+    /// is a reader whose users cannot tell you which one they were in.
+    /// </remarks>
+    public void ShowMenu()
+    {
+        var menu = _notify.ContextMenuStrip;
+        if (menu is null)
+        {
+            return;
+        }
+        // A menu shown from a NotifyIcon does not take foreground on its own,
+        // so keyboard focus stays where it was and the arrow keys never reach
+        // it. This is the documented shell workaround.
+        menu.Show(System.Windows.Forms.Cursor.Position);
+        menu.Focus();
+    }
+
     /// <summary>Update the icon and tooltip to reflect enabled / disabled state.</summary>
     public void SetEnabled(bool enabled)
     {

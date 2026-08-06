@@ -409,6 +409,19 @@ rules:
   # List / grid / tree selection. Distinct from ValueChanged: a listbox raises
   # SelectionItem.ElementSelected, not a value change, so without this rule
   # arrowing through a list announced nothing at all.
+  # Ctrl+Space, or Ctrl+click, in a multi-select list. Focus does not move and
+  # the item is already known — the news is the state, which is the whole point
+  # of the keystroke.
+  - id: core.selection.added
+    priority: 30
+    scope: { reason: SelectionAdded }
+    action: { type: emit, template: "{state:selected}" }
+
+  - id: core.selection.removed
+    priority: 30
+    scope: { reason: SelectionRemoved }
+    action: { type: emit, template: "{state:not selected}" }
+
   # A bare "{name}" here was half an announcement. NVDA says the item and where
   # it sits — "Speech, 2 of 7" — because in a list of seven categories the
   # position is most of what the user needs, and a lone name gave no way to

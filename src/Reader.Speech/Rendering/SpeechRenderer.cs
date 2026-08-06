@@ -18,6 +18,9 @@ namespace Aura.Speech.Rendering;
 /// </remarks>
 public sealed class SpeechRenderer : IPresentationRenderer<Utterance>
 {
+    /// <summary>Which parts of an announcement are conveyed at all.</summary>
+    public Verbosity Verbosity { get; set; } = Verbosity.Full;
+
     /// <summary>Punctuation verbosity applied to spoken content.</summary>
     public PunctuationLevel PunctuationLevel { get; set; } = PunctuationLevel.Some;
 
@@ -54,6 +57,10 @@ public sealed class SpeechRenderer : IPresentationRenderer<Utterance>
 
         foreach (var segment in presentation.Segments)
         {
+            if (!Verbosity.Allows(segment.Kind))
+            {
+                continue;
+            }
             if (segment.Kind == SegmentKind.Cue)
             {
                 parts.Add(new CuePart(segment.Text));

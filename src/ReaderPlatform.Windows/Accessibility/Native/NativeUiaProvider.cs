@@ -37,7 +37,7 @@ namespace Aura.Platform.Windows.Accessibility.Native;
 [SupportedOSPlatform("windows6.1")]
 public sealed class NativeUiaProvider : IAccessibilityProvider
 {
-    private enum RawKind { Focus, Value, Text, CaretMoved, Selection, Alert, ToolTip, LiveRegion, Notification }
+    private enum RawKind { Focus, Value, Text, CaretMoved, Selection, SelectionAdded, SelectionRemoved, Alert, ToolTip, LiveRegion, Notification }
 
     private readonly record struct RawEvent(
         RawKind Kind,
@@ -252,6 +252,11 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         Register(UIA_EVENT_ID.UIA_LiveRegionChangedEventId, "live-region");
         Register(UIA_EVENT_ID.UIA_Window_WindowOpenedEventId, "window-opened");
         Register(UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId, "element-selected");
+        // Multi-select containers raise these instead, and only these. Without
+        // them Ctrl+Space in Explorer changed the selection silently — the one
+        // keystroke whose entire purpose is to change selection said nothing.
+        Register(UIA_EVENT_ID.UIA_SelectionItem_ElementAddedToSelectionEventId, "selection-added");
+        Register(UIA_EVENT_ID.UIA_SelectionItem_ElementRemovedFromSelectionEventId, "selection-removed");
         Register(UIA_EVENT_ID.UIA_MenuOpenedEventId, "menu-opened");
         Register(UIA_EVENT_ID.UIA_ToolTipOpenedEventId, "tooltip-opened");
         Register(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId, "text-selection");
@@ -388,6 +393,8 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId => RawKind.CaretMoved,
                 UIA_EVENT_ID.UIA_Text_TextChangedEventId => RawKind.Text,
                 UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId => RawKind.Selection,
+                UIA_EVENT_ID.UIA_SelectionItem_ElementAddedToSelectionEventId => RawKind.SelectionAdded,
+                UIA_EVENT_ID.UIA_SelectionItem_ElementRemovedFromSelectionEventId => RawKind.SelectionRemoved,
                 UIA_EVENT_ID.UIA_LiveRegionChangedEventId => RawKind.LiveRegion,
                 UIA_EVENT_ID.UIA_ToolTipOpenedEventId => RawKind.ToolTip,
                 _ => RawKind.Alert,
@@ -461,6 +468,14 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
             case RawKind.Selection:
                 Emit(raw.Element, AccessibilityEventKind.SelectionChanged, focusedOnly: false);
+                break;
+
+            case RawKind.SelectionAdded:
+                Emit(raw.Element, AccessibilityEventKind.SelectionAdded, focusedOnly: false);
+                break;
+
+            case RawKind.SelectionRemoved:
+                Emit(raw.Element, AccessibilityEventKind.SelectionRemoved, focusedOnly: false);
                 break;
 
             case RawKind.LiveRegion:

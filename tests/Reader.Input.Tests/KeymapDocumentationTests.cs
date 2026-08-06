@@ -32,6 +32,7 @@ public class KeymapDocumentationTests
         [ReaderCommand.None] = "sentinel, not a command",
         [ReaderCommand.ReportDate] = "reached by double-tapping Reader+F12",
         [ReaderCommand.ToggleEnabled] = "reached by double-tapping CapsLock, or the tray menu",
+        [ReaderCommand.OpenSettings] = "reached from the Aura menu (Reader+A), like NVDA's",
     };
 
     private static string KeymapPath()

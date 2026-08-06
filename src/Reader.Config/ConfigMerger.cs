@@ -97,6 +97,11 @@ public static class ConfigMerger
         return new SpeechConfig
         {
             Engine = upper.Engine ?? lower.Engine,
+            ReportRole = upper.ReportRole ?? lower.ReportRole,
+            ReportPosition = upper.ReportPosition ?? lower.ReportPosition,
+            ReportState = upper.ReportState ?? lower.ReportState,
+            ReportDescription = upper.ReportDescription ?? lower.ReportDescription,
+            ReportHints = upper.ReportHints ?? lower.ReportHints,
             VoiceId = upper.VoiceId ?? lower.VoiceId,
             RatePercent = upper.RatePercent ?? lower.RatePercent,
             VolumeDelta = upper.VolumeDelta ?? lower.VolumeDelta,

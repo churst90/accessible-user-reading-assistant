@@ -73,7 +73,18 @@ internal static class SpeechTemplate
                 var s = text.ToString().Trim();
                 if (s.Length > 0)
                 {
-                    segments.Add(new PresentationSegment(s, kind, node?.Role));
+                    // A literal that IS this node's role word is a role, not a
+                    // literal. Templates say "{name}, list item" rather than
+                    // "{name}, {role}", because the role word is often more
+                    // specific than the enum ("check box, checked"), and
+                    // nothing in the string says which part is the role.
+                    // Matching it against the formatted role recovers that for
+                    // free, so verbosity can drop role words without every
+                    // template being rewritten first.
+                    var effective = kind == SegmentKind.Literal && IsRoleWord(s, node?.Role)
+                        ? SegmentKind.Role
+                        : kind;
+                    segments.Add(new PresentationSegment(s, effective, node?.Role));
                 }
             }
             text.Clear();
@@ -205,6 +216,9 @@ internal static class SpeechTemplate
         kind = SegmentKind.Literal;
         return null;
     }
+
+    private static bool IsRoleWord(string text, AccessibleRole? role)
+        => role is not null && string.Equals(text, FormatRole(role), StringComparison.Ordinal);
 
     private static bool TryParseKind(ReadOnlySpan<char> declared, out SegmentKind kind)
     {

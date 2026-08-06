@@ -23,6 +23,7 @@ using Aura.Scripting;
 using Aura.Speech;
 using Aura.Speech.Engines;
 using Aura.Speech.Queue;
+using Aura.Speech.Rendering;
 using Aura.Speech.Rules;
 using Serilog.Events;
 
@@ -332,7 +333,20 @@ internal static class Program
         // would queue forever and dialogs would never appear.
         using var uiThread = new UiThread();
         var uiDispatcher = uiThread.Dispatcher;
-        var settingsHost = new SettingsHost(configStore, engineRouter, uiDispatcher, log);
+        // The engine ids the Speech page offers. Same source the synthesiser
+        // dialog uses — SAPI is always present, eSpeak NG only when its runtime
+        // loaded, which means only when the user has installed it.
+        IReadOnlyList<string> AvailableEngineIds()
+        {
+            var ids = new List<string> { sapiEngine.Id };
+            if (espeakEngine is not null)
+            {
+                ids.Add(espeakEngine.Id);
+            }
+            return ids;
+        }
+
+        var settingsHost = new SettingsHost(configStore, engineRouter, uiDispatcher, log, AvailableEngineIds);
         var exitDialogHost = new ExitDialogHost(uiDispatcher, shutdown, log);
         // Synthesizer registry is host-owned. SAPI is always present; eSpeak NG
         // appears only when the runtime initialized successfully (i.e. the user
@@ -412,7 +426,11 @@ internal static class Program
                     // process holding it is routine, not exceptional.
                     log.Warning(ex, "could not write diagnostics to the clipboard");
                 }
-            }));
+            }),
+            // The tray's own menu, shown at the cursor. One menu, not two that
+            // mostly agree — a user who cannot tell you which menu they were in
+            // cannot tell you what went wrong in it either.
+            showAuraMenu: () => uiDispatcher.BeginInvoke(() => tray?.ShowMenu()));
 
         // --- Live config reaction ---
         configStore.Changed += updated =>
@@ -661,6 +679,14 @@ internal static class Program
         }
 
         pipeline.CapitalLetterAnnouncement = speech.CapitalLetterAnnouncement ?? "pitch";
+        pipeline.Renderer.Verbosity = new Verbosity
+        {
+            ReportRole = speech.ReportRole ?? true,
+            ReportPosition = speech.ReportPosition ?? true,
+            ReportState = speech.ReportState ?? true,
+            ReportDescription = speech.ReportDescription ?? true,
+            ReportHints = speech.ReportHints ?? false,
+        };
     }
 
     /// <summary>
