@@ -86,7 +86,7 @@ rules:
   - id: core.role.tree
     priority: 10
     scope: { role: Tree }
-    action: { type: emit, template: "{name}, tree" }
+    action: { type: emit, template: "{name}, tree, {value}" }
 
   - id: core.role.treeitem
     priority: 10
@@ -96,7 +96,7 @@ rules:
   - id: core.role.list
     priority: 10
     scope: { role: List }
-    action: { type: emit, template: "{name}, list" }
+    action: { type: emit, template: "{name}, list, {value}" }
 
   - id: core.role.listitem
     priority: 10

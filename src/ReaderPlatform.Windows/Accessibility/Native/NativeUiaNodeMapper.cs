@@ -63,10 +63,35 @@ internal static class NativeUiaNodeMapper
         {
             return new NodeId(string.Join('.', runtimeId.Select(i => i.ToString(CultureInfo.InvariantCulture))));
         }
-        // No runtime id means the element cannot be correlated across events.
-        // A fresh guid keeps it addressable for this one announcement without
-        // ever matching a later one — the honest outcome.
-        return new NodeId(Guid.NewGuid().ToString("N"));
+        // No runtime id. A fresh guid used to go here, on the reasoning that an
+        // element which cannot be correlated should not pretend to be. That was
+        // wrong, and expensively so: three separate mechanisms correlate by id,
+        // and all three fail open rather than closed.
+        //
+        //   OutputArbiter collapses two producers describing one action by
+        //   comparing subjects — with unique ids nothing ever matches, so a
+        //   focus event and a selection event for the same control both speak.
+        //   That is "general, general".
+        //
+        //   FocusTracker decides whether a queued announcement is still about
+        //   the focus by comparing ids — with unique ids the answer is always
+        //   no, so announcements are swept that should have been kept, and the
+        //   ones that survive are the ones nobody could match either way.
+        //
+        //   The provider's own focus dedup falls back to this id in its key.
+        //
+        // A composite of the properties that actually identify a control is
+        // stable across events for the same control and distinct between
+        // different ones, which is everything the correlation needs. It is the
+        // same shape as FocusKey, deliberately.
+        var role = Get(element, UIA_PROPERTY_ID.UIA_ControlTypePropertyId, cached) as int? ?? 0;
+        var name = GetString(element, UIA_PROPERTY_ID.UIA_NamePropertyId, cached) ?? string.Empty;
+        var automationId = GetString(element, UIA_PROPERTY_ID.UIA_AutomationIdPropertyId, cached) ?? string.Empty;
+        var bounds = Get(element, UIA_PROPERTY_ID.UIA_BoundingRectanglePropertyId, cached) is double[] { Length: 4 } r
+            ? string.Create(CultureInfo.InvariantCulture, $"{r[0]:0},{r[1]:0},{r[2]:0},{r[3]:0}")
+            : string.Empty;
+        return new NodeId(string.Create(CultureInfo.InvariantCulture,
+            $"k:{role}|{name}|{automationId}|{bounds}"));
     }
 
     private static AccessibleStates ReadStates(IUIAutomationElement element, bool cached)

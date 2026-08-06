@@ -301,7 +301,11 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 (int)UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 (int)UIA_PROPERTY_ID.UIA_ValueValuePropertyId,
                 (int)UIA_PROPERTY_ID.UIA_RangeValueValuePropertyId,
-                (int)UIA_PROPERTY_ID.UIA_SelectionItemIsSelectedPropertyId,
+                // Deliberately NOT SelectionItemIsSelected. ElementSelected
+                // already reports a selection change, and registering both
+                // meant one arrow press produced two announcements about the
+                // same item through two different reasons — which then carried
+                // two different cancel groups, so neither superseded the other.
                 (int)UIA_PROPERTY_ID.UIA_NamePropertyId,
             ];
             unsafe
