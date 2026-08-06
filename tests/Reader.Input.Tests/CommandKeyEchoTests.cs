@@ -38,7 +38,6 @@ public class CommandKeyEchoTests
         // Turning key names off must not silence what was deleted: the removed
         // character is content, not a key name.
         var settings = KeyEchoSettings.Defaults with { SpeakCommandKeys = false };
-        settings.SpeakDeletedCharacters.Should().BeTrue();
     }
 
     [Fact]
@@ -47,6 +46,5 @@ public class CommandKeyEchoTests
         var settings = KeyEchoSettings.Defaults with { SpeakCommandKeys = true };
         settings.SpeakCharacters.Should().BeFalse();
         settings.SpeakWords.Should().BeTrue();
-        settings.SpeakDeletedCharacters.Should().BeTrue();
     }
 }

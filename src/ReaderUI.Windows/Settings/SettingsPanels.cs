@@ -111,7 +111,7 @@ internal static class SettingsPanels
         // increasing scope, and the last one is a qualifier on the two above it
         // rather than a fourth thing to turn on.
         panel.Children.Add(BuildCheck(
-            "Speak command keys (Control, Alt, Shift, Windows, Tab, Escape, function keys)",
+            "Speak command keys",
             nameof(SettingsViewModel.SpeakCommandKeys)));
         panel.Children.Add(BuildCheck(
             "Speak typed characters",
@@ -135,10 +135,9 @@ internal static class SettingsPanels
         // Its own group: deleting is not typing. Grouping it with the echo
         // checkboxes implies turning character echo off also silences
         // deletions, which is the opposite of what a user wants.
-        panel.Children.Add(Group("Speak deleted text"));
-        panel.Children.Add(BuildCheck(
-            "Speak the character removed by Backspace or Delete",
-            nameof(SettingsViewModel.SpeakDeletedCharacters)));
+        // Deleting used to be a checkbox. It is not a preference: a reader that
+        // silently discards what you just removed has failed at the one job
+        // that keystroke has. Always on.
 
         panel.Children.Add(new TextBlock
         {

@@ -330,6 +330,8 @@ internal static class Program
             text => pipeline.Submit(new SpeechRequest(SpeechReason.UserAnnouncement, Node: null, RawText: text, AppExecutableName: null)),
             ToEchoSettings(configStore.Current),
             onTypingActivity: typingState.NotifyTyping,
+            charBeforeCaret: () => caretTracker.CharBefore,
+            charAfterCaret: () => caretTracker.CharAfter,
             currentMode: () => modeManager.Mode);
         using var lockKeyAnnouncer = new LockKeyAnnouncer(
             keyboard,
@@ -634,7 +636,6 @@ internal static class Program
             SpeakCommandKeys = k?.SpeakCommandKeys ?? false,
             SpeakCharacters = k?.SpeakCharacters ?? false,
             SpeakWords = k?.SpeakWords ?? true,
-            SpeakDeletedCharacters = k?.SpeakDeletedCharacters ?? true,
             ApplyEchoInReadMode = k?.ApplyEchoInReadMode ?? false,
         };
     }

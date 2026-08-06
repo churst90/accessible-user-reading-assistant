@@ -34,28 +34,15 @@ public sealed record KeyEchoSettings
     /// <c>CommandKeyEchoTests</c>, not merely the current behaviour.
     /// </para>
     /// <para>
-    /// Distinct from <see cref="SpeakDeletedCharacters"/>: that announces the
-    /// <em>character removed</em> by a deletion, which is content rather than a
-    /// key name, and stays on when this is off.
+    /// Distinct from deletion feedback, which announces the <em>character
+    /// removed</em> by Backspace or Delete. That is content rather than a key
+    /// name, it is not a setting at all, and it speaks when this is off — see
+    /// <c>DeletionEchoTests</c>.
     /// </para>
     /// </remarks>
     public bool SpeakCommandKeys { get; init; }
     public bool SpeakCharacters { get; init; }
     public bool SpeakWords { get; init; } = true;
-
-    /// <summary>
-    /// Speak the character that Backspace or Delete removes. <b>On by
-    /// default, and independent of <see cref="SpeakCharacters"/>.</b>
-    /// </summary>
-    /// <remarks>
-    /// Deletion is destructive and unverifiable by any other means. A sighted
-    /// user glances at the line to confirm what vanished; without this the
-    /// only way to find out is to navigate back over the text and re-read it.
-    /// So it is not part of character echo: a user who finds per-character
-    /// echo too chatty while typing still needs to know what they just
-    /// destroyed.
-    /// </remarks>
-    public bool SpeakDeletedCharacters { get; init; } = true;
 
     /// <summary>
     /// Whether character and word echo also apply while in
@@ -76,7 +63,7 @@ public sealed record KeyEchoSettings
     /// </para>
     /// <para>
     /// Only gates <see cref="SpeakCharacters"/> and <see cref="SpeakWords"/>.
-    /// Deletion echo is unaffected — deleting is destructive in either mode.
+    /// Deletion feedback is unaffected — deleting is destructive in either mode.
     /// </para>
     /// </remarks>
     public bool ApplyEchoInReadMode { get; init; }

@@ -48,6 +48,5 @@ public class ReadModeEchoTests
         var settings = KeyEchoSettings.Defaults with { ApplyEchoInReadMode = true };
         settings.SpeakCommandKeys.Should().BeFalse();
         settings.SpeakWords.Should().BeTrue();
-        settings.SpeakDeletedCharacters.Should().BeTrue("deleting is destructive in either mode");
     }
 }

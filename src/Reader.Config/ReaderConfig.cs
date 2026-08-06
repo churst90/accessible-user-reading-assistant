@@ -102,7 +102,6 @@ public sealed record KeyboardConfig
     /// <see cref="SpeakCharacters"/> — deletion is destructive, and knowing
     /// what vanished is not the same want as hearing every keystroke.
     /// </summary>
-    public bool? SpeakDeletedCharacters { get; init; }
 
     /// <summary>
     /// Apply character and word echo in Read mode too. Off by default: in Read
@@ -119,7 +118,6 @@ public sealed record KeyboardConfig
         SpeakCommandKeys = false,
         SpeakCharacters = false,
         SpeakWords = true,
-        SpeakDeletedCharacters = true,
         ApplyEchoInReadMode = false,
     };
 }

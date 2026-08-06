@@ -549,9 +549,6 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
 
     // Set position, when the provider does not publish it.
-    private string? _setParentKey;
-    private int _setParentCount;
-
     /// <summary>
     /// Fill in "n of m" for a list or tree item whose provider does not publish
     /// <c>PositionInSet</c> and <c>SizeOfSet</c>.
@@ -573,9 +570,12 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
     /// entry and none afterwards.
     /// </para>
     /// <para>
-    /// Keyed on identity rather than elapsed time deliberately. A cache that
-    /// expires on a clock goes stale exactly when the machine is busy, which is
-    /// when a screen reader can least afford to be wrong.
+    /// It is not cached. A per-parent cache was the first shape of this and it
+    /// was wrong twice over: a folder's contents change under it, and it hid
+    /// the fact that the position lookup was failing on the desktop entirely.
+    /// One FindAll per focus change on a list item is the honest cost; if it
+    /// measures badly on a large folder, cache it then, with the measurement in
+    /// hand.
     /// </para>
     /// </remarks>
     private AccessibleNode EnrichSetPosition(AccessibleNode node, IUIAutomationElement element)
@@ -589,47 +589,50 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
         try
         {
-            if (element.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_LegacyIAccessibleChildIdPropertyId)
-                is not int childId || childId <= 0)
-            {
-                return node;
-            }
-
             var parent = _automation.ControlViewWalker.GetParentElement(element);
             if (parent is null)
             {
+                _log.Debug("set position: {Id} has no parent", node.Id.Value);
                 return node;
             }
 
-            var parentKey = string.Join('.',
-                parent.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_RuntimeIdPropertyId) as int[] ?? []);
-            int count;
-            if (parentKey.Length > 0 && string.Equals(_setParentKey, parentKey, StringComparison.Ordinal))
+            var children = parent.FindAll(TreeScope.TreeScope_Children, _automation.CreateTrueCondition());
+            var count = children?.Length ?? 0;
+            if (count <= 0)
             {
-                count = _setParentCount;
+                _log.Debug("set position: {Id} parent reported no children", node.Id.Value);
+                return node;
             }
-            else
+
+            // Position from the legacy child id where the provider offers one —
+            // it is already cached, so it costs nothing. Where it does not,
+            // find the element among the siblings we just fetched. The desktop
+            // is the case that matters and it was silent because only the first
+            // route was tried.
+            var position = element.GetCurrentPropertyValue(
+                UIA_PROPERTY_ID.UIA_LegacyIAccessibleChildIdPropertyId) as int? ?? 0;
+            if (position <= 0 || position > count)
             {
-                var children = parent.FindAll(TreeScope.TreeScope_Children, _automation.CreateTrueCondition());
-                count = children?.Length ?? 0;
-                if (count <= 0)
+                position = 0;
+                for (var i = 0; i < count; i++)
                 {
-                    return node;
+                    if (_automation.CompareElements(element, children!.GetElement(i)) != 0)
+                    {
+                        position = i + 1;
+                        break;
+                    }
                 }
-                _setParentKey = parentKey;
-                _setParentCount = count;
             }
-
-            if (childId > count)
+            if (position <= 0)
             {
-                // The container changed under us. Say nothing rather than
-                // something wrong — "12 of 7" is worse than no count at all.
+                _log.Debug("set position: {Id} not found among {Count} siblings", node.Id.Value, count);
                 return node;
             }
 
+            _log.Debug("set position: {Id} is {Position} of {Count}", node.Id.Value, position, count);
             var extras = new Dictionary<string, object?>(node.Extras, StringComparer.Ordinal)
             {
-                ["uia.PositionInSet"] = childId,
+                ["uia.PositionInSet"] = position,
                 ["uia.SizeOfSet"] = count,
             };
             return new AccessibleNode(node.Id, node.Role, node.Name, node.Value, node.Description,
@@ -637,6 +640,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         }
         catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
         {
+            _log.Debug(ex, "set position: provider failed for {Id}", node.Id.Value);
             return node;
         }
     }

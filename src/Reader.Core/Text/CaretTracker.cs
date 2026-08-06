@@ -49,6 +49,8 @@ public sealed class CaretTracker
     private ITextRange? _last;
     private NodeId _lastNodeId;
     private TextUnit? _pendingUnit;
+    private string? _charBefore;
+    private string? _charAfter;
     private bool _hasLast;
 
     public CaretTracker(
@@ -61,6 +63,29 @@ public sealed class CaretTracker
         _focusedNode = focusedNode ?? throw new ArgumentNullException(nameof(focusedNode));
         _announce = announce ?? throw new ArgumentNullException(nameof(announce));
         _isTyping = isTyping;
+    }
+
+    /// <summary>
+    /// The character immediately before the caret as of the last observation.
+    /// </summary>
+    /// <remarks>
+    /// Held rather than read on demand, because the only moment it can be read
+    /// correctly has already passed by the time anyone wants it. Backspace has
+    /// to say what it removed, and the keyboard hook sees the key before the
+    /// application does — but announcing from the hook would mean a
+    /// cross-process read inside it, and a hook that blocks is a hook Windows
+    /// silently unregisters. So it is captured on the way past, whenever the
+    /// caret is sampled for any other reason, and read from memory afterwards.
+    /// </remarks>
+    public string? CharBefore
+    {
+        get { lock (_gate) { return _charBefore; } }
+    }
+
+    /// <summary>The character immediately after the caret — what Delete removes.</summary>
+    public string? CharAfter
+    {
+        get { lock (_gate) { return _charAfter; } }
     }
 
     /// <summary>How long to keep re-sampling for a change before giving up.</summary>
@@ -151,11 +176,13 @@ public sealed class CaretTracker
                 _last = current.Clone();
                 _lastNodeId = node.Id;
                 _hasLast = true;
+                CaptureNeighbours(current);
                 return CaretMotion.None;
             }
 
             motion = CaretMotionResolver.Resolve(_last, current, _pendingUnit);
             _last = current.Clone();
+            CaptureNeighbours(current);
             if (motion.Kind != CaretMotionKind.None)
             {
                 _pendingUnit = null;
@@ -224,6 +251,38 @@ public sealed class CaretTracker
             _last = current.Clone();
             _lastNodeId = node.Id;
             _hasLast = true;
+            CaptureNeighbours(current);
+        }
+    }
+
+    /// <summary>
+    /// Read the characters either side of the caret. Caller holds the gate.
+    /// </summary>
+    /// <remarks>
+    /// One clone and two single-character expansions. It rides along with a
+    /// sample that was happening anyway, so the cost is bounded by how often
+    /// the caret moves rather than by how often anyone asks.
+    /// </remarks>
+    private void CaptureNeighbours(ITextRange current)
+    {
+        try
+        {
+            var before = current.Clone();
+            before.Collapse(toStart: true);
+            _charBefore = before.MoveEndpoint(RangeEndpoint.Start, TextUnit.Character, -1) != 0
+                ? before.GetText(8)
+                : null;
+
+            var after = current.Clone();
+            after.Collapse(toStart: true);
+            _charAfter = after.MoveEndpoint(RangeEndpoint.End, TextUnit.Character, 1) != 0
+                ? after.GetText(8)
+                : null;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+        {
+            _charBefore = null;
+            _charAfter = null;
         }
     }
 }

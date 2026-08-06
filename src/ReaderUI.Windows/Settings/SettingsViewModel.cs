@@ -31,7 +31,6 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _speakCommandKeys;
     private bool _applyEchoInReadMode;
     private bool _speakCharacters;
-    private bool _speakDeletedCharacters = true;
     private bool _speakWords = true;
 
     public IReadOnlyList<string> AvailableVoices { get; }
@@ -67,7 +66,6 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             _speakCommandKeys = k.SpeakCommandKeys ?? false;
             _speakCharacters = k.SpeakCharacters ?? false;
             _speakWords = k.SpeakWords ?? true;
-            _speakDeletedCharacters = k.SpeakDeletedCharacters ?? true;
             _applyEchoInReadMode = k.ApplyEchoInReadMode ?? false;
         }
 
@@ -266,11 +264,6 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set => Set(ref _applyEchoInReadMode, value);
     }
 
-    public bool SpeakDeletedCharacters
-    {
-        get => _speakDeletedCharacters;
-        set => Set(ref _speakDeletedCharacters, value);
-    }
 
     /// <summary>Project the current view-model state back into a persistable <see cref="ReaderConfig"/>.</summary>
     public ReaderConfig ToConfig() => new()
@@ -295,7 +288,6 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             SpeakCommandKeys = _speakCommandKeys,
             SpeakCharacters = _speakCharacters,
             SpeakWords = _speakWords,
-            SpeakDeletedCharacters = _speakDeletedCharacters,
             ApplyEchoInReadMode = _applyEchoInReadMode,
         },
         Input = new InputConfig

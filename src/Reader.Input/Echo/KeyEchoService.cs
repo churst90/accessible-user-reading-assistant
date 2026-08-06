@@ -49,6 +49,8 @@ public sealed class KeyEchoService : IDisposable
     private readonly IInputSource _source;
     private readonly Action<string> _speak;
     private readonly Action? _onTypingActivity;
+    private readonly Func<string?>? _charBeforeCaret;
+    private readonly Func<string?>? _charAfterCaret;
     private readonly Func<ReaderMode>? _currentMode;
     private readonly StringBuilder _wordBuffer = new(64);
     private readonly object _gate = new();
@@ -62,12 +64,16 @@ public sealed class KeyEchoService : IDisposable
         Action<string> speak,
         KeyEchoSettings? initialSettings = null,
         Action? onTypingActivity = null,
-        Func<ReaderMode>? currentMode = null)
+        Func<ReaderMode>? currentMode = null,
+        Func<string?>? charBeforeCaret = null,
+        Func<string?>? charAfterCaret = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _speak = speak ?? throw new ArgumentNullException(nameof(speak));
         _onTypingActivity = onTypingActivity;
         _currentMode = currentMode;
+        _charBeforeCaret = charBeforeCaret;
+        _charAfterCaret = charAfterCaret;
         _settings = initialSettings ?? KeyEchoSettings.Defaults;
         _log = LoggerFactory.ForComponent("Input.KeyEcho");
     }
@@ -123,19 +129,11 @@ public sealed class KeyEchoService : IDisposable
                 return;
             }
 
-            // Named navigation / control keys — the user wants to hear "Tab", "Escape", etc.
-            var navName = MapNavigationKey(input.KeyCode);
-            if (navName is not null)
-            {
-                HandleWordBreak(input.KeyCode);
-                if (_settings.SpeakCommandKeys)
-                {
-                    _speak(navName);
-                }
-                return;
-            }
-
-            // Backspace — announce the character it removes.
+            // Deleting, BEFORE the navigation-key branch. Delete is in the
+            // navigation map, so it was claimed there and announced as the key
+            // name — or, with command-key echo off, not announced at all. It
+            // never reached this code, which is why Delete said nothing about
+            // the character it removed.
             //
             // Taken from the word buffer rather than read back from the
             // control. The buffer already holds exactly what the user typed,
@@ -148,28 +146,61 @@ public sealed class KeyEchoService : IDisposable
             // The buffer is empty when the user arrowed into existing text and
             // started deleting. There is no cheap exact answer there, so we
             // fall back to naming the key. See docs/ROADMAP.md 3.6 #6.
-            if (input.KeyCode == VK_BACK)
+            if (input.KeyCode is VK_BACK or VK_DELETE)
             {
                 _onTypingActivity?.Invoke();
                 string? removed = null;
-                lock (_gate)
+
+                if (input.KeyCode == VK_BACK)
                 {
-                    if (_wordBuffer.Length > 0)
+                    // The word buffer is exact and free when it has anything:
+                    // it holds precisely what this user typed, with no race
+                    // against the application processing the key.
+                    lock (_gate)
                     {
-                        removed = _wordBuffer[^1].ToString();
-                        _wordBuffer.Length--;
+                        if (_wordBuffer.Length > 0)
+                        {
+                            removed = _wordBuffer[^1].ToString();
+                            _wordBuffer.Length--;
+                        }
                     }
+                    // Empty when the user arrowed into existing text and started
+                    // deleting — which is most deleting. The caret tracker has
+                    // been keeping the neighbouring characters as it goes,
+                    // precisely because this moment cannot read them for itself.
+                    removed ??= _charBeforeCaret?.Invoke();
                 }
-                if (removed is not null && _settings.SpeakDeletedCharacters)
+                else
+                {
+                    // Delete removes what is AHEAD of the caret, so the word
+                    // buffer knows nothing about it — it never did, which is why
+                    // Delete said nothing at all.
+                    removed = _charAfterCaret?.Invoke();
+                }
+
+                if (!string.IsNullOrEmpty(removed))
                 {
                     _speak(removed);
                 }
                 else if (_settings.SpeakCommandKeys)
                 {
-                    // Only reachable with command-key echo ON. With it off the
-                    // user must never hear the word "backspace" — see
-                    // KeyEchoSettings.SpeakCommandKeys.
-                    _speak("backspace");
+                    // Nothing could be determined. Naming the key is better than
+                    // silence, but only for a user who asked to hear key names —
+                    // see KeyEchoSettings.SpeakCommandKeys.
+                    _speak(input.KeyCode == VK_BACK ? "backspace" : "delete");
+                }
+                return;
+            }
+
+
+            // Named navigation / control keys — the user wants to hear "Tab", "Escape", etc.
+            var navName = MapNavigationKey(input.KeyCode);
+            if (navName is not null)
+            {
+                HandleWordBreak(input.KeyCode);
+                if (_settings.SpeakCommandKeys)
+                {
+                    _speak(navName);
                 }
                 return;
             }
