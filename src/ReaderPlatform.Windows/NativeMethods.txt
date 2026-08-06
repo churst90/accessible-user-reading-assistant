@@ -12,6 +12,7 @@ IUIAutomationTextPattern2
 IUIAutomationTextRange
 IUIAutomationTextRangeArray
 IUIAutomationValuePattern
+IUIAutomationSelectionPattern
 IUIAutomationFocusChangedEventHandler
 IUIAutomationEventHandler
 IUIAutomationPropertyChangedEventHandler

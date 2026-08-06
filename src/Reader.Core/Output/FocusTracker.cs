@@ -17,7 +17,6 @@ namespace Aura.Core.Output;
 public sealed class FocusTracker
 {
     private readonly object _gate = new();
-    private readonly HashSet<string> _everFocused = new(StringComparer.Ordinal);
     private string? _currentId;
     private string? _currentWindowId;
     private List<string> _ancestorIds = [];
@@ -47,14 +46,6 @@ public sealed class FocusTracker
             _currentId = focused?.Id.Value;
             _currentWindowId = windowId;
             _ancestorIds = ancestorIds is null ? [] : [.. ancestorIds];
-            if (_currentId is not null)
-            {
-                _everFocused.Add(_currentId);
-                // Unbounded growth over a long session is the one cost of
-                // remembering; a few thousand ids is nothing next to the UIA
-                // element cache, and clearing it would make "never had focus"
-                // wrong, which is the clause that keeps toasts audible.
-            }
         }
     }
 
@@ -76,13 +67,19 @@ public sealed class FocusTracker
             {
                 return true;
             }
-            // Never had focus, so this was never *about* focus — an alert, a
-            // toast, a live region. Those must survive a focus change; they are
-            // the announcements a user most needs and least expects.
-            if (!_everFocused.Contains(subject))
-            {
-                return true;
-            }
+            // There used to be an exemption here for anything that had never
+            // held focus, meant to protect alerts and toasts from being swept.
+            // It was both unnecessary and harmful. Unnecessary because those
+            // announcements are never given a predicate in the first place —
+            // only focus and selection are. Harmful because a focus event that
+            // the provider deduped away never reached the tracker, so a stale
+            // announcement about that element looked like "never focused" and
+            // was spoken: press Down in a list and hear the item you just left,
+            // then the one you are on.
+            //
+            // A focus or selection announcement about something that is not the
+            // focus is stale. There is no case where it is not.
+
             // An ancestor of what now has focus: the user moved inward, and
             // "dialog, Save" wants both halves.
             if (_ancestorIds.Contains(subject, StringComparer.Ordinal))

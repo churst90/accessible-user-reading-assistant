@@ -38,9 +38,11 @@ namespace Aura.Speech.Queue;
 /// one item queued because of the cancel group, not because of its text.
 /// </para>
 /// <para>
-/// <b>Now preemption.</b> Enqueueing a <c>Now</c> drops all pending non-Now
-/// items and raises <see cref="PreemptiveEnqueued"/> so the consumer can
-/// cancel in-flight engine playback.
+/// <b>Now preemption.</b> Enqueueing a <c>Now</c> raises
+/// <see cref="PreemptiveEnqueued"/> so the consumer cancels in-flight playback,
+/// and priority ordering puts it at the front. Pending items are <em>not</em>
+/// discarded — they are things the user still needs to hear, and throwing them
+/// away is how a dialog's title silenced the control its focus landed on.
 /// </para>
 /// <para>
 /// Thread-safe. <see cref="DequeueAsync"/> may be awaited from one consumer;
@@ -111,7 +113,13 @@ public sealed class SpeechQueue : IDisposable
 
             if (utterance.Priority == SpeechPriority.Now)
             {
-                dropped += DropMatching(node => node.Value.Priority < SpeechPriority.Now);
+                // Preempt what is playing and go to the front — but do NOT
+                // delete what is queued. This used to drop every pending
+                // non-Now item, which meant opening a dialog silenced the
+                // control the focus was landing on: the window title is a Now
+                // announcement, and it threw away the announcement of where
+                // the user actually was. Interrupting is the point of Now;
+                // deleting the user's place is not.
                 preempt = true;
             }
             else if (_currentSpeakingGroup is not null && utterance.Priority > _currentSpeakingPriority)

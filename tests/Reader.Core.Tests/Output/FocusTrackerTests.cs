@@ -44,18 +44,28 @@ public class FocusTrackerTests
     }
 
     [Fact]
-    public void Something_that_never_had_focus_is_never_stale()
+    public void Something_that_never_held_focus_is_still_stale_once_focus_is_elsewhere()
     {
-        // Alerts, toasts and live regions fire on elements that by definition
-        // do not have focus. Treating "not the focus" as "stale" would silence
-        // exactly the announcements a user least expects and most needs.
+        // There was an exemption here for anything the tracker had never seen
+        // hold focus, meant to keep alerts and toasts audible. It was
+        // unnecessary — those announcements are never given a predicate at all,
+        // only focus and selection are — and it was harmful: a focus event the
+        // provider deduped away never reached the tracker, so a stale
+        // announcement about that element looked unfamiliar and was let
+        // through. Pressing Down in a list then read the item you had just
+        // left, followed by the one you were on.
         var t = new FocusTracker();
         t.OnFocusChanged(Node("a"));
-        var toast = t.For("toast");
+        var strayed = t.For("never-seen");
         t.OnFocusChanged(Node("b"));
 
-        toast.IsStillValid().Should().BeTrue();
+        strayed.IsStillValid().Should().BeFalse();
     }
+
+    // What the exemption was reaching for — an alert surviving a focus change —
+    // is covered end to end by the an-alert-survives-a-focus-change transcript,
+    // because it depends on alerts never being given a predicate at all, which
+    // is a fact about the pipeline rather than about this class.
 
     [Fact]
     public void An_ancestor_of_the_new_focus_is_still_valid()

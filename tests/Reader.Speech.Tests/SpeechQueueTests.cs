@@ -133,8 +133,15 @@ public class SpeechQueueTests
     }
 
     [Fact]
-    public void Now_priority_drops_pending_non_now_and_raises_event()
+    public void Now_priority_goes_first_but_does_not_delete_what_is_waiting()
     {
+        // This asserted the opposite until it was heard. Now used to drop every
+        // pending lower-priority item, so opening a dialog silenced the control
+        // its focus landed on: the window title is a Now announcement and it
+        // threw away the announcement of where the user actually was.
+        //
+        // Interrupting is the point of Now. Deleting the user's place is not —
+        // those queued items are things they still need to hear.
         using var q = new SpeechQueue();
         Utterance? preempted = null;
         q.PreemptiveEnqueued += u => preempted = u;
@@ -143,9 +150,13 @@ public class SpeechQueueTests
         q.Enqueue(Make("next", SpeechPriority.Next));
         q.Enqueue(Make("alert", SpeechPriority.Now));
 
-        q.Count.Should().Be(1);
+        q.Count.Should().Be(3);
         preempted.Should().NotBeNull();
         preempted!.Spoken().Should().Be("alert");
+
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("alert");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("next");
+        q.WaitForNext(TimeSpan.FromMilliseconds(50)).Spoken().Should().Be("background");
     }
 
     [Fact]

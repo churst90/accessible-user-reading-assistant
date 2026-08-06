@@ -1,0 +1,31 @@
+# Arrowing down the settings categories. Each press must announce the item you
+# landed on and where it sits — never the one you left.
+#
+# Reported on hardware: pressing Down read "general. speech, 2 of 7", then
+# "speech. keyboard, 3 of 7". The previous item first, then the current one.
+#
+# FocusTracker had an exemption letting through any announcement about an
+# element it had never seen hold focus, meant to keep alerts audible. A focus
+# event the provider deduped away never reached the tracker, so the stale
+# announcement about the item just left looked unfamiliar and was spoken. The
+# exemption is gone: a focus or selection announcement about something that is
+# not the focus is stale, and there is no case where it is not.
+#
+# Alerts stay audible because they are never given a predicate at all — see
+# an-alert-survives-a-focus-change.
+
+node c1 ListItem "General"  pos=1 size=7
+node c2 ListItem "Speech"   pos=2 size=7
+node c3 ListItem "Keyboard" pos=3 size=7
+focus c1
+drain
+focus c2
+select c2
+drain
+focus c3
+select c3
+
+expect
+  General, list item, 1 of 7
+  Speech, list item, 2 of 7
+  Keyboard, list item, 3 of 7

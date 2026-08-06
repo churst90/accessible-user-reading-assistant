@@ -1,0 +1,17 @@
+# Opening a dialog announces its title, then the control focus lands on.
+#
+# Reported on hardware: "when the settings window opens and the first thing it
+# lands on is the settings categories, nothing is read."
+#
+# The title is a Now-priority announcement, and Now used to drop every pending
+# lower-priority item — including the announcement of where the user actually
+# was. Interrupting is the point of Now; deleting the user's place is not.
+
+node title  Window   "Aura Settings"
+node first  ListItem "General" pos=1 size=7
+say "Aura Settings"
+focus first
+
+expect
+  Aura Settings
+  General, list item, 1 of 7

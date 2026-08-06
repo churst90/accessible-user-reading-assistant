@@ -339,10 +339,34 @@ rules:
     scope: { role: CheckBox, reason: ValueChanged, requiredStates: [Checked] }
     action: { type: emit, template: "{state:checked}" }
 
+  # Activating a radio button. Only the state changed, so only the state is
+  # worth saying — the user just pressed the key, they know which one it was.
+  - id: core.radiobutton.value_changed
+    priority: 41
+    scope: { role: RadioButton, reason: ValueChanged, requiredStates: [Selected] }
+    action: { type: emit, template: "{state:selected}" }
+
+  - id: core.radiobutton.value_changed.cleared
+    priority: 40
+    scope: { role: RadioButton, reason: ValueChanged, forbiddenStates: [Selected] }
+    action: { type: emit, template: "{state:not selected}" }
+
   - id: core.togglebutton.value_changed
     priority: 40
     scope: { role: ToggleButton, reason: ValueChanged, forbiddenStates: [Pressed] }
     action: { type: emit, template: "{state:not pressed}" }
+
+  # Activating a radio button. Only the state changed, so only the state is
+  # worth saying — the user just pressed the key, they know which one it was.
+  - id: core.radiobutton.value_changed
+    priority: 41
+    scope: { role: RadioButton, reason: ValueChanged, requiredStates: [Selected] }
+    action: { type: emit, template: "{state:selected}" }
+
+  - id: core.radiobutton.value_changed.cleared
+    priority: 40
+    scope: { role: RadioButton, reason: ValueChanged, forbiddenStates: [Selected] }
+    action: { type: emit, template: "{state:not selected}" }
 
   - id: core.togglebutton.value_changed.pressed
     priority: 41
@@ -362,10 +386,14 @@ rules:
   # List / grid / tree selection. Distinct from ValueChanged: a listbox raises
   # SelectionItem.ElementSelected, not a value change, so without this rule
   # arrowing through a list announced nothing at all.
+  # A bare "{name}" here was half an announcement. NVDA says the item and where
+  # it sits — "Speech, 2 of 7" — because in a list of seven categories the
+  # position is most of what the user needs, and a lone name gave no way to
+  # tell a list from a row of buttons.
   - id: core.selection.changed
     priority: 30
     scope: { reason: SelectionChanged }
-    action: { type: emit, template: "{name}" }
+    action: { type: emit, template: "{name}, {posInSet}" }
 
   # Windows and dialogs opening without stealing focus, tooltips, menus.
   - id: core.alert.raised

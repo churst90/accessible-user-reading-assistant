@@ -53,6 +53,19 @@ public class CaretAnnouncementTests
         Announced(CaretMotionKind.Character, text).Should().Be("line feed");
     }
 
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("\t")]
+    public void A_space_between_words_is_a_character_not_a_line_ending(string text)
+    {
+        // Reviewing a sentence with the arrow keys walks onto the spaces
+        // between words. Blank.Is counts a space as blank — correct for a whole
+        // line, wrong for one character — so every space read as "line feed".
+        // A space is a real character with a name; only the absence of one is a
+        // line feed. The naming happens downstream in PunctuationFilter.
+        Announced(CaretMotionKind.Character, text).Should().Be(text);
+    }
+
     [Fact]
     public void Landing_on_whitespace_between_words_says_nothing()
     {

@@ -152,10 +152,52 @@ internal static class NativeUiaNodeMapper
         {
             return d.ToString("0.##", CultureInfo.CurrentCulture);
         }
-        // Last resort. Combo boxes commonly report their selected entry only
-        // through the legacy bridge, so without this one tabbing past a combo
-        // announced its label and nothing else.
-        return GetString(element, UIA_PROPERTY_ID.UIA_LegacyIAccessibleValuePropertyId, cached);
+        // Combo boxes commonly report their selected entry only through the
+        // legacy bridge.
+        if (GetString(element, UIA_PROPERTY_ID.UIA_LegacyIAccessibleValuePropertyId, cached) is { Length: > 0 } legacy)
+        {
+            return legacy;
+        }
+
+        // And a WPF combo box reports it through neither. It has no value
+        // pattern at all — what it has is a *selection*, and the selected item
+        // is a separate element whose name is the text the user needs. Without
+        // this, tabbing onto a combo announced its label and the word "combo
+        // box" and left the user to open the list to find out what was in it.
+        return ReadSelectedItemName(element);
+    }
+
+    /// <summary>
+    /// The name of the first selected child, for controls that express their
+    /// value as a selection.
+    /// </summary>
+    /// <remarks>
+    /// A live pattern call, so it costs a round trip — but only for a control
+    /// that has already failed three cheaper cached lookups, which in practice
+    /// means a combo box or list the user has just landed on. It is bounded by
+    /// the client transaction timeout like every other call.
+    /// </remarks>
+    private static string? ReadSelectedItemName(IUIAutomationElement element)
+    {
+        try
+        {
+            if (element.GetCurrentPattern(UIA_PATTERN_ID.UIA_SelectionPatternId)
+                is not IUIAutomationSelectionPattern selection)
+            {
+                return null;
+            }
+            var selected = selection.GetCurrentSelection();
+            if (selected is null || selected.Length == 0)
+            {
+                return null;
+            }
+            var name = selected.GetElement(0)?.CurrentName;
+            return name?.ToString();
+        }
+        catch (Exception ex) when (IsProviderFailure(ex))
+        {
+            return null;
+        }
     }
 
     private static Dictionary<string, object?>? BuildExtras(IUIAutomationElement element, bool cached)

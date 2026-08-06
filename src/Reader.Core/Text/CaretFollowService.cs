@@ -225,8 +225,9 @@ public sealed class CaretFollowService : IDisposable
             case CaretMotionKind.None:
                 return null;
 
-            case CaretMotionKind.Character when Blank.Is(text):
-                // Past the last character of the line.
+            case CaretMotionKind.Character when NothingThere(text):
+                // Past the last character of the line, or standing on the line
+                // ending itself.
                 text = LineEndToken;
                 break;
 
@@ -251,6 +252,35 @@ public sealed class CaretFollowService : IDisposable
         return string.IsNullOrEmpty(text)
             ? null
             : new SpeechRequest(SpeechReason.CaretMoved, node, RawText: text, AppExecutableName: null);
+    }
+
+    /// <summary>
+    /// True when there is no character at the caret at all.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately <em>not</em> <see cref="Blank.Is"/>, which counts a space as
+    /// blank — correct for a whole line, wrong for one character. Reviewing a
+    /// sentence with the arrow keys walks onto the spaces between words, and
+    /// calling each of them "line feed" is both wrong and confusing. A space is
+    /// a real character with a name; only the absence of one, or the line
+    /// ending itself, is a line feed. The naming of "space", "tab" and the
+    /// punctuation happens downstream in <c>PunctuationFilter.SpokenName</c>,
+    /// which is why this only has to let them through.
+    /// </remarks>
+    private static bool NothingThere(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return true;
+        }
+        foreach (var c in text)
+        {
+            if (c is not ('\r' or '\n' or '\0'))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// <summary>
