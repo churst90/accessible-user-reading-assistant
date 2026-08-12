@@ -82,11 +82,12 @@ does more work here than any other.
 | eSpeak NG | yes | **shipped** | Requires user install; bundling is a follow-up |
 | OneCore / Windows voices | yes | **planned** | Cheap after F1 |
 | Neural TTS (Piper etc.) | add-on | **planned** | A differentiator; needs F1's streaming/marker model |
-| Speech as a sequence | yes | **planned** (F1) | The largest contract hole |
-| Per-language voice switching | yes | **planned** (F1+F7) | |
-| Prosody spans (capitals by pitch) | yes | **planned** (F1) | |
-| Inline earcons | yes | **planned** (F1+4b) | |
-| Say-all position markers | yes | **planned** (F1) | |
+| Speech as a sequence | yes | **shipped** (F1) | `Utterance` of `OutputPart`s. Was the largest contract hole |
+| Per-language voice switching | yes | **partial** | `LanguagePart` exists and renders; no per-language voice arbitration yet (F7) |
+| Prosody spans (capitals by pitch) | yes | **shipped** (F1) | `ProsodyPush`/`Pop` as a stack, so an interrupted utterance re-establishes state on resume |
+| Inline earcons | yes | **partial** | `CuePart` is carried end-to-end; nothing plays it until a theme exists (4b) |
+| Say-all position markers | yes | **partial** | `MarkerPart` + `ISpeechEngine.MarkerReached` ship; say-all does not resume from one yet |
+| Verbosity levels (what to omit) | yes | **shipped** | Filtered per `SegmentKind` — role / position / state / description / hints. Deliberately no switch for the name or the text |
 | Data-driven speech rules | **no** | **shipped** | AURA is *ahead*. Users ask NVDA for this and cannot have it |
 | Rule trace ("why did it say that?") | **no** | **partial** | Recorded, never surfaced. Would be a first |
 | Symbol level / dictionaries | yes | **planned** (F7) | Engine exists, data does not |
@@ -158,7 +159,7 @@ does more work here than any other.
 | Structured logging | partial | **shipped** | With content redaction on by default |
 | Log viewer in-app | yes | **planned** | |
 | Speech viewer | yes | **planned** | F1 |
-| Golden transcript regression tests | **no** | **planned** (F5a) | **Nobody has this.** The compounding advantage |
+| Golden transcript regression tests | **no** | **shipped** (F5a) | **Nobody has this.** 14 scenarios; each one is a bug that cannot come back. See the caveat below |
 | Backend conformance suites | no | **planned** (F5b) | |
 | Measured latency budgets | no | **planned** (F5c) | Principle stated since day one, never measured |
 | Freeze watchdog | yes | **partial** | Beeps; does not recover. F4 |
@@ -198,12 +199,33 @@ demoralising and also wrong:
 
 | Status | Count |
 |---|---|
-| shipped | 14 |
-| partial | 8 |
-| planned | 38 |
+| shipped | 18 |
+| partial | 11 |
+| planned | 32 |
 | undecided | 12 |
 | never | 12 |
 
 The number to watch is **undecided**. Each one is a question that will be
 answered by drift if it is not answered deliberately, and drift always answers
 "yes, eventually, badly".
+
+---
+
+## The caveat this file needs, as of 2026-08-06
+
+**"Shipped" means the contract exists and has tests. It does not mean a blind
+user has heard it work.** Three rounds of listening on real hardware in early
+August found thirteen behavioural bugs across capabilities all marked shipped —
+lists announcing nothing, items announced twice, Delete never firing. Every one
+was audible within seconds and invisible to a green suite.
+
+The golden transcripts (F5a) are the answer to that and they are already
+earning their place, but round 3 also found their limit: the harness held its
+own copy of the host's announcement policy, so when the host asked the wrong
+question the harness asked the same wrong question and reported success. A
+regression suite that duplicates the logic it tests agrees with the bug. That
+is F5 open question 1, and it is now the most valuable unfixed thing here.
+
+So read this scoreboard as *what has been built*, and
+[`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) as *what has been heard*. Until a
+daily driver exists, the second number is the real one.

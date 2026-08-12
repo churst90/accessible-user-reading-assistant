@@ -1,6 +1,127 @@
 # Session Handoff
 
-Last updated: 2026-08-03 (F1 + F5a landed)
+Last updated: 2026-08-06 (round 3 — ten commits of listening)
+
+---
+
+## Round 3 — what a listening session cost, and what it bought
+
+Ten commits on 2026-08-06, all of them driven by hearing the reader run rather
+than by reading it. That is the whole lesson of the round: **every bug below was
+invisible to the test suite and obvious within seconds of listening**, and
+several had survived multiple passes of being looked at.
+
+### The pattern that produced most of them
+
+Code that reads as live and does nothing. It appeared four separate times:
+
+- `FocusTracker` had clauses for ancestors of the new focus and for the owning
+  window. The host passed neither. They read as protection while protecting
+  nothing, which is how the selection bug survived two rounds of inspection.
+- `AccessibilityEvent.CharBeforeCaret` and `SelectionText` were declared and
+  documented at length — the comment explained exactly why `CharBeforeCaret`
+  existed — and never populated or read. A comment answering a real question
+  wrongly is worse than no comment.
+- `SpeechRenderer.AnnounceBlank`: a switch defaulting to off, guarding a rule
+  that duplicated what `CaretFollowService` already did. Two producers of one
+  word, one of them disabled.
+- `"uia.PositionInSet"` as a bare string in five files. A producer writing
+  `PositionInSet` and a consumer reading `PositionInset` agree on nothing, say
+  nothing, and raise no error anywhere. Now `NodeExtras` constants, where a typo
+  is a build error.
+
+The other recurring shape: **two implementations of one policy**. The host and
+the transcript harness each had a copy of the rules deciding which announcements
+survive. They drifted, the host asked a focus question about selection
+announcements, every list announcement was swept, and lists went silent — and
+the harness built to catch exactly that asked the same wrong question, agreed,
+and reported success. `AnnouncementPolicy` now lives in `Reader.Core`, holds no
+provider/queue/engine, and has nine tests. Two implementations of one policy
+cannot disagree if there is only one.
+
+### The behavioural fixes, in the order they were found
+
+| Symptom | Cause |
+|---|---|
+| Every list announcement silent | Selection announcements carried the *focus* validity predicate; a WPF list box keeps focus on the list, so the answer was always "no" and each one died before speaking |
+| "General twice, then Speech 2 of 7" | `BuildId` fell back to `Guid.NewGuid()` for elements with no runtime id. Three mechanisms correlate by id and every one fails **open** when the id is unique. Now a composite of role, name, automation id and bounds |
+| The list read one behind | A `FocusTracker` exemption let through any announcement about an element it had never seen hold focus — meant to keep alerts audible, but alerts never carry a predicate at all |
+| Silence when a window opened | `Now` dropped every pending lower-priority item, including the control focus was landing on. It preempts without discarding now, like NVDA |
+| Spaces read as "line feed" | `Blank.Is` counts a space as blank — right for a line, wrong for a single character |
+| Combo boxes said "collapsed" | The expand/collapse rules were scoped by reason and state but not role, and a combo is *always* one or the other. Scoped to tree items |
+| Delete said nothing, ever | It is in the navigation-key map, so that branch claimed it and the deletion code below was unreachable |
+| Backspace only worked on text you had just typed | It read the word buffer, which is empty the moment you arrow into existing text — which is most deleting |
+| Delete read two or three characters | The neighbour capture moved one endpoint past the other; implementations normalise that by collapsing. Move-then-expand, never move-past |
+| Desktop items had no counts | The desktop's MSAA-backed list view publishes neither `PositionInSet` nor `SizeOfSet` |
+| Sliders announced "RatePercent", "PitchDelta" | The accessible name came from the bound property name — an implementation detail read aloud |
+| Ctrl+Space did nothing | Multi-select containers raise `ElementAddedToSelection` / `ElementRemovedFromSelection` and we listened for neither |
+
+**Backspace and Delete want opposite answers, and it is not arbitrary.**
+Backspace moves the caret away from what it removed, so naming what vanished is
+the only way to know what you lost. Delete leaves the caret still and pulls the
+rest of the line under it, so what you need is what is there *now*. Same as
+NVDA. `CaretTracker` keeps the characters either side as it goes, captured on
+samples that were happening anyway — so no timing is involved, and reading
+across a process boundary inside a hook (which is how Windows silently
+unregisters your hook) never has to happen.
+
+**Deletion echo is no longer a setting.** A reader that silently discards what
+you just removed has failed at the one job that keystroke has. `SpeakDeletedCharacters`
+is gone from the panel, the view model, the config and the merger. Its tests had
+asserted the property defaulted to true — testing a property rather than a
+behaviour, so they went on passing after the behaviour stopped consulting it.
+That is the worst thing a test can do; they now drive real keystrokes.
+
+### What was added, not fixed
+
+- **Verbosity**, which is what `SegmentKind` was for. Announcements are composed
+  from parts that each say what they *are*, so "stop telling me it is a list
+  item" is one filter over a list rather than an edit to forty rules. Role /
+  position / state / description / hints, in Speech settings. There is
+  deliberately **no switch for the name or the text** — a reader that can be
+  configured to stop saying what it is looking at has no remaining purpose.
+  The trick that made it reach today's rules: templates say `{name}, list item`
+  rather than `{name}, {role}`, so a literal exactly matching the node's
+  formatted role is tagged as a role.
+- **Synthesiser selection** on the Speech page, above Voice — a voice only means
+  anything inside a synthesiser. It surfaced a real bug: `SettingsViewModel`
+  hardcoded `Engine = "sapi5"`, so saving that dialog silently undid a choice
+  made in the synth dialog. A settings screen changing a setting it does not show.
+- **The Aura menu** on `Reader+A` — the tray's own menu at the cursor. One menu,
+  not two that mostly agree: a user who cannot say which menu they were in cannot
+  say what went wrong in it. Settings is reached from there, so the binding to
+  remember does not change when a panel is added. **Say-all moved to
+  `Reader+Shift+A`**, which was already the laptop binding.
+- **Voice, rate, pitch and volume apply as they change.** A voice you cannot hear
+  until you press OK is not a choice.
+- **An item that is selectable and not selected now says so**, gated on the
+  element actually exposing the selection-item pattern.
+
+### What to check this round
+
+1. **Ctrl+Space in a multi-select list** — "selected" / "not selected".
+2. **`Reader+A`** opens the Aura menu; **`Reader+Shift+A`** says all.
+3. **Backspace over existing text you did not just type** — the character.
+4. **Delete, repeatedly** — what is under the caret each time, not the previous
+   press's neighbour.
+5. **Arrow the desktop** — "3 of 42", and the icon name before its tooltip.
+6. **Tab to a combo box** — its current value, not "collapsed".
+7. **Verbosity toggles** in Speech settings actually silence their part.
+8. **Worth an ear:** the item-count `FindAll` is the first thing on the focus
+   path that scales with container size. A desktop of sixty icons is one call —
+   but if arrowing into a *very* large folder feels slower than before, that is
+   what to blame.
+
+### Still open
+
+- **Focus after deleting a file in Explorer.** Not addressed. Which event is or
+  is not arriving could not be determined from Linux, and guessing at it has
+  been expensive twice. The debug tracing now names the subject id of every
+  event and announcement, so the next recurrence has evidence.
+- Key echo, caret following, the review cursor and the watchdog are still inside
+  the host. Each is a candidate to follow `AnnouncementPolicy` out — and the
+  harness duplicating host logic is F5 open question 1, which has now cost
+  something real.
 
 ---
 
@@ -102,8 +223,20 @@ work without reading it.** In order:
 
 ```
 dotnet build AURA.slnx -p:EnableWindowsTargeting=true   →  0 Warning(s)  0 Error(s)
-dotnet test  AURA.slnx --no-build                       →  338 passed, 1 skipped, 0 failed
+dotnet test  AURA.slnx --no-build                       →  420 passed, 1 skipped, 0 failed
 ```
+
+Verified 2026-08-06 on Linux. `ReaderPlatform.Windows.Tests` targets
+`net10.0-windows` and does **not** run there, so 420 is the platform-neutral
+suite — the Windows-only tests need a Windows host.
+
+**One trap worth knowing before you trust a red suite.** `FirstPartyAppModuleTests`
+resolves the app-modules directory by taking the *first* `bin/<config>/<tfm>/`
+it finds containing one, so a stale output directory from an older TFM or the
+pre-rename `openreader.*` ids makes six tests fail with what looks like a real
+regression. `rm -rf src/ReaderHost.Windows/bin` and rebuild before believing
+them. Making that resolution pick deliberately, rather than first-wins, is a
+small fix nobody has made yet.
 
 ### The three findings that changed the plan
 
@@ -131,18 +264,25 @@ NVDA user will reach for and not find.
 
 ### What to do next, in order
 
+**F1 and F5a are done** — struck through below, kept for the reasoning. The
+live list is 1, 2 and 5.
+
 1. **Measure, on the VM.** `PerfTimer` on the hot path (F5c) and the R2 spike —
    the cross-process cost of a `TreeScope_Subtree` `BuildUpdatedCache` over a
    large page. R2 can invalidate the whole Read-mode design and it is cheap to
-   run. Both are gates, not work; do them before building.
+   run. Both are gates, not work; do them before building. **Round 3 added a
+   second thing to measure:** the item-count `FindAll` on the focus path, which
+   is the first call whose cost scales with container size.
 2. **Start the uiAccess certificate.** Weeks of lead time, nothing gates on it,
    and without it the keyboard hook does not fire in any elevated window — the
    reader looks frozen and the user cannot even stop speech.
-3. **Build F1** ([`foundation/F1-OUTPUT-MODEL.md`](foundation/F1-OUTPUT-MODEL.md)).
-   Everything else keys off it, including the test harness.
-4. **Build F5a** — golden transcripts. From that point every bug becomes a
-   permanent test. The first two files backfill the last two commits' bugs.
-5. Then F4b (COM ownership) → F2 → F3 → 4c.
+3. ~~**Build F1**~~ ([`foundation/F1-OUTPUT-MODEL.md`](foundation/F1-OUTPUT-MODEL.md)) —
+   **landed 2026-08-03.** Everything else keys off it, including the test harness.
+4. ~~**Build F5a**~~ — golden transcripts, **landed 2026-08-03**. Round 3 added
+   six more, and they caught real bugs; they also agreed with the host when both
+   were wrong in the same way, which is why the harness must stop duplicating
+   host logic (F5 open question 1).
+5. **Then F4b (COM ownership) → F2 → F3 → 4c.** This is the next build.
 
 ### Landed 2026-08-03
 
@@ -161,14 +301,18 @@ NVDA user will reach for and not find.
 These are all symptoms of the missing seams above. Fix them against the model,
 not individually — that is what produced the last four rounds of regressions.
 
-- Notepad reads a whole line on left-arrow to the line above.
-- Blank lines unreliable. *(F1: blankness is a property of the composed
-  presentation, not of a string compared with the last string.)*
-- Line endings not announced.
-- PowerShell numpad review dead. *(F3: the console is the first tree
-  interceptor, and it should be built before Read mode.)*
-- Backspace/Delete announcement missing (roadmap 3.6 #6). *(F1: the deleted text
-  is a segment captured before the keystroke.)*
+- ~~Notepad reads a whole line on left-arrow to the line above.~~ Fixed in round
+  2: the keystroke supplies the granularity, positions say what happened.
+- ~~Blank lines unreliable.~~ Fixed in round 2 (`Blank.Is` + trimming the line
+  terminator), and corrected again in round 3 — a *space* is a real character
+  with a name, not a blank.
+- ~~Line endings not announced.~~ Says "line feed".
+- ~~Backspace/Delete announcement missing (roadmap 3.6 #6).~~ Fixed in round 3:
+  `CaretTracker` keeps the characters either side of the caret on samples that
+  were happening anyway, so deletion reads them from memory.
+- **PowerShell numpad review dead.** Still open. *(F3: the console is the first
+  tree interceptor, and it should be built before Read mode.)*
+- **Focus after deleting a file in Explorer.** Still open; see round 3 above.
 
 ---
 
@@ -538,10 +682,13 @@ Phase 4 has no fixed deadline; users will tell us what to build by then.
 ## Useful commands
 
 ```
-cd "/run/media/cody/Personal Data/Data/Github/OpenReader"
-dotnet build AURA.slnx -p:EnableWindowsTargeting=true
+git clone https://github.com/churst90/accessible-user-reading-assistant.git
+dotnet build AURA.slnx -p:EnableWindowsTargeting=true   # drop the flag on Windows
 dotnet test  AURA.slnx --no-build
 dotnet run   --project src/ReaderHost.Windows
+
+# if six FirstPartyAppModuleTests fail, suspect stale build output first
+rm -rf src/ReaderHost.Windows/bin && dotnet build AURA.slnx -p:EnableWindowsTargeting=true
 
 # enable plugin hot-reload
 $env:AURA_DEV = "1"

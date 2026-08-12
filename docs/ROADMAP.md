@@ -211,18 +211,31 @@ dialogs), not just unit tests. Ordered by user-visible impact:
       on rapid arrowing. Make it event-driven (trust UIA
       `TextSelectionChangedEvent` where supported; keystroke + Win32 only as
       the fallback for controls that don't fire it, e.g. classic Notepad).
-- [ ] **#5 — Nits.** Word echo splitting on apostrophe/hyphen is fixed for
-      the text model (a word is a run of non-whitespace, covered by
-      `StringTextSurfaceTests`), but `KeyEchoService` has its own splitter and
-      still needs porting. `KeyTranslator` dead-key reset is still documented
-      but not performed. Char echo cut by the generic cancel on fast typing is
-      unverified.
-- [ ] **#6 — Backspace / Delete announcement.** Regressed by the #4 rewrite
-      and deliberately left out of it: position diffing cannot describe an
-      edit, because the two positions belong to different documents. Saying
-      what was just deleted needs the text captured *before* the keystroke,
-      which belongs in key echo. `CaretFollowService.MightMoveCaret` excludes
-      both keys so nothing wrong is announced in the meantime.
+- [ ] **#5 — Nits.** Two of three closed.
+      - [x] Word echo splitting on apostrophe/hyphen. `KeyEchoService` no longer
+            has its own splitter; it calls `WordBoundary.IsTerminator`, the one
+            definition shared with the text model. `char.IsPunctuation` includes
+            apostrophes and hyphens, which is why it used to say "don" then "t".
+      - [ ] `KeyTranslator` dead-key reset is **still documented but not
+            performed** — the remark claims the state is reset on every call so
+            the next press is not swallowed, and `TryTranslate` never does it
+            (a `-1` return is discarded without the flushing second call). This
+            is exactly the round-3 pattern: a comment answering a real question
+            wrongly, which is worse than no comment.
+      - [ ] Char echo cut by the generic cancel on fast typing is still
+            unverified. Echo announcements carry no cancel group, so a burst
+            queues rather than superseding. Pre-dates F1; needs an ear.
+- [x] **#6 — Backspace / Delete announcement.** Done 2026-08-06, and not the way
+      this entry expected. Position diffing genuinely cannot describe an edit —
+      but the answer was not "capture the text before the keystroke in key echo"
+      either, because the only moment the character *can* be read has passed by
+      the time anyone wants it, and reading across a process boundary inside a
+      hook is how Windows silently unregisters your hook. `CaretTracker` instead
+      keeps the characters either side of the caret as it goes, captured on
+      samples that were already happening, and deletion reads them from memory.
+      Backspace names what vanished; Delete names what is now under the caret,
+      because the caret does not move and the rest of the line comes to it.
+      Deletion echo is no longer a setting.
 - [x] **Refactor (from the architecture question):** done as
       `ITextSurface` / `ITextRange` / `ITextSurfaceProvider` — see
       `docs/TEXT_MODEL.md`. Original note below.
@@ -235,6 +248,45 @@ dialogs), not just unit tests. Ordered by user-visible impact:
 **Done when:** focusing Notepad / the Run box reads sensibly, arrowing reads
 the right line every time, selection/alert/dialog events are heard, and review
 navigation tracks the caret — all confirmed on the running exe.
+
+## Phase 3.7 — The listening rounds — **2026-08-03 to 2026-08-06**
+
+Not a planned phase. F1 and F5a landed, the build was run on real hardware for
+the first time in a while, and what came back was three rounds of bugs that no
+test had caught and that took seconds to hear. Recorded here because the ratio
+is the finding: **thirteen behavioural bugs, all audible immediately, none
+visible to a green suite.**
+
+Full detail is in [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md). The summary:
+
+- [x] **Round 1** — F1's validity predicates replacing cancel-on-keypress.
+- [x] **Round 2** — blank lines, wrapping granularity, line endings, tooltips
+      racing icon names.
+- [x] **Round 3** — ten commits. Lists silent (selection announcements carrying
+      a focus predicate), items announced twice (`Guid.NewGuid()` node ids
+      failing *open* in three correlation mechanisms), the list reading one
+      behind, silence on window open, spaces read as "line feed", combo boxes
+      saying "collapsed", Delete never firing, Backspace only working on text
+      you had just typed, desktop item counts absent, sliders reading their
+      bound property names aloud, Ctrl+Space silent.
+- [x] **`AnnouncementPolicy` extracted** to `Reader.Core` with nine tests. The
+      host and the transcript harness had each held a copy of the rules about
+      which announcements survive; they drifted, and the harness built to catch
+      that class of bug agreed with the host because both were wrong the same
+      way.
+- [x] **Verbosity** — role / position / state / description / hints, filtered
+      per segment kind. Deliberately no switch for the name or the text.
+- [x] **The Aura menu** on `Reader+A`; say-all moved to `Reader+Shift+A`.
+- [x] **Synthesiser selection** on the Speech page, which surfaced
+      `SettingsViewModel` hardcoding `Engine = "sapi5"` and silently undoing the
+      synth dialog's choice on every save.
+- [x] **Voice, rate, pitch and volume apply as they change**, rather than on OK.
+
+**The lesson, kept because it will apply again:** four separate bugs were code
+that reads as live and does nothing — dead predicate clauses, declared-but-never-populated
+event fields, a disabled duplicate rule, and a property-name string typo'd
+across five files with no error anywhere. Constants where core depends on them,
+and delete the rest.
 
 ## Phase 4 — Depth (target: open-ended)
 

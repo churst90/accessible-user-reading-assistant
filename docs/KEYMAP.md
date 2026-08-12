@@ -19,12 +19,11 @@ a binding and do not document it, that test fails.
 | `Reader+T` | Report title — the window title, not the focused control |
 | `Reader+F12` | Speak time. Press twice quickly for the date. |
 | `Reader+L` | Read current line |
-| `Reader+A` | Say all from the review cursor |
+| `Reader+Shift+A` | Say all from the review cursor |
 | `Reader+P` | Cycle punctuation level — None / Some / Most / All |
 | `Reader+1` | Toggle keyboard help mode |
 | `Reader+F1` | Open documentation |
-| `Reader+N` | Open settings |
-| `Reader+A` | Open the Aura menu (settings, docs, exit) |
+| `Reader+A` | Open the Aura menu — settings, docs, exit |
 | `Reader+Q` | Exit dialog |
 | `Ctrl+Reader+S` | Choose synthesiser |
 | `Ctrl+Reader+D` | **Copy diagnostics to the clipboard** — use this in bug reports |
@@ -161,7 +160,7 @@ including the two with no default chord.
 |---|---|---|
 | `StopSpeech` | Stop speaking immediately | `Ctrl` |
 | `SayAll` | Read from the beginning | `Reader+Shift+Down` (desktop), `Ctrl+Shift+Reader+A` (laptop) |
-| `SayAllFromCursor` | Read from the review cursor | `Reader+A`, `Reader+Numpad+`, `Reader+Down` |
+| `SayAllFromCursor` | Read from the review cursor | `Reader+Shift+A`, `Reader+Numpad+`, `Reader+Down` |
 | `ReadCharacter` | Speak the character at the review cursor | `Numpad2` / `Reader+.` |
 | `ReadNextCharacter` | Move right one character and speak it | `Numpad3` / `Reader+Right` |
 | `ReadPreviousCharacter` | Move left one character and speak it | `Numpad1` / `Reader+Left` |
