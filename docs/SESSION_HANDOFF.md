@@ -228,7 +228,21 @@ dotnet test  AURA.slnx --no-build                       →  420 passed, 1 skipp
 
 Verified 2026-08-06 on Linux. `ReaderPlatform.Windows.Tests` targets
 `net10.0-windows` and does **not** run there, so 420 is the platform-neutral
-suite — the Windows-only tests need a Windows host.
+suite. On Windows CI (2026-08-12): **424 passed, 2 skipped, 0 failed**.
+
+**That "+4" is the finding, not the reassurance.** The Windows-only suite is
+five tests: four of them prosody arithmetic, and the fifth a placeholder named
+`UiaProvider_translates_focus_event_to_AccessibilityEvent`, skipped since
+Phase 1 and still skipped through the provider being written, migrated to
+native COM, and rewritten. `NativeUiaProvider`, `NativeUiaNodeMapper`,
+`UiaTextSurface`, `Win32TextSurface`, `Sapi5Engine`, `EspeakNgEngine` and the
+keyboard hook have **no coverage at all**.
+
+Every round-3 bug was in that layer. It is where the hardware bugs are because
+it is the layer nothing checks — which promotes **F5b** from "nice, after F5a"
+to the thing standing between here and not rediscovering these by ear. The
+golden transcripts cover the composition path above it; nothing covers the
+translation from a real UIA element down to an `AccessibleNode`.
 
 **One trap worth knowing before you trust a red suite.** `FirstPartyAppModuleTests`
 resolves the app-modules directory by taking the *first* `bin/<config>/<tfm>/`

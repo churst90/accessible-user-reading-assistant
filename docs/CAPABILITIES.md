@@ -160,7 +160,7 @@ does more work here than any other.
 | Log viewer in-app | yes | **planned** | |
 | Speech viewer | yes | **planned** | F1 |
 | Golden transcript regression tests | **no** | **shipped** (F5a) | **Nobody has this.** 14 scenarios; each one is a bug that cannot come back. See the caveat below |
-| Backend conformance suites | no | **planned** (F5b) | |
+| Backend conformance suites | no | **planned** (F5b) | The platform layer has *no* coverage today — see the caveat below. This is the highest-value untested surface |
 | Measured latency budgets | no | **planned** (F5c) | Principle stated since day one, never measured |
 | Freeze watchdog | yes | **partial** | Beeps; does not recover. F4 |
 | Crash recovery | yes | **partial** | Global handlers exist; no provider rebuild |
@@ -229,3 +229,19 @@ is F5 open question 1, and it is now the most valuable unfixed thing here.
 So read this scoreboard as *what has been built*, and
 [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) as *what has been heard*. Until a
 daily driver exists, the second number is the real one.
+
+**And there is a reason those rounds found so much.** CI ran the Windows-only
+suite on 2026-08-12 for the first time in a long while:
+`ReaderPlatform.Windows.Tests` contains **five tests, four of which are prosody
+arithmetic**, and the fifth — named
+`UiaProvider_translates_focus_event_to_AccessibilityEvent` — is a placeholder
+skipped since Phase 1 that has stayed skipped while the provider underneath it
+was written, migrated to native COM, and rewritten.
+
+Which means `NativeUiaProvider`, `NativeUiaNodeMapper`, `UiaTextSurface`,
+`Win32TextSurface`, both speech engines and the keyboard hook have **no test
+coverage at all**. Every round-3 bug lived in exactly that layer — node
+identity, desktop item counts, the combo-box selection fallback, the ungated
+pattern call on the focus path. The platform layer is where the hardware bugs
+are because it is the layer nothing checks. That is what **F5b (backend
+conformance suites)** is for, and this is its justification.
