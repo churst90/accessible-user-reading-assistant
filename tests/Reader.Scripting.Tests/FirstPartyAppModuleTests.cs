@@ -52,19 +52,44 @@ public class FirstPartyAppModuleTests
         {
             return string.Empty;
         }
-        // Pick whatever Configuration\TFM directory exists with an app-modules folder.
-        foreach (var config in Directory.EnumerateDirectories(hostBin))
+
+        // Take the most recently *built* app-modules directory, not the first
+        // one found.
+        //
+        // First-wins cost half an hour once: a bin\Debug\net8.0-windows\ left
+        // over from before the retarget still held modules under the old
+        // openreader.* ids, the walk reached it before the current net10.0
+        // output, nothing loaded, and six tests failed in a way indistinguishable
+        // from a real regression. The build output is not a set of equally valid
+        // candidates — the newest one is the one this build produced.
+        //
+        // Freshness is the newest file *inside* the directory, not the
+        // directory's own stamp: overwriting a file in place does not touch the
+        // containing directory, so a rebuild of the same modules would leave
+        // the folder looking as old as the day it was created.
+        return Directory.EnumerateDirectories(hostBin)
+            .SelectMany(Directory.EnumerateDirectories)
+            .Select(tfm => Path.Combine(tfm, "app-modules"))
+            .Where(Directory.Exists)
+            .Select(dir => (Dir: dir, Built: NewestWriteUtc(dir)))
+            .OrderByDescending(candidate => candidate.Built)
+            .Select(candidate => candidate.Dir)
+            .FirstOrDefault() ?? string.Empty;
+    }
+
+    /// <summary>Newest last-write time anywhere under <paramref name="root"/>.</summary>
+    private static DateTime NewestWriteUtc(string root)
+    {
+        var newest = DateTime.MinValue;
+        foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
         {
-            foreach (var tfm in Directory.EnumerateDirectories(config))
+            var written = File.GetLastWriteTimeUtc(file);
+            if (written > newest)
             {
-                var candidate = Path.Combine(tfm, "app-modules");
-                if (Directory.Exists(candidate))
-                {
-                    return candidate;
-                }
+                newest = written;
             }
         }
-        return string.Empty;
+        return newest;
     }
 
     private static ProcessInfo Process(string exe, string title) =>

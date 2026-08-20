@@ -135,6 +135,9 @@ internal static class CommandBindings
                     // Executable name only — never the control's name or value.
                     new("Focused app", DescribeFocusedApp(focused)),
                     new("Focused role", focused?.Role.ToString()),
+                    // Live should be small and steady; released should climb.
+                    // Live climbing in step with released is the freeze signature.
+                    new("UIA references", DescribeComReferences(provider)),
                     new("Log directory", LogPaths.LogDirectory),
                 };
 
@@ -269,6 +272,16 @@ internal static class CommandBindings
             var effectiveText = string.IsNullOrEmpty(text) ? "blank" : text;
             pipeline.Submit(new SpeechRequest(reason, Node: null, RawText: effectiveText, AppExecutableName: null));
         }
+    }
+
+    /// <summary>
+    /// How many UIA references the provider owns, and how many it has handed
+    /// back. See <c>docs/THREAD_MAP.md</c> for what the pair means.
+    /// </summary>
+    private static string DescribeComReferences(NativeUiaProvider provider)
+    {
+        var (live, released) = provider.ComReferences;
+        return string.Create(CultureInfo.InvariantCulture, $"{live} live, {released} released");
     }
 
     /// <summary>

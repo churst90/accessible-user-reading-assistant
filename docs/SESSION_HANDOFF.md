@@ -244,13 +244,14 @@ to the thing standing between here and not rediscovering these by ear. The
 golden transcripts cover the composition path above it; nothing covers the
 translation from a real UIA element down to an `AccessibleNode`.
 
-**One trap worth knowing before you trust a red suite.** `FirstPartyAppModuleTests`
-resolves the app-modules directory by taking the *first* `bin/<config>/<tfm>/`
-it finds containing one, so a stale output directory from an older TFM or the
-pre-rename `openreader.*` ids makes six tests fail with what looks like a real
-regression. `rm -rf src/ReaderHost.Windows/bin` and rebuild before believing
-them. Making that resolution pick deliberately, rather than first-wins, is a
-small fix nobody has made yet.
+~~**One trap worth knowing before you trust a red suite.**~~ Fixed 2026-08-20.
+`FirstPartyAppModuleTests` used to resolve the app-modules directory by taking
+the *first* `bin/<config>/<tfm>/` containing one, so a stale output directory
+from an older TFM made six tests fail with what looked exactly like a real
+regression. It now takes the most recently built candidate, measured by the
+newest file *inside* it — a directory's own stamp does not move when a rebuild
+overwrites files in place. Verified by aging a leftover `net8.0-windows` tree to
+January and confirming the suite stays green with it present.
 
 ### The three findings that changed the plan
 
@@ -278,8 +279,21 @@ NVDA user will reach for and not find.
 
 ### What to do next, in order
 
-**F1 and F5a are done** — struck through below, kept for the reasoning. The
-live list is 1, 2 and 5.
+**F1, F5a and F4b are done** — struck through below, kept for the reasoning.
+The live list is 1, 2 and 5.
+
+**F4b landed 2026-08-20**, with F4a written first because its invariant cannot
+be stated without a thread map. See [`THREAD_MAP.md`](THREAD_MAP.md). What it
+found on the way in: the hazard was not a rare path but the hottest one —
+`_elementCache.Clear()` on every focus change to a new control handed every
+cached element to the finalizer thread, and `EnrichSetPosition`'s `FindAll`
+did the same with every sibling, so arrowing a sixty-icon desktop was
+sixty-odd uncontrolled releases per keypress. It also left one open question
+answered only by evidence-gathering: **which COM apartment owns the UIA client
+is currently an accident of async scheduling**, because `Main` is `[STAThread]`
+but `StartAsync` is reached after awaits with no synchronization context. The
+provider now logs the apartment at startup; giving UIA a thread of its own is
+the follow-up, and it wants that log in hand rather than a guess from Linux.
 
 1. **Measure, on the VM.** `PerfTimer` on the hot path (F5c) and the R2 spike —
    the cross-process cost of a `TreeScope_Subtree` `BuildUpdatedCache` over a

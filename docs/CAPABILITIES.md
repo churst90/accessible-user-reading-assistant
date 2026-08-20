@@ -162,7 +162,8 @@ does more work here than any other.
 | Golden transcript regression tests | **no** | **shipped** (F5a) | **Nobody has this.** 14 scenarios; each one is a bug that cannot come back. See the caveat below |
 | Backend conformance suites | no | **planned** (F5b) | The platform layer has *no* coverage today — see the caveat below. This is the highest-value untested surface |
 | Measured latency budgets | no | **planned** (F5c) | Principle stated since day one, never measured |
-| Freeze watchdog | yes | **partial** | Beeps; does not recover. F4 |
+| Freeze watchdog | yes | **partial** | Beeps; does not recover. F4d |
+| Deterministic COM lifetime | workaround | **shipped** (F4b) | AURA is *ahead*. NVDA disables automatic GC and collects at one point in the main loop, after issue #11398; AURA owns every reference explicitly and drains a release queue at that same point, by design rather than after the bug hunt |
 | Crash recovery | yes | **partial** | Global handlers exist; no provider rebuild |
 
 ## Localisation

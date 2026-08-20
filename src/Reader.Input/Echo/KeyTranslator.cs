@@ -9,8 +9,10 @@ namespace Aura.Input.Echo;
 /// </summary>
 /// <remarks>
 /// Wraps Win32 <c>ToUnicodeEx</c>. Returns null for non-character keys
-/// (modifiers, function keys, navigation keys). The dead-key state is reset
-/// on every call so we don't accidentally swallow the next press.
+/// (modifiers, function keys, navigation keys), and for dead keys, which commit
+/// no character of their own. A dead key leaves an accent pending in the
+/// layout's state — state shared with the application being typed into — so it
+/// is flushed before returning. See <see cref="FlushDeadKey"/>.
 /// </remarks>
 public static class KeyTranslator
 {
@@ -76,12 +78,62 @@ public static class KeyTranslator
         var scan = MapVirtualKeyEx((uint)virtualKey, 0 /* MAPVK_VK_TO_VSC */, layout);
         var buffer = stackalloc char[8];
         var rc = ToUnicodeEx((uint)virtualKey, scan, keyboardState, buffer, 8, 0, layout);
+
+        if (rc < 0)
+        {
+            // A dead key — the acute on a US-International layout, the circumflex
+            // on a French one. It commits no character yet, so there is nothing
+            // to echo, but the call has just left the accent pending inside the
+            // layout's own state.
+            //
+            // That state is shared with the application the user is typing into.
+            // Leaving it set means their next keypress combines with an accent
+            // that we, not they, put there — so typing "e" after a dead key we
+            // probed produces a character nobody asked for, or the accent is
+            // swallowed and never appears. A screen reader must not change what
+            // its user is typing.
+            //
+            // Flushing is a second call the layout can absorb: translating a
+            // space with no modifiers consumes the pending accent and leaves the
+            // state clean. The result is thrown away.
+            FlushDeadKey(layout);
+            return null;
+        }
+
         if (rc == 1)
         {
             var ch = buffer[0];
             return char.IsControl(ch) ? null : ch;
         }
+
+        // rc == 0 is "no translation"; rc >= 2 is a layout that produced several
+        // characters at once, which no echo of a single keystroke should claim
+        // to describe.
         return null;
+    }
+
+    /// <summary>
+    /// Consume a pending dead key so the next translation — ours or the
+    /// application's — starts from a clean layout state.
+    /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static unsafe void FlushDeadKey(nint layout)
+    {
+        const int VK_SPACE = 0x20;
+        var empty = new byte[256];
+        var buffer = stackalloc char[8];
+        var scan = MapVirtualKeyEx(VK_SPACE, 0 /* MAPVK_VK_TO_VSC */, layout);
+
+        // Bounded. A layout that keeps reporting a dead key would otherwise spin
+        // here, on the keyboard hook, which is the one thread that must never
+        // take its time.
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            if (ToUnicodeEx(VK_SPACE, scan, empty, buffer, 8, 0, layout) >= 0)
+            {
+                return;
+            }
+        }
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]

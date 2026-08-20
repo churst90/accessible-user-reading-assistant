@@ -3,6 +3,7 @@ using System.Runtime.Versioning;
 using System.Threading.Channels;
 using Aura.Abstractions.Accessibility;
 using Aura.Diagnostics;
+using Aura.Platform.Windows.Interop;
 using Serilog;
 using Windows.Win32.UI.Accessibility;
 
@@ -41,28 +42,45 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
     private readonly record struct RawEvent(
         RawKind Kind,
-        IUIAutomationElement Element,
+        ComOwned<IUIAutomationElement> Element,
         string? Text = null);
 
     private readonly Channel<RawEvent> _events;
     private readonly object _gate = new();
     private readonly List<Subscription> _subscriptions = new();
-    private readonly Dictionary<NodeId, IUIAutomationElement> _elementCache = new();
+    private readonly Dictionary<NodeId, ComOwned<IUIAutomationElement>> _elementCache = new();
+    private readonly ComReleaseQueue _com = new();
     private readonly ILogger _log;
     private readonly CancellationTokenSource _cts = new();
 
     private IUIAutomation? _automation;
     private IUIAutomationCacheRequest? _cacheRequest;
+    // Both are COM objects returned fresh on every property read, so they are
+    // fetched once and kept rather than re-marshalled on every focus change.
+    private ComOwned<IUIAutomationTreeWalker>? _controlWalker;
+    private ComOwned<IUIAutomationCondition>? _trueCondition;
     private FocusSink? _focusSink;
     private EventSink? _eventSink;
     private NotificationSink? _notificationSink;
     private PropertySink? _propertySink;
     private Task? _dispatchTask;
     private AccessibleNode? _focused;
-    private IUIAutomationElement? _focusedElement;
+    private ComOwned<IUIAutomationElement>? _focusedElement;
     private string? _lastFocusKey;
     private bool _started;
     private bool _disposed;
+
+    /// <summary>
+    /// Live UIA references currently owned, and the running total handed back.
+    /// </summary>
+    /// <remarks>
+    /// In a bug report these two numbers answer a question nothing else can:
+    /// whether the release queue is draining. A live count that climbs and
+    /// never falls is a leak. A live count that stays low while the released
+    /// total climbs is the loop doing its job. Both are counts of our own
+    /// bookkeeping — they say nothing about what the user was reading.
+    /// </remarks>
+    public (int Live, long Released) ComReferences => (_com.LiveCount, _com.ReleasedCount);
 
     public NativeUiaProvider()
     {
@@ -86,7 +104,12 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             try
             {
-                return _automation is null ? null : NativeUiaNodeMapper.Map(_automation.GetRootElement());
+                if (_automation is null)
+                {
+                    return null;
+                }
+                using var root = _com.Own(_automation.GetRootElement());
+                return NativeUiaNodeMapper.Map(root.Value);
             }
             catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
             {
@@ -96,15 +119,33 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
     }
 
     /// <summary>The live element behind a node id, if it is the one in focus.</summary>
+    /// <remarks>
+    /// A <em>borrow</em>. The cache owns the reference and releases it; the
+    /// caller reads through it and must not hold it past the call, because the
+    /// next focus change to a different control empties the cache.
+    /// </remarks>
     internal IUIAutomationElement? TryGetElement(NodeId id)
     {
         lock (_gate)
         {
-            return _elementCache.TryGetValue(id, out var element) ? element : null;
+            return _elementCache.TryGetValue(id, out var element) ? element.ValueOrNull : null;
         }
     }
 
     internal IUIAutomation? Automation => _automation;
+
+    /// <summary>
+    /// Take ownership of an element the caller has just been handed by UIA.
+    /// </summary>
+    internal ComOwned<IUIAutomationElement> OwnElement(IUIAutomationElement element)
+        => _com.Own(element);
+
+    /// <summary>
+    /// Take an independent reference to an element borrowed from this provider,
+    /// for a caller that needs it after focus has moved on.
+    /// </summary>
+    internal ComOwned<IUIAutomationElement> OwnElementReference(IUIAutomationElement element)
+        => _com.OwnNewReference(element);
 
     /// <summary>
     /// The title of the window owning the focused element. Used by "report
@@ -116,7 +157,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         IUIAutomationElement? element;
         lock (_gate)
         {
-            element = _focusedElement;
+            element = _focusedElement?.ValueOrNull;
         }
         var (_, name) = GetTopLevelWindowInfo(element);
         return string.IsNullOrEmpty(name) ? null : name;
@@ -132,10 +173,19 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             return (0, null);
         }
+        var walker = _controlWalker?.ValueOrNull;
+        if (walker is null)
+        {
+            return (0, null);
+        }
+
+        // Every step up the chain marshals a new element. Walking sixty-four of
+        // them and letting them fall out of scope is sixty-four releases on
+        // somebody else's thread, per call, on a path "report title" runs.
+        ComOwned<IUIAutomationElement>? ancestor = null;
         try
         {
-            var walker = _automation.ControlViewWalker;
-            var current = element;
+            var current = element; // borrowed from the caller
             // Bounded: a pathological or cyclic tree must not spin here on the
             // dispatch loop.
             for (var depth = 0; current is not null && depth < 64; depth++)
@@ -147,12 +197,22 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                     var name = current.GetCurrentPropertyValue(UIA_PROPERTY_ID.UIA_NamePropertyId);
                     return (handle is int h ? h : 0, name as string);
                 }
-                current = walker.GetParentElement(current);
+
+                var parent = walker.GetParentElement(current);
+                // Release the previous rung before taking the next one, so the
+                // walk holds one ancestor at a time rather than the whole chain.
+                ancestor?.Dispose();
+                ancestor = _com.OwnIfNotNull(parent);
+                current = ancestor?.ValueOrNull;
             }
         }
         catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
         {
             _log.Warning(ex, "could not resolve the top-level window");
+        }
+        finally
+        {
+            ancestor?.Dispose();
         }
         return (0, null);
     }
@@ -163,7 +223,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         IUIAutomationElement? element;
         lock (_gate)
         {
-            element = _focusedElement;
+            element = _focusedElement?.ValueOrNull;
         }
         return GetTopLevelWindowInfo(element);
     }
@@ -172,9 +232,13 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
     {
         try
         {
-            return _automation is null
-                ? null
-                : NativeUiaNodeMapper.Map(_automation.ElementFromPoint(new System.Drawing.Point(screenX, screenY)));
+            if (_automation is null)
+            {
+                return null;
+            }
+            using var hit = _com.Own(
+                _automation.ElementFromPoint(new System.Drawing.Point(screenX, screenY)));
+            return NativeUiaNodeMapper.Map(hit.Value);
         }
         catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
         {
@@ -202,6 +266,20 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         }
         _started = true;
 
+        // Which apartment the client is created in decides how every element it
+        // ever returns is marshalled, for the life of the process — and today
+        // that is not chosen anywhere. Main is [STAThread], but StartAsync is
+        // reached after awaits with no synchronization context, so the thread
+        // that gets here is whichever one the scheduler supplied. Logged rather
+        // than asserted because the fix is to give UIA a thread of its own, and
+        // that is a change worth making with evidence in hand. See
+        // docs/THREAD_MAP.md.
+        _log.Information(
+            "creating the UIA client on thread {ThreadId} ({Apartment}, pool={IsPool})",
+            Environment.CurrentManagedThreadId,
+            Thread.CurrentThread.GetApartmentState(),
+            Thread.CurrentThread.IsThreadPoolThread);
+
         _automation = NativeUia.Create();
         // IUIAutomation6 arrived in Windows 10 1809. Everything below degrades
         // gracefully without it — no coalescing, no notification events.
@@ -210,6 +288,12 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             NativeUia.TryEnableCoalescing(_automation);
         }
         _cacheRequest = NativeUia.BuildCacheRequest(_automation);
+
+        // Fetched once and kept. Both are COM objects returned fresh on every
+        // access, and both sat on the focus path: the walker in the window
+        // lookup, the condition in the set-position count.
+        _controlWalker = _com.Own(_automation.ControlViewWalker);
+        _trueCondition = _com.Own(_automation.CreateTrueCondition());
 
         _focusSink = new FocusSink(this);
         _eventSink = new EventSink(this);
@@ -247,7 +331,8 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         {
             return;
         }
-        var root = _automation.GetRootElement();
+        using var rootOwner = _com.Own(_automation.GetRootElement());
+        var root = rootOwner.Value;
 
         Register(UIA_EVENT_ID.UIA_LiveRegionChangedEventId, "live-region");
         Register(UIA_EVENT_ID.UIA_Window_WindowOpenedEventId, "window-opened");
@@ -313,12 +398,13 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 // two different cancel groups, so neither superseded the other.
                 (int)UIA_PROPERTY_ID.UIA_NamePropertyId,
             ];
+            using var root = _com.Own(_automation.GetRootElement());
             unsafe
             {
                 fixed (int* ptr = properties)
                 {
                     _automation.AddPropertyChangedEventHandlerNativeArray(
-                        _automation.GetRootElement(),
+                        root.Value,
                         TreeScope.TreeScope_Subtree,
                         _cacheRequest,
                         _propertySink,
@@ -350,8 +436,9 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         try
         {
             _notificationSink = new NotificationSink(this);
+            using var root = _com.Own(_automation.GetRootElement());
             six.AddNotificationEventHandler(
-                _automation.GetRootElement(), TreeScope.TreeScope_Subtree, _cacheRequest, _notificationSink);
+                root.Value, TreeScope.TreeScope_Subtree, _cacheRequest, _notificationSink);
             _log.Debug("registered notification handler");
         }
         catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
@@ -362,18 +449,34 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
     // ---- sinks: minimum work, then queue -----------------------------------
 
+    /// <summary>
+    /// Take ownership of the element the callback handed us and put it on the
+    /// dispatch queue.
+    /// </summary>
+    /// <remarks>
+    /// This is where a UIA reference crosses from the provider's callback
+    /// thread to ours, and it is the moment ownership has to become explicit.
+    /// If the write does not land, the reference is released here rather than
+    /// left for whoever collects it.
+    /// </remarks>
     private void Queue(RawKind kind, IUIAutomationElement? element, string? text = null)
     {
         if (element is null)
         {
             return;
         }
+        var owned = _com.Own(element);
         try
         {
-            _events.Writer.TryWrite(new RawEvent(kind, element, text));
+            if (!_events.Writer.TryWrite(new RawEvent(kind, owned, text)))
+            {
+                // Channel completed — shutting down. Nobody will drain this.
+                owned.Dispose();
+            }
         }
         catch (Exception ex) when (NativeUiaNodeMapper.IsProviderFailure(ex))
         {
+            owned.Dispose();
             _log.Warning(ex, "ignored exception queueing {Kind}", kind);
         }
     }
@@ -441,6 +544,18 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 {
                     _log.Warning(ex, "dispatch loop threw on {Kind}", raw.Kind);
                 }
+                finally
+                {
+                    // The event's own reference, unless Handle moved it into
+                    // the focus cache. Disposing an emptied owner is a no-op.
+                    raw.Element.Dispose();
+
+                    // The known point in the loop. Everything disposed while
+                    // handling this event is released here, on this thread,
+                    // between events — never on the finalizer thread, and never
+                    // in the middle of composing an announcement.
+                    _com.Drain();
+                }
             }
         }
         catch (OperationCanceledException)
@@ -451,6 +566,9 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
     private void Handle(RawEvent raw)
     {
+        // Everything except focus reads through the reference and is done with
+        // it when the case returns; the loop's finally releases it. Focus is the
+        // exception — it keeps the element, so it takes the owner.
         switch (raw.Kind)
         {
             case RawKind.Focus:
@@ -459,45 +577,55 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
             case RawKind.Value:
             case RawKind.Text:
-                Emit(raw.Element, AccessibilityEventKind.ValueChanged, focusedOnly: true);
+                Emit(raw.Element.Value, AccessibilityEventKind.ValueChanged, focusedOnly: true);
                 break;
 
             case RawKind.CaretMoved:
-                Emit(raw.Element, AccessibilityEventKind.CaretMoved, focusedOnly: true);
+                Emit(raw.Element.Value, AccessibilityEventKind.CaretMoved, focusedOnly: true);
                 break;
 
             case RawKind.Selection:
-                Emit(raw.Element, AccessibilityEventKind.SelectionChanged, focusedOnly: false);
+                Emit(raw.Element.Value, AccessibilityEventKind.SelectionChanged, focusedOnly: false);
                 break;
 
             case RawKind.SelectionAdded:
-                Emit(raw.Element, AccessibilityEventKind.SelectionAdded, focusedOnly: false);
+                Emit(raw.Element.Value, AccessibilityEventKind.SelectionAdded, focusedOnly: false);
                 break;
 
             case RawKind.SelectionRemoved:
-                Emit(raw.Element, AccessibilityEventKind.SelectionRemoved, focusedOnly: false);
+                Emit(raw.Element.Value, AccessibilityEventKind.SelectionRemoved, focusedOnly: false);
                 break;
 
             case RawKind.LiveRegion:
-                Emit(raw.Element, AccessibilityEventKind.LiveRegionChanged, focusedOnly: false);
+                Emit(raw.Element.Value, AccessibilityEventKind.LiveRegionChanged, focusedOnly: false);
                 break;
 
             case RawKind.Alert:
-                Emit(raw.Element, AccessibilityEventKind.AlertRaised, focusedOnly: false);
+                Emit(raw.Element.Value, AccessibilityEventKind.AlertRaised, focusedOnly: false);
                 break;
 
             case RawKind.ToolTip:
-                Emit(raw.Element, AccessibilityEventKind.ToolTipOpened, focusedOnly: false);
+                Emit(raw.Element.Value, AccessibilityEventKind.ToolTipOpened, focusedOnly: false);
                 break;
 
             case RawKind.Notification:
-                HandleNotification(raw.Element, raw.Text);
+                HandleNotification(raw.Element.Value, raw.Text);
                 break;
         }
     }
 
-    private void HandleFocus(IUIAutomationElement element)
+    /// <summary>
+    /// Handle a focus change, taking ownership of the element.
+    /// </summary>
+    /// <remarks>
+    /// The one event whose element outlives the event: it becomes the
+    /// remembered focus, and the caret and text paths read through it until
+    /// focus moves again. Ownership is moved out of <paramref name="incoming"/>
+    /// rather than copied — one reference, one owner.
+    /// </remarks>
+    private void HandleFocus(ComOwned<IUIAutomationElement> incoming)
     {
+        var element = incoming.Value;
         var node = NativeUiaNodeMapper.MapCached(element);
         if (node is null)
         {
@@ -511,18 +639,46 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
 
         var key = FocusKey(node);
         bool sameNode, sameControl;
+        // Emptied inside the lock, released outside it: a COM release can block
+        // on a wedged provider, and holding _gate through that would take every
+        // thread that asks what has focus down with it.
+        var evicted = new List<ComOwned<IUIAutomationElement>>();
         lock (_gate)
         {
             sameNode = _focused is { } prev && prev.Id == node.Id;
             sameControl = string.Equals(_lastFocusKey, key, StringComparison.Ordinal);
             _focused = node;
-            _focusedElement = element;
+
+            if (_focusedElement is { } previous)
+            {
+                evicted.Add(previous);
+            }
+            var owned = incoming.Transfer();
+            _focusedElement = owned;
+
             if (!sameNode)
             {
+                foreach (var stale in _elementCache.Values)
+                {
+                    evicted.Add(stale);
+                }
                 _elementCache.Clear();
             }
-            _elementCache[node.Id] = element;
+            else if (_elementCache.TryGetValue(node.Id, out var replaced))
+            {
+                evicted.Add(replaced);
+            }
+            // The cache borrows from the focus owner; it does not own a second
+            // reference, so it is not disposed when evicted from here.
+            _elementCache[node.Id] = owned;
             _lastFocusKey = key;
+        }
+
+        foreach (var stale in evicted)
+        {
+            // The focus owner is in both the field and the cache, so the same
+            // owner can be evicted twice. Dispose is idempotent.
+            stale.Dispose();
         }
 
         // The same control re-firing focus — common in editable combos, which
@@ -602,17 +758,27 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
             return node;
         }
 
+        if (_controlWalker?.ValueOrNull is not { } walker || _trueCondition?.ValueOrNull is not { } anyChild)
+        {
+            return node;
+        }
+
         try
         {
-            var parent = _automation.ControlViewWalker.GetParentElement(element);
+            using var parent = _com.OwnIfNotNull(walker.GetParentElement(element));
             if (parent is null)
             {
                 _log.Debug("set position: {Id} has no parent", node.Id.Value);
                 return node;
             }
 
-            var children = parent.FindAll(TreeScope.TreeScope_Children, _automation.CreateTrueCondition());
-            var count = children?.Length ?? 0;
+            // FindAll marshals every sibling. On a desktop of sixty icons that
+            // is sixty references per focus change, and letting them fall out
+            // of scope hands all sixty to the finalizer thread — the single
+            // largest source of uncontrolled releases in the reader.
+            using var children = _com.OwnIfNotNull(
+                parent.Value.FindAll(TreeScope.TreeScope_Children, anyChild));
+            var count = children?.ValueOrNull?.Length ?? 0;
             if (count <= 0)
             {
                 _log.Debug("set position: {Id} parent reported no children", node.Id.Value);
@@ -631,7 +797,9 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
                 position = 0;
                 for (var i = 0; i < count; i++)
                 {
-                    if (_automation.CompareElements(element, children!.GetElement(i)) != 0)
+                    using var sibling = _com.OwnIfNotNull(children!.Value.GetElement(i));
+                    if (sibling is not null
+                        && _automation.CompareElements(element, sibling.Value) != 0)
                     {
                         position = i + 1;
                         break;
@@ -688,7 +856,7 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         IUIAutomationElement? focused;
         lock (_gate)
         {
-            focused = _focusedElement;
+            focused = _focusedElement?.ValueOrNull;
         }
         if (focused is null || _automation is null)
         {
@@ -779,11 +947,40 @@ public sealed class NativeUiaProvider : IAccessibilityProvider
         }
         _cts.Dispose();
 
+        // Anything still queued in the channel was never handled, so nobody
+        // else will hand it back.
+        while (_events.Reader.TryRead(out var abandoned))
+        {
+            abandoned.Element.Dispose();
+        }
+
         lock (_gate)
         {
             _subscriptions.Clear();
+            // The focus owner is the cache's entry too, so disposing both is
+            // one release, not two.
+            _focusedElement?.Dispose();
+            foreach (var cached in _elementCache.Values)
+            {
+                cached.Dispose();
+            }
             _elementCache.Clear();
+            _focusedElement = null;
         }
+
+        _controlWalker?.Dispose();
+        _trueCondition?.Dispose();
+        _controlWalker = null;
+        _trueCondition = null;
+
+        // The dispatch loop has stopped, so this is the last drain there will
+        // be. A non-zero count afterwards is a reference nobody handed back.
+        _com.Drain();
+        if (_com.LiveCount != 0)
+        {
+            _log.Warning("{Count} UIA references were still owned at shutdown", _com.LiveCount);
+        }
+
         _focusSink = null;
         _eventSink = null;
         _notificationSink = null;

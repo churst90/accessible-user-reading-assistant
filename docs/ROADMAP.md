@@ -216,12 +216,14 @@ dialogs), not just unit tests. Ordered by user-visible impact:
             has its own splitter; it calls `WordBoundary.IsTerminator`, the one
             definition shared with the text model. `char.IsPunctuation` includes
             apostrophes and hyphens, which is why it used to say "don" then "t".
-      - [ ] `KeyTranslator` dead-key reset is **still documented but not
-            performed** — the remark claims the state is reset on every call so
-            the next press is not swallowed, and `TryTranslate` never does it
-            (a `-1` return is discarded without the flushing second call). This
-            is exactly the round-3 pattern: a comment answering a real question
-            wrongly, which is worse than no comment.
+      - [x] `KeyTranslator` dead-key reset. Done 2026-08-20, and it was worse
+            than a stale comment: the layout's dead-key state is shared with the
+            application being typed into, so probing a dead key from the hook and
+            leaving the accent pending changes *the user's own typing* on any
+            international layout — their next letter combines with an accent we
+            put there. A `-1` return now flushes through a space and returns no
+            character, bounded to four attempts because it runs on the keyboard
+            hook.
       - [ ] Char echo cut by the generic cancel on fast typing is still
             unverified. Echo announcements carry no cancel group, so a burst
             queues rather than superseding. Pre-dates F1; needs an ear.
